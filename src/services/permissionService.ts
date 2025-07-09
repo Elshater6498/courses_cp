@@ -17,7 +17,7 @@ export const getPermissions = async (params: PaginationParams = {}): Promise<Pag
 
 // Get all permissions without pagination
 export const getAllPermissions = async (): Promise<ApiResponse<Permission[]>> => {
-  return apiGet<Permission[]>(`${PERMISSION_BASE_PATH}/all`);
+  return apiGet<Permission[]>(`${PERMISSION_BASE_PATH}`);
 };
 
 // Get permission by ID

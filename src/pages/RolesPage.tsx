@@ -51,6 +51,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Plus,
   Search,
@@ -68,6 +69,7 @@ import {
   useCreateRole,
   useUpdateRole,
   useDeleteRole,
+  useHardDeleteRole,
   useRoleStats,
 } from "@/hooks/useRoles";
 import type { Role, CreateRoleInput, UpdateRoleInput } from "@/types/api";
@@ -88,7 +90,6 @@ const updateRoleSchema = z.object({
     .min(2, "Role name must be at least 2 characters")
     .max(50, "Role name cannot exceed 50 characters"),
   permissions: z.array(z.string()).optional(),
-  isActive: z.boolean().optional(),
 });
 
 type CreateRoleFormData = z.infer<typeof createRoleSchema>;
@@ -121,7 +122,8 @@ export function RolesPage() {
   // Mutations
   const createRoleMutation = useCreateRole();
   const updateRoleMutation = useUpdateRole();
-  const deleteRoleMutation = useDeleteRole();
+  const deleteRoleMutation = useDeleteRole(); // Soft delete (for isActive toggle)
+  const hardDeleteRoleMutation = useHardDeleteRole(); // Hard delete (for delete button)
 
   // Forms
   const createForm = useForm<CreateRoleFormData>({
@@ -137,7 +139,6 @@ export function RolesPage() {
     defaultValues: {
       name: "",
       permissions: [],
-      isActive: true,
     },
   });
 
@@ -176,11 +177,30 @@ export function RolesPage() {
 
   const handleDeleteRole = async (roleId: string) => {
     try {
-      await deleteRoleMutation.mutateAsync(roleId);
-      toast.success("Role deleted successfully!");
+      await hardDeleteRoleMutation.mutateAsync(roleId);
+      toast.success("Role deleted permanently!");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete role"
+      );
+    }
+  };
+
+  const handleToggleRoleStatus = async (
+    roleId: string,
+    currentStatus: boolean
+  ) => {
+    try {
+      await updateRoleMutation.mutateAsync({
+        id: roleId,
+        data: { isActive: !currentStatus },
+      });
+      toast.success(
+        `Role ${!currentStatus ? "activated" : "deactivated"} successfully!`
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update role status"
       );
     }
   };
@@ -190,7 +210,6 @@ export function RolesPage() {
     updateForm.reset({
       name: role.name,
       permissions: role.permissions.map((p) => p._id),
-      isActive: role.isActive,
     });
     setIsEditDialogOpen(true);
   };
@@ -412,20 +431,21 @@ export function RolesPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Permissions</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Active</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={6} className="text-center py-8">
                       Loading roles...
                     </TableCell>
                   </TableRow>
                 ) : rolesData?.data?.items?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={6} className="text-center py-8">
                       No roles found.
                     </TableCell>
                   </TableRow>
@@ -459,35 +479,69 @@ export function RolesPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
+                        <Switch
+                          checked={role.isActive}
+                          onCheckedChange={() =>
+                            handleToggleRoleStatus(role._id, role.isActive)
+                          }
+                          disabled={updateRoleMutation.isPending}
+                        />
+                      </TableCell>
+                      <TableCell>
                         {new Date(role.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
+                        {/* Desktop Actions - Direct buttons for md+ screens */}
+                        <div className="hidden md:flex gap-2">
+                          {canUpdate && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditRole(role)}
+                            >
+                              <Edit className="h-4 w-4" />
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {canUpdate && (
-                              <DropdownMenuItem
-                                onClick={() => handleEditRole(role)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                            )}
-                            {canDelete && (
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteRole(role._id)}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteRole(role._id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Mobile Actions - Dropdown for small screens */}
+                        <div className="md:hidden">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {canUpdate && (
+                                <DropdownMenuItem
+                                  onClick={() => handleEditRole(role)}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                              )}
+                              {canDelete && (
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteRole(role._id)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -562,23 +616,7 @@ export function RolesPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={updateForm.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Active</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
+
               <FormField
                 control={updateForm.control}
                 name="permissions"
