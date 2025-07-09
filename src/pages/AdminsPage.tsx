@@ -70,6 +70,7 @@ import {
   useDeleteAdmin,
   useAdminStats,
   useAllRoles,
+  useUpdateAdminPassword,
 } from "@/hooks/useAdmins";
 import type { Admin, CreateAdminInput, UpdateAdminInput } from "@/types/api";
 
@@ -78,9 +79,21 @@ const createAdminSchema = z.object({
   userName: z
     .string()
     .min(3, "Username must be at least 3 characters")
-    .max(30, "Username cannot exceed 30 characters"),
+    .max(30, "Username cannot exceed 30 characters")
+    .regex(
+      /^[a-zA-Z0-9._-]+$/,
+      "Username can only contain letters, numbers, dots, hyphens, and underscores"
+    )
+    .regex(/^[a-zA-Z0-9]/, "Username must start with alphanumeric character")
+    .regex(/[a-zA-Z0-9]$/, "Username must end with alphanumeric character"),
   email: z.string().email("Please provide a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      "Password must contain at least 8 characters with uppercase, lowercase, number, and special character"
+    ),
   roleId: z.string().min(1, "Role is required"),
   phone: z.string().optional(),
 });
@@ -89,7 +102,13 @@ const updateAdminSchema = z.object({
   userName: z
     .string()
     .min(3, "Username must be at least 3 characters")
-    .max(30, "Username cannot exceed 30 characters"),
+    .max(30, "Username cannot exceed 30 characters")
+    .regex(
+      /^[a-zA-Z0-9._-]+$/,
+      "Username can only contain letters, numbers, dots, hyphens, and underscores"
+    )
+    .regex(/^[a-zA-Z0-9]/, "Username must start with alphanumeric character")
+    .regex(/[a-zA-Z0-9]$/, "Username must end with alphanumeric character"),
   email: z.string().email("Please provide a valid email address"),
   roleId: z.string().min(1, "Role is required"),
   phone: z.string().optional(),
@@ -97,7 +116,13 @@ const updateAdminSchema = z.object({
 });
 
 const updatePasswordSchema = z.object({
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  newPassword: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      "Password must contain at least 8 characters with uppercase, lowercase, number, and special character"
+    ),
 });
 
 type CreateAdminFormData = z.infer<typeof createAdminSchema>;
@@ -134,6 +159,7 @@ export function AdminsPage() {
   const createAdminMutation = useCreateAdmin();
   const updateAdminMutation = useUpdateAdmin();
   const deleteAdminMutation = useDeleteAdmin();
+  const updateAdminPasswordMutation = useUpdateAdminPassword();
 
   // Forms
   const createForm = useForm<CreateAdminFormData>({
@@ -196,6 +222,10 @@ export function AdminsPage() {
   };
 
   const handleDeleteAdmin = async (adminId: string) => {
+    if (!window.confirm("Are you sure you want to delete this admin?")) {
+      return;
+    }
+
     try {
       await deleteAdminMutation.mutateAsync(adminId);
       toast.success("Admin deleted successfully!");
@@ -220,8 +250,10 @@ export function AdminsPage() {
 
   const handleUpdatePassword = async (data: UpdatePasswordFormData) => {
     try {
-      // You'll need to create a useUpdateAdminPassword hook
-      // await updateAdminPasswordMutation.mutateAsync({ id: passwordAdminId, password: data.newPassword });
+      await updateAdminPasswordMutation.mutateAsync({
+        id: passwordAdminId,
+        password: data.newPassword,
+      });
       toast.success("Password updated successfully!");
       setIsPasswordDialogOpen(false);
       setPasswordAdminId("");
@@ -764,7 +796,14 @@ export function AdminsPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Update Password</Button>
+                <Button
+                  type="submit"
+                  disabled={updateAdminPasswordMutation.isPending}
+                >
+                  {updateAdminPasswordMutation.isPending
+                    ? "Updating..."
+                    : "Update Password"}
+                </Button>
               </DialogFooter>
             </form>
           </Form>
