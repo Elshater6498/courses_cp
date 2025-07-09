@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { adminService } from '../services/adminService';
+import * as adminService from '../services/adminService';
+import * as roleService from '../services/roleService';
 import type { PaginationParams, CreateAdminInput, UpdateAdminInput } from '../types/api';
 
 // Query keys
@@ -56,6 +57,14 @@ export const useAdminsByRole = (roleId: string, params: PaginationParams = {}) =
     queryFn: () => adminService.getAdminsByRole(roleId, params),
     enabled: !!roleId,
     placeholderData: keepPreviousData,
+  });
+};
+
+// Get all roles (for admin forms)
+export const useAllRoles = () => {
+  return useQuery({
+    queryKey: ['roles', 'all'],
+    queryFn: () => roleService.getAllRoles(),
   });
 };
 

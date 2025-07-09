@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Admin } from '../types/api';
-import { authService } from '../services/authService';
+import * as authService from '../services/authService';
 
 interface AuthState {
   admin: Admin | null;
@@ -34,6 +34,7 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true });
           const response = await authService.login(credentials);
           console.log(response);
+          
           if (response.success && response.data) {
             const { admin, token } = response.data;
             set({ 

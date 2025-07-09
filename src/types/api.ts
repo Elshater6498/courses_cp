@@ -106,10 +106,14 @@ export interface Permission {
   name: string;
   resource: string;
   action: string;
+  description?: string;
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
+
+export type CreatePermissionInput = Pick<Permission, 'name' | 'resource' | 'action' | 'description'>;
+export type UpdatePermissionInput = Partial<Pick<Permission, 'name' | 'resource' | 'action' | 'description' | 'isActive'>>;
 
 export type PermissionResource = 
   | 'admin'

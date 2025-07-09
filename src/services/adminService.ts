@@ -6,60 +6,56 @@ import type {
   PaginatedResponse, 
   ApiResponse 
 } from '../types/api';
-import { apiService } from './api';
+import { apiGet, apiPost, apiPut, apiPatch, apiDelete, apiGetPaginated } from './api';
 
-export class AdminService {
-  private readonly basePath = '/dashboard/admin';
+const ADMIN_BASE_PATH = '/dashboard/admin';
 
-  // Get all admins with pagination
-  async getAdmins(params: PaginationParams = {}): Promise<PaginatedResponse<Admin>> {
-    return apiService.getPaginated<Admin>(this.basePath, params);
-  }
+// Get all admins with pagination
+export const getAdmins = async (params: PaginationParams = {}): Promise<PaginatedResponse<Admin>> => {
+  return apiGetPaginated<Admin>(ADMIN_BASE_PATH, params);
+};
 
-  // Get admin by ID
-  async getAdminById(id: string): Promise<ApiResponse<Admin>> {
-    return apiService.get<Admin>(`${this.basePath}/${id}`);
-  }
+// Get admin by ID
+export const getAdminById = async (id: string): Promise<ApiResponse<Admin>> => {
+  return apiGet<Admin>(`${ADMIN_BASE_PATH}/${id}`);
+};
 
-  // Create new admin
-  async createAdmin(data: CreateAdminInput): Promise<ApiResponse<Admin>> {
-    return apiService.post<Admin>(this.basePath, data);
-  }
+// Create new admin
+export const createAdmin = async (data: CreateAdminInput): Promise<ApiResponse<Admin>> => {
+  return apiPost<Admin>(ADMIN_BASE_PATH, data);
+};
 
-  // Update admin
-  async updateAdmin(id: string, data: UpdateAdminInput): Promise<ApiResponse<Admin>> {
-    return apiService.put<Admin>(`${this.basePath}/${id}`, data);
-  }
+// Update admin
+export const updateAdmin = async (id: string, data: UpdateAdminInput): Promise<ApiResponse<Admin>> => {
+  return apiPut<Admin>(`${ADMIN_BASE_PATH}/${id}`, data);
+};
 
-  // Update admin password
-  async updateAdminPassword(id: string, newPassword: string): Promise<ApiResponse<void>> {
-    return apiService.patch<void>(`${this.basePath}/${id}/password`, { newPassword });
-  }
+// Update admin password
+export const updateAdminPassword = async (id: string, newPassword: string): Promise<ApiResponse<void>> => {
+  return apiPatch<void>(`${ADMIN_BASE_PATH}/${id}/password`, { newPassword });
+};
 
-  // Delete admin (soft delete)
-  async deleteAdmin(id: string): Promise<ApiResponse<Admin>> {
-    return apiService.delete<Admin>(`${this.basePath}/${id}`);
-  }
+// Delete admin (soft delete)
+export const deleteAdmin = async (id: string): Promise<ApiResponse<Admin>> => {
+  return apiDelete<Admin>(`${ADMIN_BASE_PATH}/${id}`);
+};
 
-  // Hard delete admin
-  async hardDeleteAdmin(id: string): Promise<ApiResponse<void>> {
-    return apiService.delete<void>(`${this.basePath}/${id}/hard`);
-  }
+// Hard delete admin
+export const hardDeleteAdmin = async (id: string): Promise<ApiResponse<void>> => {
+  return apiDelete<void>(`${ADMIN_BASE_PATH}/${id}/hard`);
+};
 
-  // Get admin statistics
-  async getAdminStats(): Promise<ApiResponse<any>> {
-    return apiService.get<any>(`${this.basePath}/stats`);
-  }
+// Get admin statistics
+export const getAdminStats = async (): Promise<ApiResponse<any>> => {
+  return apiGet<any>(`${ADMIN_BASE_PATH}/stats`);
+};
 
-  // Search admins with advanced filters
-  async searchAdmins(params: PaginationParams = {}): Promise<PaginatedResponse<Admin>> {
-    return apiService.getPaginated<Admin>(`${this.basePath}/search`, params);
-  }
+// Search admins with advanced filters
+export const searchAdmins = async (params: PaginationParams = {}): Promise<PaginatedResponse<Admin>> => {
+  return apiGetPaginated<Admin>(`${ADMIN_BASE_PATH}/search`, params);
+};
 
-  // Get admins by role
-  async getAdminsByRole(roleId: string, params: PaginationParams = {}): Promise<PaginatedResponse<Admin>> {
-    return apiService.getPaginated<Admin>(`${this.basePath}/role/${roleId}`, params);
-  }
-}
-
-export const adminService = new AdminService(); 
+// Get admins by role
+export const getAdminsByRole = async (roleId: string, params: PaginationParams = {}): Promise<PaginatedResponse<Admin>> => {
+  return apiGetPaginated<Admin>(`${ADMIN_BASE_PATH}/role/${roleId}`, params);
+}; 
