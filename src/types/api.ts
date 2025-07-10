@@ -138,28 +138,67 @@ export type PermissionAction =
 // University Types
 export interface University {
   _id: string;
-  name: string;
-  code: string;
-  country: string;
-  city: string;
-  website?: string;
-  description?: string;
-  logo?: string;
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string; // Support both multilingual and simple string for display
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
+export interface CreateUniversityInput {
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+}
+
+export interface UpdateUniversityInput {
+  name?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  isActive?: boolean;
+}
+
 // Faculty Types
 export interface Faculty {
   _id: string;
-  name: string;
-  code: string;
-  universityId: string;
-  description?: string;
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string; // Support both multilingual and simple string for display
+  universityId: University | string;
+  no_academic_year: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface CreateFacultyInput {
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  universityId: string;
+  no_academic_year: number;
+}
+
+export interface UpdateFacultyInput {
+  name?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  universityId?: string;
+  no_academic_year?: number;
+  isActive?: boolean;
 }
 
 // User Types

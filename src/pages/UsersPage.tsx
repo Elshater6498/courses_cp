@@ -413,12 +413,14 @@ export function UsersPage() {
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
                         {typeof user.universityId === "object"
-                          ? user.universityId.name
+                          ? typeof user.universityId.name === "string"
+                            ? user.universityId.name
+                            : (user.universityId.name as any)?.en || "N/A"
                           : "N/A"}
                       </TableCell>
                       <TableCell>
                         {typeof user.facultyId === "object"
-                          ? user.facultyId.name
+                          ? (user.facultyId.name as any)?.en || "N/A"
                           : "N/A"}
                       </TableCell>
                       <TableCell>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -50,7 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Plus,
   Search,
@@ -72,7 +72,7 @@ import {
   useAllRoles,
   useUpdateAdminPassword,
 } from "@/hooks/useAdmins";
-import type { Admin } from "@/types/api";
+import type { Admin, CreateAdminInput, UpdateAdminInput } from "@/types/api";
 
 // Form schemas
 const createAdminSchema = z.object({
@@ -112,7 +112,6 @@ const updateAdminSchema = z.object({
   email: z.string().email("Please provide a valid email address"),
   roleId: z.string().min(1, "Role is required"),
   phone: z.string().optional(),
-  isActive: z.boolean().optional(),
 });
 
 const updatePasswordSchema = z.object({
@@ -180,7 +179,6 @@ export function AdminsPage() {
       email: "",
       roleId: "",
       phone: "",
-      isActive: true,
     },
   });
 
@@ -236,6 +234,25 @@ export function AdminsPage() {
     }
   };
 
+  const handleToggleAdminStatus = async (
+    adminId: string,
+    currentStatus: boolean
+  ) => {
+    try {
+      await updateAdminMutation.mutateAsync({
+        id: adminId,
+        data: { isActive: !currentStatus },
+      });
+      toast.success(
+        `Admin ${!currentStatus ? "activated" : "deactivated"} successfully!`
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update admin status"
+      );
+    }
+  };
+
   const handleEditAdmin = (admin: Admin) => {
     setEditingAdmin(admin);
     updateForm.reset({
@@ -243,7 +260,6 @@ export function AdminsPage() {
       email: admin.email,
       roleId: admin.roleId._id,
       phone: admin.phone || "",
-      isActive: admin.isActive,
     });
     setIsEditDialogOpen(true);
   };
@@ -275,9 +291,9 @@ export function AdminsPage() {
     setCurrentPage(1);
   };
 
-  const canCreate = hasPermission("create_admin");
-  const canUpdate = hasPermission("update_admin");
-  const canDelete = hasPermission("delete_admin");
+  const canCreate = hasPermission("create_admins");
+  const canUpdate = hasPermission("update_admins");
+  const canDelete = hasPermission("delete_admins");
 
   return (
     <div className="space-y-6">
@@ -509,20 +525,21 @@ export function AdminsPage() {
                   <TableHead>Role</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Active</TableHead>
                   <TableHead>Last Login</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  <TableHead className="w-[140px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={8} className="text-center py-8">
                       Loading admins...
                     </TableCell>
                   </TableRow>
                 ) : adminsData?.data?.items?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={8} className="text-center py-8">
                       No admins found.
                     </TableCell>
                   </TableRow>
@@ -545,48 +562,94 @@ export function AdminsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
+                        <Switch
+                          checked={admin.isActive}
+                          onCheckedChange={() =>
+                            handleToggleAdminStatus(admin._id, admin.isActive)
+                          }
+                          disabled={updateAdminMutation.isPending}
+                        />
+                      </TableCell>
+                      <TableCell>
                         {admin.lastLogin
                           ? new Date(admin.lastLogin).toLocaleDateString()
                           : "Never"}
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {canUpdate && (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() => handleEditAdmin(admin)}
-                                >
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setPasswordAdminId(admin._id);
-                                    setIsPasswordDialogOpen(true);
-                                  }}
-                                >
-                                  <Key className="mr-2 h-4 w-4" />
-                                  Change Password
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {canDelete && (
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteAdmin(admin._id)}
-                                className="text-red-600"
+                        {/* Desktop Actions - Direct buttons for md+ screens */}
+                        <div className="hidden md:flex gap-2">
+                          {canUpdate && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditAdmin(admin)}
                               >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setPasswordAdminId(admin._id);
+                                  setIsPasswordDialogOpen(true);
+                                }}
+                              >
+                                <Key className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteAdmin(admin._id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Mobile Actions - Dropdown for small screens */}
+                        <div className="md:hidden">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {canUpdate && (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditAdmin(admin)}
+                                  >
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setPasswordAdminId(admin._id);
+                                      setIsPasswordDialogOpen(true);
+                                    }}
+                                  >
+                                    <Key className="mr-2 h-4 w-4" />
+                                    Change Password
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {canDelete && (
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteAdmin(admin._id)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -715,23 +778,6 @@ export function AdminsPage() {
                       <Input placeholder="Enter phone number" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={updateForm.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Active</FormLabel>
-                    </div>
                   </FormItem>
                 )}
               />
