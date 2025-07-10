@@ -165,17 +165,19 @@ export interface Faculty {
 // User Types
 export interface User {
   _id: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   phone?: string;
-  dateOfBirth?: Date;
-  gender?: 'male' | 'female' | 'other';
-  universityId?: string;
-  facultyId?: string;
-  isActive: boolean;
-  isEmailVerified: boolean;
+  universityId: University;
+  facultyId: Faculty;
+  academicYear: string;
+  semester: string;
+  enrollmentIds: string[];
+  progressIds: string[];
+  blocked: boolean;
+  emailVerified: boolean;
   devices: Device[];
+  lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -183,9 +185,33 @@ export interface User {
 export interface Device {
   deviceId: string;
   deviceName: string;
-  deviceType: string;
-  isActive: boolean;
+  deviceType: 'mobile' | 'desktop' | 'tablet';
+  userAgent: string;
+  ipAddress: string;
+  isVerified: boolean;
   lastUsed: Date;
+  createdAt: Date;
+}
+
+export interface CreateUserInput {
+  fullName: string;
+  email: string;
+  password: string;
+  universityId: string;
+  facultyId: string;
+  academicYear: string;
+  semester: string;
+  phone?: string;
+}
+
+export interface UpdateUserInput {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  universityId?: string;
+  facultyId?: string;
+  academicYear?: string;
+  semester?: string;
 }
 
 // Course Types

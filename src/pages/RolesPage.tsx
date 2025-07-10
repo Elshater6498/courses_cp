@@ -277,7 +277,36 @@ export function RolesPage() {
                     name="permissions"
                     render={() => (
                       <FormItem>
-                        <FormLabel>Permissions</FormLabel>
+                        <div className="flex items-center justify-between">
+                          <FormLabel>Permissions</FormLabel>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="create-select-all"
+                              checked={
+                                (permissionsData?.data?.length || 0) > 0 &&
+                                createForm.watch("permissions")?.length ===
+                                  (permissionsData?.data?.length || 0)
+                              }
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  createForm.setValue(
+                                    "permissions",
+                                    permissionsData?.data?.map((p) => p._id) ||
+                                      []
+                                  );
+                                } else {
+                                  createForm.setValue("permissions", []);
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor="create-select-all"
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              Select All
+                            </label>
+                          </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                           {permissionsData?.data?.map((permission) => (
                             <FormField
@@ -622,7 +651,35 @@ export function RolesPage() {
                 name="permissions"
                 render={() => (
                   <FormItem>
-                    <FormLabel>Permissions</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Permissions</FormLabel>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="edit-select-all"
+                          checked={
+                            (permissionsData?.data?.length || 0) > 0 &&
+                            updateForm.watch("permissions")?.length ===
+                              (permissionsData?.data?.length || 0)
+                          }
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              updateForm.setValue(
+                                "permissions",
+                                permissionsData?.data?.map((p) => p._id) || []
+                              );
+                            } else {
+                              updateForm.setValue("permissions", []);
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="edit-select-all"
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          Select All
+                        </label>
+                      </div>
+                    </div>
                     <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                       {permissionsData?.data?.map((permission) => (
                         <FormField

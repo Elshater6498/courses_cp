@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -72,7 +72,7 @@ import {
   useAllRoles,
   useUpdateAdminPassword,
 } from "@/hooks/useAdmins";
-import type { Admin, CreateAdminInput, UpdateAdminInput } from "@/types/api";
+import type { Admin } from "@/types/api";
 
 // Form schemas
 const createAdminSchema = z.object({
