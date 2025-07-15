@@ -152,7 +152,7 @@ export function CoursesPage() {
   // Helper function to get instructor name
   const getInstructorName = (course: Course): string => {
     if (typeof course.instructorId === "string") return "Unknown Instructor";
-    return course.instructorId.userName || "Unknown Instructor";
+    return course.instructorId?.userName || "Unknown Instructor";
   };
 
   // Helper function to calculate discounted price
@@ -291,7 +291,7 @@ export function CoursesPage() {
               <p className="text-gray-500">No courses found.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {coursesData?.data?.items?.map((course) => (
                 <Card key={course._id} className="overflow-hidden">
                   {/* Course Image */}
@@ -404,7 +404,7 @@ export function CoursesPage() {
                       )}
 
                     {/* Actions */}
-                    <div className="flex gap-2 pt-3 border-t">
+                    <div className="flex items-center gap-2 pt-3 border-t">
                       {canUpdate && (
                         <>
                           <Button
@@ -412,25 +412,22 @@ export function CoursesPage() {
                             size="sm"
                             className="flex-1"
                             onClick={() =>
-                              navigate(`/courses/${course._id}/edit`)
+                              navigate(`/dashboard/courses/${course._id}`)
                             }
                           >
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
+                          <Switch
+                            // disabled={toggleCourseStatusMutation.isPending}
+                            checked={course.isActive}
+                            onCheckedChange={() =>
                               handleToggleCourseStatus(
                                 course._id,
                                 course.isActive
                               )
                             }
-                            disabled={toggleCourseStatusMutation.isPending}
-                          >
-                            <Switch className="h-4 w-4" />
-                          </Button>
+                          />
                         </>
                       )}
                       {canDelete && (
