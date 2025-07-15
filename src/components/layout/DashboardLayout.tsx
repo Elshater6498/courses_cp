@@ -35,15 +35,17 @@ import {
   GraduationCap,
   Settings,
   LogOut,
+  Book,
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Admins", href: "/dashboard/admins", icon: ShieldCheck },
+  { name: "Roles", href: "/dashboard/roles", icon: Settings },
   { name: "Users", href: "/dashboard/users", icon: Users },
   { name: "Universities", href: "/dashboard/universities", icon: Building },
   { name: "Faculties", href: "/dashboard/faculties", icon: GraduationCap },
-  { name: "Roles", href: "/dashboard/roles", icon: Settings },
+  { name: "Courses", href: "/dashboard/courses", icon: Book },
 ];
 
 export function DashboardLayout() {

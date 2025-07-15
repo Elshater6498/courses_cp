@@ -256,15 +256,96 @@ export interface UpdateUserInput {
 // Course Types
 export interface Course {
   _id: string;
-  title: string;
-  description: string;
-  facultyId: string;
-  instructorId: string;
-  duration: number;
-  level: 'beginner' | 'intermediate' | 'advanced';
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string;
+  aboutCourse: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string;
+  whatWillYouLearn: Array<{
+    en: string;
+    ar?: string;
+    he?: string;
+  }> | string[];
+  numberOfCourseHours: number;
+  coursePrice: number;
+  discount: number;
+  facultyIds: Faculty[] | string[];
+  instructorId: Admin | string;
+  instructorPercentage: number;
+  imageUrl: string;
+  introductoryVideoUrl: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  discountedPrice?: number;
+  totalLearningOutcomes?: number;
+}
+
+export interface CreateCourseInput {
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  aboutCourse: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  whatWillYouLearn: Array<{
+    en: string;
+    ar?: string;
+    he?: string;
+  }>;
+  numberOfCourseHours: number;
+  coursePrice: number;
+  discount?: number;
+  facultyIds: string[];
+  instructorId: string;
+  instructorPercentage: number;
+  imageUrl: string;
+  introductoryVideoUrl: string;
+}
+
+export interface UpdateCourseInput {
+  name?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  aboutCourse?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  whatWillYouLearn?: Array<{
+    en: string;
+    ar?: string;
+    he?: string;
+  }>;
+  numberOfCourseHours?: number;
+  coursePrice?: number;
+  discount?: number;
+  facultyIds?: string[];
+  instructorId?: string;
+  instructorPercentage?: number;
+  imageUrl?: string;
+  introductoryVideoUrl?: string;
+  isActive?: boolean;
+}
+
+export interface CourseStats {
+  total: number;
+  active: number;
+  inactive: number;
+  averagePrice: number;
+  averageHours: number;
+  totalRevenue: number;
 }
 
 // Error Types

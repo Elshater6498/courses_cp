@@ -17,6 +17,8 @@ import { UsersPage } from "./pages/UsersPage";
 import { UniversitiesPage } from "./pages/UniversitiesPage";
 import { FacultiesPage } from "./pages/FacultiesPage";
 import { RolesPage } from "./pages/RolesPage";
+import { CoursesPage } from "./pages/CoursesPage";
+import { CourseDetails } from "./pages/CourseDetails";
 import { LoadingSpinner } from "./components/ui/LoadingSpinner";
 
 // Protected Route Component
@@ -75,10 +77,13 @@ function App() {
           >
             <Route index element={<DashboardHome />} />
             <Route path="admins" element={<AdminsPage />} />
+            <Route path="roles" element={<RolesPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="universities" element={<UniversitiesPage />} />
             <Route path="faculties" element={<FacultiesPage />} />
-            <Route path="roles" element={<RolesPage />} />
+            <Route path="courses" element={<CoursesPage />} />
+            <Route path="courses/new" element={<CourseDetails />} />
+            <Route path="courses/:id/edit" element={<CourseDetails />} />
           </Route>
 
           {/* Redirect root to dashboard */}
