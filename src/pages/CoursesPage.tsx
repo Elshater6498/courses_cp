@@ -167,7 +167,7 @@ export function CoursesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 py-4 -mx-6 px-6 mb-6">
         <div>
           <h1 className="text-3xl font-bold">Course Management</h1>
           <p className="text-gray-600">
@@ -175,7 +175,10 @@ export function CoursesPage() {
           </p>
         </div>
         {canCreate && (
-          <Button onClick={() => navigate("/dashboard/courses/new")}>
+          <Button
+            className="w-full md:w-auto"
+            onClick={() => navigate("/dashboard/courses/new")}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Create Course
           </Button>
