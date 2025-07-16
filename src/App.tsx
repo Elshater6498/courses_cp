@@ -17,8 +17,8 @@ import { UsersPage } from "./pages/UsersPage";
 import { UniversitiesPage } from "./pages/UniversitiesPage";
 import { FacultiesPage } from "./pages/FacultiesPage";
 import { RolesPage } from "./pages/RolesPage";
-import { CoursesPage } from "./pages/CoursesPage";
-import { CreateCourse } from "./pages/create-course";
+import { CoursesPage } from "./pages/course/courses-page";
+import { CreateCourse } from "./pages/course/create-course";
 import { LoadingSpinner } from "./components/ui/LoadingSpinner";
 
 // Protected Route Component
