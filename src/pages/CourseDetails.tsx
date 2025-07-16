@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/select";
 import { MultipleSelector } from "@/components/ui/multiple-selector";
 import type { Option } from "@/components/ui/multiple-selector";
-import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
   Save,
@@ -40,10 +39,8 @@ import {
   Trash2,
   BookOpen,
   Clock,
-  DollarSign,
   Users,
   Video,
-  Image,
   GraduationCap,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -55,6 +52,8 @@ import {
   useFacultiesGroupedByUniversity,
   useAllAdmins,
 } from "@/hooks/useCourses";
+import { UploadService, type UploadProgress } from "@/services/uploadService";
+import { UploadProgressCard } from "@/components/ui/upload-progress";
 
 // Form schemas
 const courseSchema = z.object({
@@ -136,8 +135,8 @@ const courseSchema = z.object({
     .number()
     .min(0, "Instructor percentage must be at least 0")
     .max(100, "Instructor percentage cannot exceed 100"),
-  imageUrl: z.string().url("Please provide a valid image URL"),
-  introductoryVideoUrl: z.string().url("Please provide a valid video URL"),
+  imageUrl: z.string().optional(),
+  introductoryVideoUrl: z.string().optional(),
   isActive: z.boolean(),
 });
 
@@ -148,6 +147,21 @@ export function CourseDetails() {
   const { id } = useParams<{ id: string }>();
   const { hasPermission } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
+
+  // File upload state
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [imageUploadProgress, setImageUploadProgress] =
+    useState<UploadProgress | null>(null);
+  const [videoUploadProgress, setVideoUploadProgress] =
+    useState<UploadProgress | null>(null);
+  const [imageUploadStatus, setImageUploadStatus] = useState<
+    "idle" | "uploading" | "completed" | "error"
+  >("idle");
+  const [videoUploadStatus, setVideoUploadStatus] = useState<
+    "idle" | "uploading" | "completed" | "error"
+  >("idle");
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Queries
   const { data: courseData, isLoading: isLoadingCourse } = useCourse(id || "");
@@ -175,7 +189,7 @@ export function CourseDetails() {
       isActive: true,
     },
   });
-
+  console.log(form.formState.errors);
   // Load course data when editing
   useEffect(() => {
     if (id && courseData?.data) {
@@ -223,8 +237,8 @@ export function CourseDetails() {
         facultyIds,
         instructorId,
         instructorPercentage: course.instructorPercentage,
-        imageUrl: course.imageUrl,
-        introductoryVideoUrl: course.introductoryVideoUrl,
+        imageUrl: course.imageUrl || "",
+        introductoryVideoUrl: course.introductoryVideoUrl || "",
         isActive: course.isActive,
       });
       setIsEditing(true);
@@ -234,6 +248,9 @@ export function CourseDetails() {
   // Handlers
   const handleSubmit = async (data: CourseFormData) => {
     try {
+      // Upload files first
+      const uploadResults = await uploadFiles();
+
       // Clean up empty strings
       const processedData = {
         name: {
@@ -259,8 +276,9 @@ export function CourseDetails() {
         facultyIds: data.facultyIds,
         instructorId: data.instructorId,
         instructorPercentage: data.instructorPercentage,
-        imageUrl: data.imageUrl,
-        introductoryVideoUrl: data.introductoryVideoUrl,
+        imageUrl: uploadResults.imageUrl || data.imageUrl || "",
+        introductoryVideoUrl:
+          uploadResults.videoUrl || data.introductoryVideoUrl || "",
         isActive: data.isActive,
       };
 
@@ -295,6 +313,90 @@ export function CourseDetails() {
         currentOutcomes.filter((_, i) => i !== index)
       );
     }
+  };
+
+  // File upload handlers
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file");
+        return;
+      }
+      setSelectedImage(file);
+      setImageUploadStatus("idle");
+      setImageUploadProgress(null);
+      setUploadError(null);
+    }
+  };
+
+  const handleVideoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("video/")) {
+        toast.error("Please select a valid video file");
+        return;
+      }
+      setSelectedVideo(file);
+      setVideoUploadStatus("idle");
+      setVideoUploadProgress(null);
+      setUploadError(null);
+    }
+  };
+
+  const uploadFiles = async (): Promise<{
+    imageUrl: string;
+    videoUrl: string;
+  }> => {
+    const results = { imageUrl: "", videoUrl: "" };
+
+    // Upload image (required)
+    if (selectedImage) {
+      try {
+        setImageUploadStatus("uploading");
+        const imageResult = await UploadService.uploadFileWithProgress(
+          selectedImage,
+          "image",
+          "courses",
+          (progress) => setImageUploadProgress(progress)
+        );
+        results.imageUrl = imageResult.downloadUrl;
+        setImageUploadStatus("completed");
+      } catch (error) {
+        setImageUploadStatus("error");
+        setUploadError(
+          error instanceof Error ? error.message : "Image upload failed"
+        );
+        throw error;
+      }
+    } else if (!isEditing && !form.getValues("imageUrl")) {
+      throw new Error("Course image is required");
+    }
+
+    // Upload video (optional)
+    if (selectedVideo) {
+      try {
+        setVideoUploadStatus("uploading");
+        const videoResult = await UploadService.uploadFileWithProgress(
+          selectedVideo,
+          "video",
+          "courses",
+          (progress) => setVideoUploadProgress(progress)
+        );
+        results.videoUrl = videoResult.downloadUrl;
+        setVideoUploadStatus("completed");
+      } catch (error) {
+        setVideoUploadStatus("error");
+        setUploadError(
+          error instanceof Error ? error.message : "Video upload failed"
+        );
+        throw error;
+      }
+    }
+
+    return results;
   };
 
   const canCreate = hasPermission("create_courses");
@@ -347,12 +449,18 @@ export function CourseDetails() {
         <Button
           onClick={form.handleSubmit(handleSubmit)}
           disabled={
-            createCourseMutation.isPending || updateCourseMutation.isPending
+            createCourseMutation.isPending ||
+            updateCourseMutation.isPending ||
+            imageUploadStatus === "uploading" ||
+            videoUploadStatus === "uploading"
           }
         >
           <Save className="h-4 w-4 mr-2" />
           {createCourseMutation.isPending || updateCourseMutation.isPending
             ? "Saving..."
+            : imageUploadStatus === "uploading" ||
+              videoUploadStatus === "uploading"
+            ? "Uploading files..."
             : "Save Course"}
         </Button>
       </div>
@@ -765,26 +873,197 @@ export function CourseDetails() {
             </CardContent>
           </Card>
 
-          {/* Media URLs */}
+          {/* Media Upload */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Video className="h-5 w-5" />
-                Media URLs
+                Media Upload
               </CardTitle>
               <CardDescription>
-                Provide URLs for course image and introductory video.
+                Upload course image (required) and introductory video
+                (optional).
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* Image Upload */}
+              <div className="space-y-4">
+                <div>
+                  <FormLabel className="text-base font-medium">
+                    Course Image *
+                  </FormLabel>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Upload a high-quality image for your course (JPG, PNG, GIF,
+                    WebP, SVG)
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="flex-1"
+                    />
+                    {selectedImage && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedImage(null)}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+
+                  {selectedImage && (
+                    <div className="text-sm text-gray-600">
+                      Selected: {selectedImage.name} (
+                      {UploadService.formatBytes(selectedImage.size)})
+                    </div>
+                  )}
+
+                  {imageUploadStatus === "uploading" && imageUploadProgress && (
+                    <UploadProgressCard
+                      progress={imageUploadProgress}
+                      fileName={selectedImage?.name || ""}
+                      fileSize={selectedImage?.size || 0}
+                      status="uploading"
+                    />
+                  )}
+
+                  {imageUploadStatus === "completed" && (
+                    <UploadProgressCard
+                      progress={imageUploadProgress!}
+                      fileName={selectedImage?.name || ""}
+                      fileSize={selectedImage?.size || 0}
+                      status="completed"
+                    />
+                  )}
+
+                  {imageUploadStatus === "error" && (
+                    <UploadProgressCard
+                      progress={imageUploadProgress!}
+                      fileName={selectedImage?.name || ""}
+                      fileSize={selectedImage?.size || 0}
+                      status="error"
+                      error={uploadError}
+                    />
+                  )}
+
+                  {/* Show existing image when editing */}
+                  {isEditing &&
+                    courseData?.data?.imageUrl &&
+                    !selectedImage && (
+                      <div className="mt-3 p-3 border rounded-lg bg-gray-50">
+                        <p className="text-sm text-gray-600 mb-2">
+                          Current image:
+                        </p>
+                        <img
+                          src={courseData.data.imageUrl}
+                          alt="Current course image"
+                          className="max-w-xs h-auto rounded border"
+                        />
+                      </div>
+                    )}
+                </div>
+              </div>
+
+              {/* Video Upload */}
+              <div className="space-y-4">
+                <div>
+                  <FormLabel className="text-base font-medium">
+                    Introductory Video
+                  </FormLabel>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Upload an introductory video for your course (MP4, MPEG,
+                    MOV, AVI, WebM, OGG)
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="file"
+                      accept="video/*"
+                      onChange={handleVideoSelect}
+                      className="flex-1"
+                    />
+                    {selectedVideo && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedVideo(null)}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+
+                  {selectedVideo && (
+                    <div className="text-sm text-gray-600">
+                      Selected: {selectedVideo.name} (
+                      {UploadService.formatBytes(selectedVideo.size)})
+                    </div>
+                  )}
+
+                  {videoUploadStatus === "uploading" && videoUploadProgress && (
+                    <UploadProgressCard
+                      progress={videoUploadProgress}
+                      fileName={selectedVideo?.name || ""}
+                      fileSize={selectedVideo?.size || 0}
+                      status="uploading"
+                    />
+                  )}
+
+                  {videoUploadStatus === "completed" && (
+                    <UploadProgressCard
+                      progress={videoUploadProgress!}
+                      fileName={selectedVideo?.name || ""}
+                      fileSize={selectedVideo?.size || 0}
+                      status="completed"
+                    />
+                  )}
+
+                  {videoUploadStatus === "error" && (
+                    <UploadProgressCard
+                      progress={videoUploadProgress!}
+                      fileName={selectedVideo?.name || ""}
+                      fileSize={selectedVideo?.size || 0}
+                      status="error"
+                      error={uploadError}
+                    />
+                  )}
+
+                  {/* Show existing video when editing */}
+                  {isEditing &&
+                    courseData?.data?.introductoryVideoUrl &&
+                    !selectedVideo && (
+                      <div className="mt-3 p-3 border rounded-lg bg-gray-50">
+                        <p className="text-sm text-gray-600 mb-2">
+                          Current video:
+                        </p>
+                        <video
+                          src={courseData.data.introductoryVideoUrl}
+                          controls
+                          className="max-w-xs h-auto rounded border"
+                        />
+                      </div>
+                    )}
+                </div>
+              </div>
+
+              {/* Hidden form fields for validation */}
               <FormField
                 control={form.control}
                 name="imageUrl"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Course Image URL *</FormLabel>
+                  <FormItem className="hidden">
                     <FormControl>
-                      <Input placeholder="Enter course image URL" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -794,13 +1073,9 @@ export function CourseDetails() {
                 control={form.control}
                 name="introductoryVideoUrl"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Introductory Video URL *</FormLabel>
+                  <FormItem className="hidden">
                     <FormControl>
-                      <Input
-                        placeholder="Enter introductory video URL"
-                        {...field}
-                      />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
