@@ -30,7 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MultiSelect } from "@/components/ui/multi-select";
+import { MultipleSelector } from "@/components/ui/multiple-selector";
+import type { Option } from "@/components/ui/multiple-selector";
 import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
@@ -51,10 +52,9 @@ import {
   useCourse,
   useCreateCourse,
   useUpdateCourse,
-  useAllFaculties,
+  useFacultiesGroupedByUniversity,
   useAllAdmins,
 } from "@/hooks/useCourses";
-import type { Course, CreateCourseInput, UpdateCourseInput } from "@/types/api";
 
 // Form schemas
 const courseSchema = z.object({
@@ -151,9 +151,8 @@ export function CourseDetails() {
 
   // Queries
   const { data: courseData, isLoading: isLoadingCourse } = useCourse(id || "");
-  const { data: facultiesData } = useAllFaculties();
+  const { data: facultiesData } = useFacultiesGroupedByUniversity();
   const { data: adminsData } = useAllAdmins();
-
   // Mutations
   const createCourseMutation = useCreateCourse();
   const updateCourseMutation = useUpdateCourse();
@@ -715,29 +714,53 @@ export function CourseDetails() {
               <FormField
                 control={form.control}
                 name="facultyIds"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Faculties *</FormLabel>
-                    <FormControl>
-                      <MultiSelect
-                        options={
-                          facultiesData?.data?.map((faculty) => ({
-                            label:
-                              typeof faculty.name === "string"
-                                ? faculty.name
-                                : faculty.name.en,
-                            value: faculty._id,
-                          })) || []
-                        }
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        placeholder="Select faculties..."
-                        maxCount={5}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  // Transform grouped data to flat options with group information
+                  const options: Option[] = [];
+                  facultiesData?.data?.map((group) => {
+                    group.faculties.map((faculty) => {
+                      options.push({
+                        label: `${
+                          typeof faculty.name === "string"
+                            ? faculty.name
+                            : faculty.name.en
+                        } (${group.universityName.en})`,
+                        value: faculty._id,
+                        group: group.universityName.en,
+                      });
+                    });
+                  });
+                  return (
+                    <FormItem>
+                      <FormLabel>Faculties *</FormLabel>
+                      <FormControl>
+                        <MultipleSelector
+                          options={options}
+                          value={field.value?.map((value) => {
+                            const option = options.find(
+                              (opt) => opt.value === value
+                            );
+                            return option || { label: value, value };
+                          })}
+                          onChange={(selectedOptions) => {
+                            field.onChange(
+                              selectedOptions.map((opt) => opt.value)
+                            );
+                          }}
+                          placeholder="Select faculties..."
+                          maxSelected={5}
+                          groupBy="group"
+                          emptyIndicator={
+                            <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
+                              No faculties found.
+                            </p>
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             </CardContent>
           </Card>

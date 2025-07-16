@@ -20,6 +20,27 @@ export const facultyService = {
     return apiGet<Faculty[]>('/dashboard/faculties/all');
   },
 
+  // Get faculties grouped by university
+  async getFacultiesGroupedByUniversity(): Promise<ApiResponse<Array<{
+    universityId: string;
+    universityName: {
+      en: string;
+      ar: string;
+      he: string;
+    };
+    faculties: Faculty[];
+  }>>> {
+    return apiGet<Array<{
+      universityId: string;
+      universityName: {
+        en: string;
+        ar: string;
+        he: string;
+      };
+      faculties: Faculty[];
+    }>>('/dashboard/faculties/grouped-by-university');
+  },
+
   // Get faculties by university ID
   async getFacultiesByUniversity(universityId: string): Promise<ApiResponse<Faculty[]>> {
     return apiGet<Faculty[]>(`/dashboard/faculties/university/${universityId}`);

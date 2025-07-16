@@ -95,6 +95,14 @@ export const useAllFaculties = () => {
   });
 };
 
+export const useFacultiesGroupedByUniversity = () => {
+  return useQuery({
+    queryKey: ['faculties', 'grouped-by-university'],
+    queryFn: () => facultyService.getFacultiesGroupedByUniversity(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
 // Get all admins (for instructor selection)
 export const useAllAdmins = () => {
   return useQuery({

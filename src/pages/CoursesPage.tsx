@@ -412,14 +412,14 @@ export function CoursesPage() {
                             size="sm"
                             className="flex-1"
                             onClick={() =>
-                              navigate(`/dashboard/courses/${course._id}`)
+                              navigate(`/dashboard/courses/${course._id}/edit`)
                             }
                           >
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
                           </Button>
                           <Switch
-                            // disabled={toggleCourseStatusMutation.isPending}
+                            disabled={toggleCourseStatusMutation.isPending}
                             checked={course.isActive}
                             onCheckedChange={() =>
                               handleToggleCourseStatus(
