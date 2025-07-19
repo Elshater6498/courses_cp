@@ -63,7 +63,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   useRoles,
   useCreateRole,
@@ -71,9 +71,9 @@ import {
   useDeleteRole,
   useHardDeleteRole,
   useRoleStats,
-} from "@/hooks/useRoles";
+} from "@/hooks/use-roles";
 import type { Role, CreateRoleInput, UpdateRoleInput } from "@/types/api";
-import { useAllPermissions } from "@/hooks/usePermissions";
+import { useAllPermissions } from "@/hooks/use-permissions";
 
 // Form schemas
 const createRoleSchema = z.object({

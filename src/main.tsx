@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import { Toaster } from "sonner";
-import { useAuthStore } from "./stores/authStore";
+import { useAuthStore } from "./stores/auth-store.ts";
 
 // Auth initializer component
 function AuthInitializer() {

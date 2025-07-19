@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { topicService } from '@/services/topicService';
+import { topicService } from '@/services/topic-service';
 import type {
   Topic,
   CreateTopicInput,

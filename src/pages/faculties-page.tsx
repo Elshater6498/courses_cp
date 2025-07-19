@@ -57,28 +57,31 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  Building,
+  Building2,
   RefreshCw,
   Globe,
+  GraduationCap,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/auth-store";
 import {
-  useUniversities,
-  useCreateUniversity,
-  useUpdateUniversity,
-  useDeleteUniversity,
-  useHardDeleteUniversity,
-  useUniversityStats,
-} from "@/hooks/useUniversities";
+  useFaculties,
+  useCreateFaculty,
+  useUpdateFaculty,
+  useDeleteFaculty,
+  useHardDeleteFaculty,
+  useFacultyStats,
+} from "@/hooks/use-faculties";
+import { useAllUniversities } from "@/hooks/use-universities";
 import type {
+  Faculty,
+  CreateFacultyInput,
+  UpdateFacultyInput,
   University,
-  CreateUniversityInput,
-  UpdateUniversityInput,
 } from "@/types/api";
 
 // Form schemas
-const createUniversitySchema = z.object({
+const createFacultySchema = z.object({
   name: z.object({
     en: z
       .string()
@@ -101,9 +104,14 @@ const createUniversitySchema = z.object({
       .optional()
       .or(z.literal("")),
   }),
+  universityId: z.string().min(1, "University is required"),
+  no_academic_year: z
+    .number()
+    .min(1, "Number of academic years must be at least 1")
+    .max(10, "Number of academic years cannot exceed 10"),
 });
 
-const updateUniversitySchema = z.object({
+const updateFacultySchema = z.object({
   name: z.object({
     en: z
       .string()
@@ -126,66 +134,84 @@ const updateUniversitySchema = z.object({
       .optional()
       .or(z.literal("")),
   }),
+  universityId: z.string().min(1, "University is required"),
+  no_academic_year: z
+    .number()
+    .min(1, "Number of academic years must be at least 1")
+    .max(10, "Number of academic years cannot exceed 10"),
   isActive: z.boolean().optional(),
 });
 
-type CreateUniversityFormData = z.infer<typeof createUniversitySchema>;
-type UpdateUniversityFormData = z.infer<typeof updateUniversitySchema>;
+type CreateFacultyFormData = z.infer<typeof createFacultySchema>;
+type UpdateFacultyFormData = z.infer<typeof updateFacultySchema>;
 
-export function UniversitiesPage() {
+export function FacultiesPage() {
   const { hasPermission } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
+  const [universityFilter, setUniversityFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingUniversity, setEditingUniversity] = useState<University | null>(
-    null
-  );
+  const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Queries
   const {
-    data: universitiesData,
+    data: facultiesData,
     isLoading,
     refetch,
-  } = useUniversities({
+  } = useFaculties({
     page: currentPage,
     limit: 10,
     search: searchTerm || undefined,
     isActive: isActiveFilter === "all" ? undefined : isActiveFilter === "true",
+    universityId: universityFilter === "all" ? undefined : universityFilter,
   });
 
-  const { data: statsData } = useUniversityStats();
+  const { data: statsData } = useFacultyStats();
+  const { data: universitiesData } = useAllUniversities();
 
   // Mutations
-  const createUniversityMutation = useCreateUniversity();
-  const updateUniversityMutation = useUpdateUniversity();
-  const deleteUniversityMutation = useDeleteUniversity();
-  const hardDeleteUniversityMutation = useHardDeleteUniversity();
+  const createFacultyMutation = useCreateFaculty();
+  const updateFacultyMutation = useUpdateFaculty();
+  const deleteFacultyMutation = useDeleteFaculty();
+  const hardDeleteFacultyMutation = useHardDeleteFaculty();
 
   // Forms
-  const createForm = useForm<CreateUniversityFormData>({
-    resolver: zodResolver(createUniversitySchema),
+  const createForm = useForm<CreateFacultyFormData>({
+    resolver: zodResolver(createFacultySchema),
     defaultValues: {
       name: {
         en: "",
         ar: "",
         he: "",
       },
+      universityId: "",
+      no_academic_year: 4,
     },
   });
 
-  const updateForm = useForm<UpdateUniversityFormData>({
-    resolver: zodResolver(updateUniversitySchema),
+  const updateForm = useForm<UpdateFacultyFormData>({
+    resolver: zodResolver(updateFacultySchema),
     defaultValues: {
       name: {
         en: "",
         ar: "",
         he: "",
       },
+      universityId: "",
+      no_academic_year: 4,
       isActive: true,
     },
   });
+
+  // Helper function to get faculty name
+  const getFacultyName = (faculty: Faculty): string => {
+    if (typeof faculty.name === "string") {
+      return faculty.name;
+    }
+    return faculty.name.en || "Unknown Faculty";
+  };
 
   // Helper function to get university name
   const getUniversityName = (university: University): string => {
@@ -196,130 +222,139 @@ export function UniversitiesPage() {
   };
 
   // Handlers
-  const handleCreateUniversity = async (data: CreateUniversityFormData) => {
+  const handleCreateFaculty = async (data: CreateFacultyFormData) => {
     try {
       // Clean up empty strings
-      const processedData: CreateUniversityInput = {
+      const processedData: CreateFacultyInput = {
         name: {
           en: data.name.en,
           ...(data.name.ar && data.name.ar.trim() && { ar: data.name.ar }),
           ...(data.name.he && data.name.he.trim() && { he: data.name.he }),
         },
+        universityId: data.universityId,
+        no_academic_year: data.no_academic_year,
       };
 
-      await createUniversityMutation.mutateAsync(processedData);
-      toast.success("University created successfully!");
+      await createFacultyMutation.mutateAsync(processedData);
+      toast.success("Faculty created successfully!");
       setIsCreateDialogOpen(false);
       createForm.reset();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create university"
+        error instanceof Error ? error.message : "Failed to create faculty"
       );
     }
   };
 
-  const handleUpdateUniversity = async (data: UpdateUniversityFormData) => {
-    if (!editingUniversity) return;
+  const handleUpdateFaculty = async (data: UpdateFacultyFormData) => {
+    if (!editingFaculty) return;
 
     try {
       // Clean up empty strings
-      const processedData: UpdateUniversityInput = {
+      const processedData: UpdateFacultyInput = {
         name: {
           en: data.name.en,
           ...(data.name.ar && data.name.ar.trim() && { ar: data.name.ar }),
           ...(data.name.he && data.name.he.trim() && { he: data.name.he }),
         },
+        universityId: data.universityId,
+        no_academic_year: data.no_academic_year,
         isActive: data.isActive,
       };
 
-      await updateUniversityMutation.mutateAsync({
-        id: editingUniversity._id,
+      await updateFacultyMutation.mutateAsync({
+        id: editingFaculty._id,
         data: processedData,
       });
-      toast.success("University updated successfully!");
+      toast.success("Faculty updated successfully!");
       setIsEditDialogOpen(false);
-      setEditingUniversity(null);
+      setEditingFaculty(null);
       updateForm.reset();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update university"
+        error instanceof Error ? error.message : "Failed to update faculty"
       );
     }
   };
 
-  const handleDeleteUniversity = async (universityId: string) => {
-    if (!window.confirm("Are you sure you want to delete this university?")) {
+  const handleDeleteFaculty = async (facultyId: string) => {
+    if (!window.confirm("Are you sure you want to delete this faculty?")) {
       return;
     }
 
     try {
-      await deleteUniversityMutation.mutateAsync(universityId);
-      toast.success("University deleted successfully!");
+      await deleteFacultyMutation.mutateAsync(facultyId);
+      toast.success("Faculty deleted successfully!");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete university"
+        error instanceof Error ? error.message : "Failed to delete faculty"
       );
     }
   };
 
-  const handleHardDeleteUniversity = async (universityId: string) => {
+  const handleHardDeleteFaculty = async (facultyId: string) => {
     if (
       !window.confirm(
-        "Are you sure you want to permanently delete this university? This action cannot be undone."
+        "Are you sure you want to permanently delete this faculty? This action cannot be undone."
       )
     ) {
       return;
     }
 
     try {
-      await hardDeleteUniversityMutation.mutateAsync(universityId);
-      toast.success("University permanently deleted!");
+      await hardDeleteFacultyMutation.mutateAsync(facultyId);
+      toast.success("Faculty permanently deleted!");
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to permanently delete university"
+          : "Failed to permanently delete faculty"
       );
     }
   };
 
-  const handleToggleUniversityStatus = async (
-    universityId: string,
+  const handleToggleFacultyStatus = async (
+    facultyId: string,
     currentStatus: boolean
   ) => {
     try {
-      await updateUniversityMutation.mutateAsync({
-        id: universityId,
+      await updateFacultyMutation.mutateAsync({
+        id: facultyId,
         data: { isActive: !currentStatus },
       });
       toast.success(
-        `University ${
-          !currentStatus ? "activated" : "deactivated"
-        } successfully!`
+        `Faculty ${!currentStatus ? "activated" : "deactivated"} successfully!`
       );
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to update university status"
+          : "Failed to update faculty status"
       );
     }
   };
 
-  const handleEditUniversity = (university: University) => {
-    setEditingUniversity(university);
-    const universityName =
-      typeof university.name === "string"
-        ? { en: university.name, ar: "", he: "" }
-        : university.name;
+  const handleEditFaculty = (faculty: Faculty) => {
+    setEditingFaculty(faculty);
+    const facultyName =
+      typeof faculty.name === "string"
+        ? { en: faculty.name, ar: "", he: "" }
+        : faculty.name;
+
+    const universityId =
+      typeof faculty.universityId === "string"
+        ? faculty.universityId
+        : faculty.universityId._id;
 
     updateForm.reset({
       name: {
-        en: universityName.en || "",
-        ar: universityName.ar || "",
-        he: universityName.he || "",
+        en: facultyName.en || "",
+        ar: facultyName.ar || "",
+        he: facultyName.he || "",
       },
-      isActive: university.isActive,
+      universityId: universityId,
+      no_academic_year: faculty.no_academic_year,
+      isActive: faculty.isActive,
     });
     setIsEditDialogOpen(true);
   };
@@ -334,17 +369,22 @@ export function UniversitiesPage() {
     setCurrentPage(1);
   };
 
-  const canRead = hasPermission("read_universities");
-  const canCreate = hasPermission("create_universities");
-  const canUpdate = hasPermission("update_universities");
-  const canDelete = hasPermission("delete_universities");
+  const handleUniversityFilterChange = (value: string) => {
+    setUniversityFilter(value);
+    setCurrentPage(1);
+  };
+
+  const canRead = hasPermission("read_faculties");
+  const canCreate = hasPermission("create_faculties");
+  const canUpdate = hasPermission("update_faculties");
+  const canDelete = hasPermission("delete_faculties");
 
   if (!canRead) {
     return (
       <div className="space-y-6">
         <div className="text-center py-8">
           <p className="text-gray-500">
-            You don't have permission to view universities.
+            You don't have permission to view faculties.
           </p>
         </div>
       </div>
@@ -356,9 +396,9 @@ export function UniversitiesPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">University Management</h1>
+          <h1 className="text-3xl font-bold">Faculty Management</h1>
           <p className="text-gray-600">
-            Manage universities and their information.
+            Manage faculties and their academic programs.
           </p>
         </div>
         {canCreate && (
@@ -369,19 +409,19 @@ export function UniversitiesPage() {
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Create University
+                Create Faculty
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Create New University</DialogTitle>
+                <DialogTitle>Create New Faculty</DialogTitle>
                 <DialogDescription>
-                  Create a new university with multilingual support.
+                  Create a new faculty with multilingual support.
                 </DialogDescription>
               </DialogHeader>
               <Form {...createForm}>
                 <form
-                  onSubmit={createForm.handleSubmit(handleCreateUniversity)}
+                  onSubmit={createForm.handleSubmit(handleCreateFaculty)}
                   className="space-y-4"
                 >
                   <FormField
@@ -392,7 +432,7 @@ export function UniversitiesPage() {
                         <FormLabel>English Name *</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter university name in English"
+                            placeholder="Enter faculty name in English"
                             {...field}
                           />
                         </FormControl>
@@ -408,7 +448,7 @@ export function UniversitiesPage() {
                         <FormLabel>Arabic Name (Optional)</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter university name in Arabic"
+                            placeholder="Enter faculty name in Arabic"
                             {...field}
                           />
                         </FormControl>
@@ -424,10 +464,69 @@ export function UniversitiesPage() {
                         <FormLabel>Hebrew Name (Optional)</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter university name in Hebrew"
+                            placeholder="Enter faculty name in Hebrew"
                             {...field}
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="universityId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>University *</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a university" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {universitiesData?.data?.map((university) => (
+                              <SelectItem
+                                key={university._id}
+                                value={university._id}
+                              >
+                                {getUniversityName(university)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createForm.control}
+                    name="no_academic_year"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Number of Academic Years *</FormLabel>
+                        <Select
+                          onValueChange={(value) =>
+                            field.onChange(parseInt(value))
+                          }
+                          defaultValue={field.value.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select number of years" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((year) => (
+                              <SelectItem key={year} value={year.toString()}>
+                                {year} {year === 1 ? "Year" : "Years"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -442,11 +541,11 @@ export function UniversitiesPage() {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={createUniversityMutation.isPending}
+                      disabled={createFacultyMutation.isPending}
                     >
-                      {createUniversityMutation.isPending
+                      {createFacultyMutation.isPending
                         ? "Creating..."
-                        : "Create University"}
+                        : "Create Faculty"}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -461,39 +560,39 @@ export function UniversitiesPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Universities
+              Total Faculties
             </CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
+            <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {statsData?.data?.totalUniversities || 0}
+              {statsData?.data?.totalFaculties || 0}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Universities
+              Active Faculties
             </CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
+            <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {statsData?.data?.activeUniversities || 0}
+              {statsData?.data?.activeFaculties || 0}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Inactive Universities
+              Inactive Faculties
             </CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
+            <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {statsData?.data?.inactiveUniversities || 0}
+              {statsData?.data?.inactiveFaculties || 0}
             </div>
           </CardContent>
         </Card>
@@ -502,9 +601,9 @@ export function UniversitiesPage() {
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Universities</CardTitle>
+          <CardTitle>Faculties</CardTitle>
           <CardDescription>
-            Manage universities and their multilingual information.
+            Manage faculties and their academic information.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -513,7 +612,7 @@ export function UniversitiesPage() {
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search universities..."
+                  placeholder="Search faculties..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -531,18 +630,36 @@ export function UniversitiesPage() {
                 <SelectItem value="false">Inactive</SelectItem>
               </SelectContent>
             </Select>
+            <Select
+              value={universityFilter}
+              onValueChange={handleUniversityFilterChange}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by university" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Universities</SelectItem>
+                {universitiesData?.data?.map((university) => (
+                  <SelectItem key={university._id} value={university._id}>
+                    {getUniversityName(university)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button variant="outline" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Universities Table */}
+          {/* Faculties Table */}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>University</TableHead>
                   <TableHead>Languages</TableHead>
+                  <TableHead>Academic Years</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Active</TableHead>
                   <TableHead>Created</TableHead>
@@ -552,44 +669,49 @@ export function UniversitiesPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      Loading universities...
+                    <TableCell colSpan={8} className="text-center py-8">
+                      Loading faculties...
                     </TableCell>
                   </TableRow>
-                ) : universitiesData?.data?.items?.length === 0 ? (
+                ) : facultiesData?.data?.items?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      No universities found.
+                    <TableCell colSpan={8} className="text-center py-8">
+                      No faculties found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  universitiesData?.data?.items?.map((university) => (
-                    <TableRow key={university._id}>
+                  facultiesData?.data?.items?.map((faculty) => (
+                    <TableRow key={faculty._id}>
                       <TableCell className="font-medium">
-                        {getUniversityName(university)}
+                        {getFacultyName(faculty)}
+                      </TableCell>
+                      <TableCell>
+                        {typeof faculty.universityId === "object"
+                          ? getUniversityName(faculty.universityId)
+                          : "N/A"}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          {typeof university.name === "object" && (
+                          {typeof faculty.name === "object" && (
                             <>
-                              {university.name.en && (
+                              {faculty.name.en && (
                                 <Badge variant="outline" className="text-xs">
                                   EN
                                 </Badge>
                               )}
-                              {university.name.ar && (
+                              {faculty.name.ar && (
                                 <Badge variant="outline" className="text-xs">
                                   AR
                                 </Badge>
                               )}
-                              {university.name.he && (
+                              {faculty.name.he && (
                                 <Badge variant="outline" className="text-xs">
                                   HE
                                 </Badge>
                               )}
                             </>
                           )}
-                          {typeof university.name === "string" && (
+                          {typeof faculty.name === "string" && (
                             <Badge variant="outline" className="text-xs">
                               <Globe className="h-3 w-3 mr-1" />
                               Single
@@ -598,30 +720,35 @@ export function UniversitiesPage() {
                         </div>
                       </TableCell>
                       <TableCell>
+                        <div className="flex items-center gap-1">
+                          <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                          {faculty.no_academic_year}{" "}
+                          {faculty.no_academic_year === 1 ? "Year" : "Years"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <Badge
-                          variant={
-                            university.isActive ? "default" : "secondary"
-                          }
+                          variant={faculty.isActive ? "default" : "secondary"}
                         >
-                          {university.isActive ? "Active" : "Inactive"}
+                          {faculty.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         {canUpdate && (
                           <Switch
-                            checked={university.isActive}
+                            checked={faculty.isActive}
                             onCheckedChange={() =>
-                              handleToggleUniversityStatus(
-                                university._id,
-                                university.isActive
+                              handleToggleFacultyStatus(
+                                faculty._id,
+                                faculty.isActive
                               )
                             }
-                            disabled={updateUniversityMutation.isPending}
+                            disabled={updateFacultyMutation.isPending}
                           />
                         )}
                       </TableCell>
                       <TableCell>
-                        {new Date(university.createdAt).toLocaleDateString()}
+                        {new Date(faculty.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
                         {/* Desktop Actions */}
@@ -630,7 +757,7 @@ export function UniversitiesPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleEditUniversity(university)}
+                              onClick={() => handleEditFaculty(faculty)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -639,9 +766,7 @@ export function UniversitiesPage() {
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() =>
-                                handleDeleteUniversity(university._id)
-                              }
+                              onClick={() => handleDeleteFaculty(faculty._id)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -659,9 +784,7 @@ export function UniversitiesPage() {
                             <DropdownMenuContent align="end">
                               {canUpdate && (
                                 <DropdownMenuItem
-                                  onClick={() =>
-                                    handleEditUniversity(university)
-                                  }
+                                  onClick={() => handleEditFaculty(faculty)}
                                 >
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit
@@ -671,7 +794,7 @@ export function UniversitiesPage() {
                                 <>
                                   <DropdownMenuItem
                                     onClick={() =>
-                                      handleDeleteUniversity(university._id)
+                                      handleDeleteFaculty(faculty._id)
                                     }
                                     className="text-orange-600"
                                   >
@@ -680,7 +803,7 @@ export function UniversitiesPage() {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() =>
-                                      handleHardDeleteUniversity(university._id)
+                                      handleHardDeleteFaculty(faculty._id)
                                     }
                                     className="text-red-600"
                                   >
@@ -701,27 +824,27 @@ export function UniversitiesPage() {
           </div>
 
           {/* Pagination */}
-          {universitiesData?.data?.pagination && (
+          {facultiesData?.data?.pagination && (
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-muted-foreground">
                 Showing{" "}
-                {(universitiesData.data.pagination.currentPage - 1) *
-                  universitiesData.data.pagination.itemsPerPage +
+                {(facultiesData.data.pagination.currentPage - 1) *
+                  facultiesData.data.pagination.itemsPerPage +
                   1}{" "}
                 to{" "}
                 {Math.min(
-                  universitiesData.data.pagination.currentPage *
-                    universitiesData.data.pagination.itemsPerPage,
-                  universitiesData.data.pagination.totalItems
+                  facultiesData.data.pagination.currentPage *
+                    facultiesData.data.pagination.itemsPerPage,
+                  facultiesData.data.pagination.totalItems
                 )}{" "}
-                of {universitiesData.data.pagination.totalItems} results
+                of {facultiesData.data.pagination.totalItems} results
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={!universitiesData.data.pagination.hasPrev}
+                  disabled={!facultiesData.data.pagination.hasPrev}
                 >
                   Previous
                 </Button>
@@ -729,7 +852,7 @@ export function UniversitiesPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={!universitiesData.data.pagination.hasNext}
+                  disabled={!facultiesData.data.pagination.hasNext}
                 >
                   Next
                 </Button>
@@ -739,18 +862,18 @@ export function UniversitiesPage() {
         </CardContent>
       </Card>
 
-      {/* Edit University Dialog */}
+      {/* Edit Faculty Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit University</DialogTitle>
+            <DialogTitle>Edit Faculty</DialogTitle>
             <DialogDescription>
-              Update university information and multilingual names.
+              Update faculty information and multilingual names.
             </DialogDescription>
           </DialogHeader>
           <Form {...updateForm}>
             <form
-              onSubmit={updateForm.handleSubmit(handleUpdateUniversity)}
+              onSubmit={updateForm.handleSubmit(handleUpdateFaculty)}
               className="space-y-4"
             >
               <FormField
@@ -761,7 +884,7 @@ export function UniversitiesPage() {
                     <FormLabel>English Name *</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter university name in English"
+                        placeholder="Enter faculty name in English"
                         {...field}
                       />
                     </FormControl>
@@ -777,7 +900,7 @@ export function UniversitiesPage() {
                     <FormLabel>Arabic Name (Optional)</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter university name in Arabic"
+                        placeholder="Enter faculty name in Arabic"
                         {...field}
                       />
                     </FormControl>
@@ -793,10 +916,67 @@ export function UniversitiesPage() {
                     <FormLabel>Hebrew Name (Optional)</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter university name in Hebrew"
+                        placeholder="Enter faculty name in Hebrew"
                         {...field}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={updateForm.control}
+                name="universityId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>University *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a university" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {universitiesData?.data?.map((university) => (
+                          <SelectItem
+                            key={university._id}
+                            value={university._id}
+                          >
+                            {getUniversityName(university)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={updateForm.control}
+                name="no_academic_year"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of Academic Years *</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={field.value.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select number of years" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year} {year === 1 ? "Year" : "Years"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -811,11 +991,11 @@ export function UniversitiesPage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={updateUniversityMutation.isPending}
+                  disabled={updateFacultyMutation.isPending}
                 >
-                  {updateUniversityMutation.isPending
+                  {updateFacultyMutation.isPending
                     ? "Updating..."
-                    : "Update University"}
+                    : "Update Faculty"}
                 </Button>
               </DialogFooter>
             </form>

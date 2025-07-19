@@ -16,8 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
-import { useCreateTopic, useUpdateTopic, useTopic } from "@/hooks/useTopics";
+import { useAuthStore } from "@/stores/auth-store";
+import { useCreateTopic, useUpdateTopic, useTopic } from "@/hooks/use-topics";
 import type { CreateTopicInput, UpdateTopicInput, Topic } from "@/types/api";
 
 // Form validation schema

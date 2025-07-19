@@ -2,7 +2,7 @@ import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, Clock, HardDrive, CheckCircle, XCircle } from "lucide-react";
-import type { UploadProgress } from "@/services/uploadService";
+import type { UploadProgress } from "@/services/upload-service";
 
 interface UploadProgressProps {
   progress: UploadProgress;

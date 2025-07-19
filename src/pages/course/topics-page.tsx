@@ -57,14 +57,14 @@ import {
   Video,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   useTopicsByCourse,
   useDeleteTopic,
   useToggleTopicStatus,
   useReorderTopics,
-} from "@/hooks/useTopics";
-import { useCourse } from "@/hooks/useCourses";
+} from "@/hooks/use-topics";
+import { useCourse } from "@/hooks/use-courses";
 import { TopicDialog } from "@/components/TopicDialog";
 import type { Topic } from "@/types/api";
 

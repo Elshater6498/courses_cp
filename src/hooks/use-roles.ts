@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import * as roleService from '../services/roleService';
+import * as roleService from '../services/role-service';
 import type { PaginationParams, CreateRoleInput, UpdateRoleInput } from '../types/api';
 
 // Query keys

@@ -56,14 +56,14 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   useLessonsByTopic,
   useDeleteLesson,
   useToggleLessonStatus,
   useReorderLessons,
-} from "@/hooks/useLessons";
-import { useTopic } from "@/hooks/useTopics";
+} from "@/hooks/use-lessons";
+import { useTopic } from "@/hooks/use-topics";
 import type { Lesson } from "@/types/api";
 
 // Sortable Lesson Row Component

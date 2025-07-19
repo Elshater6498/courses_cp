@@ -63,7 +63,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   useUsers,
   useUpdateUser,
@@ -72,7 +72,7 @@ import {
   useUserStats,
   useUserDevices,
   useRemoveUserDevice,
-} from "@/hooks/useUsers";
+} from "@/hooks/use-users";
 import type { User } from "@/types/api";
 
 // Form schemas

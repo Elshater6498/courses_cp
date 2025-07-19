@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { courseService } from '@/services/courseService';
-import { facultyService } from '@/services/facultyService';
-import { getAdmins } from '@/services/adminService';
+import { courseService } from '@/services/course-service';
+import { facultyService } from '@/services/faculty-service';
+import { getAdmins } from '@/services/admin-service';
 import type {
   Course,
   CreateCourseInput,

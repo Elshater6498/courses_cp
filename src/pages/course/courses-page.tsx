@@ -34,13 +34,13 @@ import {
   Eye,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   useCourses,
   useDeleteCourse,
   useToggleCourseStatus,
   useCourseStats,
-} from "@/hooks/useCourses";
+} from "@/hooks/use-courses";
 import type { Course } from "@/types/api";
 
 export function CoursesPage() {

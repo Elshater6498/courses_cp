@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { lessonService } from '@/services/lessonService';
+import { lessonService } from '@/services/lesson-service';
 import type {
   Lesson,
   CreateLessonInput,

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import * as permissionService from '../services/permissionService';
+import * as permissionService from '../services/permission-service';
 import type { PaginationParams, CreatePermissionInput, UpdatePermissionInput } from '../types/api';
 
 // Query keys

@@ -43,15 +43,15 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   useCourse,
   useCreateCourse,
   useUpdateCourse,
   useFacultiesGroupedByUniversity,
   useAllAdmins,
-} from "@/hooks/useCourses";
-import { UploadService, type UploadProgress } from "@/services/uploadService";
+} from "@/hooks/use-courses";
+import { UploadService, type UploadProgress } from "@/services/upload-service";
 import { UploadProgressCard } from "@/components/ui/upload-progress";
 
 // Form schemas

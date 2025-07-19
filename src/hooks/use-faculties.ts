@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { facultyService } from '../services/facultyService';
+import { facultyService } from '../services/faculty-service';
 import type { 
   Faculty, 
   CreateFacultyInput, 

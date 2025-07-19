@@ -35,18 +35,18 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   useCreateLesson,
   useUpdateLesson,
   useLesson,
-} from "@/hooks/useLessons";
-import { useTopic } from "@/hooks/useTopics";
+} from "@/hooks/use-lessons";
+import { useTopic } from "@/hooks/use-topics";
 import {
   UploadService,
   type UploadResult,
   type UploadProgress,
-} from "@/services/uploadService";
+} from "@/services/upload-service";
 import { UploadProgressCard } from "@/components/ui/upload-progress";
 import type { CreateLessonInput, UpdateLessonInput } from "@/types/api";
 

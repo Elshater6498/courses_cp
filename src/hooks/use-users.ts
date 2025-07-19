@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import * as userService from '../services/userService';
+import * as userService from '../services/user-service';
 import type { PaginationParams, UpdateUserInput } from '../types/api';
 
 // Query keys

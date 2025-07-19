@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import * as adminService from '../services/adminService';
-import * as roleService from '../services/roleService';
+import * as adminService from '../services/admin-service';
+import * as roleService from '../services/role-service';
 import type { PaginationParams, CreateAdminInput, UpdateAdminInput } from '../types/api';
 
 // Query keys

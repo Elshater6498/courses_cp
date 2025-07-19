@@ -62,7 +62,7 @@ import {
   Key,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   useAdmins,
   useCreateAdmin,
@@ -71,7 +71,7 @@ import {
   useAdminStats,
   useAllRoles,
   useUpdateAdminPassword,
-} from "@/hooks/useAdmins";
+} from "@/hooks/use-admins";
 import type { Admin, CreateAdminInput, UpdateAdminInput } from "@/types/api";
 
 // Form schemas
