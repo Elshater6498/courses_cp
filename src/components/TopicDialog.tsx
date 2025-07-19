@@ -103,11 +103,17 @@ export function TopicDialog({
     }
   }, [open, form]);
 
-  const onSubmit = async (data: TopicFormData) => {
+  const handleSubmit = async (data: TopicFormData) => {
     try {
       if (isEditing) {
         const updateData: UpdateTopicInput = {
-          ...data,
+          name: {
+            en: data.name.en,
+            ...(data.name.ar && data.name.ar.trim() && { ar: data.name.ar }),
+            ...(data.name.he && data.name.he.trim() && { he: data.name.he }),
+          },
+          topicsPrice: data.topicsPrice,
+          discount: data.discount,
           isActive,
         };
         await updateTopicMutation.mutateAsync({
@@ -117,7 +123,13 @@ export function TopicDialog({
         toast.success("Topic updated successfully!");
       } else {
         const createData: CreateTopicInput = {
-          ...data,
+          name: {
+            en: data.name.en,
+            ...(data.name.ar && data.name.ar.trim() && { ar: data.name.ar }),
+            ...(data.name.he && data.name.he.trim() && { he: data.name.he }),
+          },
+          topicsPrice: data.topicsPrice,
+          discount: data.discount,
           courseId,
         };
         await createTopicMutation.mutateAsync(createData);
@@ -158,7 +170,7 @@ export function TopicDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           {/* Topic Name */}
           <div className="space-y-2">
             <Label htmlFor="name-en">Topic Name (English) *</Label>

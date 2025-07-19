@@ -59,23 +59,17 @@ const lessonSchema = z.object({
   }),
   description: z
     .object({
-      en: z.string().optional(),
+      en: z
+        .string()
+        .min(2, "English description must be at least 2 characters"),
       ar: z.string().optional(),
       he: z.string().optional(),
     })
     .optional(),
   topicId: z.string().min(1, "Topic is required"),
-  main_recording_url: z.string().url("Main recording URL must be a valid URL"),
-  recording_gvo_url: z
-    .string()
-    .url("GVO recording URL must be a valid URL")
-    .optional()
-    .or(z.literal("")),
-  recording_vvt_url: z
-    .string()
-    .url("VVT recording URL must be a valid URL")
-    .optional()
-    .or(z.literal("")),
+  main_recording_url: z.string().optional(),
+  recording_gvo_url: z.string().optional(),
+  recording_vvt_url: z.string().optional(),
   isActive: z.boolean(),
 });
 
@@ -359,15 +353,9 @@ export function CreateUpdateLesson() {
       }
 
       return {
-        mainRecordingUrl: selectedMainRecording
-          ? results[0].downloadUrl
-          : form.getValues("main_recording_url"),
-        gvoRecordingUrl: selectedGvoRecording
-          ? results[1]?.downloadUrl
-          : form.getValues("recording_gvo_url"),
-        vvtRecordingUrl: selectedVvtRecording
-          ? results[2]?.downloadUrl
-          : form.getValues("recording_vvt_url"),
+        mainRecordingUrl: results[0].downloadUrl,
+        gvoRecordingUrl: results[1]?.downloadUrl,
+        vvtRecordingUrl: results[2]?.downloadUrl,
       };
     } catch (error) {
       // Set upload status to error
@@ -388,7 +376,6 @@ export function CreateUpdateLesson() {
 
   // Form submission
   const handleSubmit = async (data: LessonFormData) => {
-    console.log(data);
     if (isSubmitting) return;
 
     setIsSubmitting(true);
@@ -401,9 +388,9 @@ export function CreateUpdateLesson() {
         gvoRecordingUrl?: string;
         vvtRecordingUrl?: string;
       } = {
-        mainRecordingUrl: data.main_recording_url,
-        gvoRecordingUrl: data.recording_gvo_url,
-        vvtRecordingUrl: data.recording_vvt_url,
+        mainRecordingUrl: data.main_recording_url || "",
+        gvoRecordingUrl: data.recording_gvo_url || "",
+        vvtRecordingUrl: data.recording_vvt_url || "",
       };
 
       if (
@@ -418,17 +405,17 @@ export function CreateUpdateLesson() {
         // Update lesson
         const lessonData: UpdateLessonInput = {
           name: {
-            en: data.name.en || "",
-            ar: data.name.ar || "",
-            he: data.name.he || "",
+            en: data.name.en,
+            ...(data.name.ar && data.name.ar.trim() && { ar: data.name.ar }),
+            ...(data.name.he && data.name.he.trim() && { he: data.name.he }),
           },
-          description: data.description
-            ? {
-                en: data.description.en || "",
-                ar: data.description.ar || "",
-                he: data.description.he || "",
-              }
-            : undefined,
+          description: {
+            en: data.description?.en || "",
+            ...(data.description?.ar &&
+              data.description?.ar.trim() && { ar: data.description?.ar }),
+            ...(data.description?.he &&
+              data.description?.he.trim() && { he: data.description?.he }),
+          },
           topicId: data.topicId,
           main_recording_url: fileUrls.mainRecordingUrl,
           recording_gvo_url: fileUrls.gvoRecordingUrl || undefined,
@@ -446,15 +433,17 @@ export function CreateUpdateLesson() {
         // Create lesson
         const lessonData: CreateLessonInput = {
           name: {
-            en: data.name.en || "",
-            ar: data.name.ar || "",
-            he: data.name.he || "",
+            en: data.name.en,
+            ...(data.name.ar && data.name.ar.trim() && { ar: data.name.ar }),
+            ...(data.name.he && data.name.he.trim() && { he: data.name.he }),
           },
           description: data.description
             ? {
-                en: data.description.en || "",
-                ar: data.description.ar || "",
-                he: data.description.he || "",
+                en: data.description.en,
+                ...(data.description.ar &&
+                  data.description.ar.trim() && { ar: data.description.ar }),
+                ...(data.description.he &&
+                  data.description.he.trim() && { he: data.description.he }),
               }
             : undefined,
           topicId: data.topicId,
@@ -478,7 +467,7 @@ export function CreateUpdateLesson() {
       setIsSubmitting(false);
     }
   };
-
+  console.log(form.formState.errors);
   // Helper function to get topic name
   const getTopicName = () => {
     if (!topicData?.data) return "Loading...";
@@ -604,7 +593,7 @@ export function CreateUpdateLesson() {
                   name="description.en"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description (English)</FormLabel>
+                      <FormLabel>Description (English) *</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Enter lesson description in English"
