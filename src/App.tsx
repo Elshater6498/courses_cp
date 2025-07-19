@@ -19,6 +19,7 @@ import { FacultiesPage } from "./pages/FacultiesPage";
 import { RolesPage } from "./pages/RolesPage";
 import { CoursesPage } from "./pages/course/courses-page";
 import { CreateCourse } from "./pages/course/create-course";
+import { TopicsPage } from "./pages/course/topics-page";
 import { LoadingSpinner } from "./components/ui/LoadingSpinner";
 
 // Protected Route Component
@@ -84,6 +85,7 @@ function App() {
             <Route path="courses" element={<CoursesPage />} />
             <Route path="courses/new" element={<CreateCourse />} />
             <Route path="courses/:id/edit" element={<CreateCourse />} />
+            <Route path="courses/:courseId/topics" element={<TopicsPage />} />
           </Route>
 
           {/* Redirect root to dashboard */}

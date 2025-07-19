@@ -348,6 +348,67 @@ export interface CourseStats {
   totalRevenue: number;
 }
 
+// Topic Types
+export interface Topic {
+  _id: string;
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string;
+  courseId: Course | string;
+  topicsPrice: number;
+  discount: number;
+  order: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  discountedPrice?: number;
+  finalPrice?: number;
+  savingsAmount?: number;
+  hasDiscount?: boolean;
+}
+
+export interface CreateTopicInput {
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  courseId: string;
+  topicsPrice: number;
+  discount?: number;
+}
+
+export interface UpdateTopicInput {
+  name?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  courseId?: string;
+  topicsPrice?: number;
+  discount?: number;
+  isActive?: boolean;
+}
+
+export interface TopicStats {
+  total: number;
+  active: number;
+  inactive: number;
+  averagePrice: number;
+  totalWithDiscount: number;
+  averageDiscount: number;
+  totalRevenue: number;
+}
+
+export interface ReorderTopicsInput {
+  topicOrders: Array<{
+    topicId: string;
+    order: number;
+  }>;
+}
+
 // Error Types
 export interface ValidationError {
   field: string;
