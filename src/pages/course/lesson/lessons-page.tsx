@@ -50,44 +50,40 @@ import {
   Edit,
   Trash2,
   BookOpen,
-  DollarSign,
+  Video,
   RefreshCw,
   GripVertical,
   ArrowLeft,
-  Video,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
 import {
-  useTopicsByCourse,
-  useDeleteTopic,
-  useToggleTopicStatus,
-  useReorderTopics,
-} from "@/hooks/useTopics";
-import { useCourse } from "@/hooks/useCourses";
-import { TopicDialog } from "@/components/TopicDialog";
-import type { Topic } from "@/types/api";
+  useLessonsByTopic,
+  useDeleteLesson,
+  useToggleLessonStatus,
+  useReorderLessons,
+} from "@/hooks/useLessons";
+import { useTopic } from "@/hooks/useTopics";
+import type { Lesson } from "@/types/api";
 
-// Sortable Topic Row Component
-interface SortableTopicRowProps {
-  topic: Topic;
-  onEdit: (topic: Topic) => void;
-  onDelete: (topicId: string) => void;
-  onToggleStatus: (topicId: string, isActive: boolean) => void;
-  onViewLessons: (topicId: string) => void;
+// Sortable Lesson Row Component
+interface SortableLessonRowProps {
+  lesson: Lesson;
+  onEdit: (lesson: Lesson) => void;
+  onDelete: (lessonId: string) => void;
+  onToggleStatus: (lessonId: string, isActive: boolean) => void;
   canUpdate: boolean;
   canDelete: boolean;
 }
 
-function SortableTopicRow({
-  topic,
+function SortableLessonRow({
+  lesson,
   onEdit,
   onDelete,
   onToggleStatus,
-  onViewLessons,
   canUpdate,
   canDelete,
-}: SortableTopicRowProps) {
+}: SortableLessonRowProps) {
   const {
     attributes,
     listeners,
@@ -95,24 +91,27 @@ function SortableTopicRow({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: topic._id });
+  } = useSortable({ id: lesson._id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
-  // Helper function to get topic name
-  const getTopicName = (topic: Topic): string => {
-    if (typeof topic.name === "string") {
-      return topic.name;
+  // Helper function to get lesson name
+  const getLessonName = (lesson: Lesson): string => {
+    if (typeof lesson.name === "string") {
+      return lesson.name;
     }
-    return topic.name.en || "Unknown Topic";
+    return lesson.name.en || "Unknown Lesson";
   };
 
-  // Helper function to calculate discounted price
-  const getDiscountedPrice = (topic: Topic): number => {
-    return topic.topicsPrice - (topic.topicsPrice * topic.discount) / 100;
+  // Helper function to get lesson description
+  const getLessonDescription = (lesson: Lesson): string => {
+    if (typeof lesson.description === "string") {
+      return lesson.description;
+    }
+    return lesson.description?.en || "No description";
   };
 
   return (
@@ -130,49 +129,48 @@ function SortableTopicRow({
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
       </TableCell>
-      <TableCell className="font-medium">{getTopicName(topic)}</TableCell>
-      <TableCell>
-        {topic.discount > 0 ? (
-          <div className="flex items-center gap-2">
-            <span className="line-through text-muted-foreground">
-              ${topic.topicsPrice}
-            </span>
-            <span className="font-semibold text-green-600">
-              ${getDiscountedPrice(topic)}
-            </span>
-            <Badge variant="destructive" className="text-xs">
-              -{topic.discount}%
-            </Badge>
-          </div>
-        ) : (
-          `$${topic.topicsPrice}`
-        )}
+      <TableCell className="font-medium">{getLessonName(lesson)}</TableCell>
+      <TableCell className="max-w-xs truncate">
+        {getLessonDescription(lesson)}
       </TableCell>
       <TableCell>
-        <Badge variant={topic.isActive ? "default" : "secondary"}>
-          {topic.isActive ? "Active" : "Inactive"}
+        <div className="flex flex-col gap-1">
+          <Badge variant="outline" className="text-xs">
+            Main: {lesson.main_recording_url ? "✓" : "✗"}
+          </Badge>
+          {lesson.recording_gvo_url && (
+            <Badge variant="outline" className="text-xs">
+              GVO: ✓
+            </Badge>
+          )}
+          {lesson.recording_vvt_url && (
+            <Badge variant="outline" className="text-xs">
+              VVT: ✓
+            </Badge>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <Badge variant={lesson.isActive ? "default" : "secondary"}>
+          {lesson.isActive ? "Active" : "Inactive"}
         </Badge>
       </TableCell>
       <TableCell className="text-right">
         <div className="flex items-center gap-2 justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onViewLessons(topic._id)}
-          >
-            <Video className="h-4 w-4 mr-1" />
-            Lessons
-          </Button>
           {canUpdate && (
             <>
-              <Button variant="outline" size="sm" onClick={() => onEdit(topic)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(lesson)}
+              >
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
               </Button>
               <Switch
-                checked={topic.isActive}
+                checked={lesson.isActive}
                 onCheckedChange={() =>
-                  onToggleStatus(topic._id, topic.isActive)
+                  onToggleStatus(lesson._id, lesson.isActive)
                 }
               />
             </>
@@ -181,7 +179,7 @@ function SortableTopicRow({
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => onDelete(topic._id)}
+              onClick={() => onDelete(lesson._id)}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -192,15 +190,14 @@ function SortableTopicRow({
   );
 }
 
-export function TopicsPage() {
-  const { courseId } = useParams<{ courseId: string }>();
+export function LessonsPage() {
+  const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
   const { hasPermission } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingTopicId, setEditingTopicId] = useState<string | undefined>();
+  const [editingLessonId, setEditingLessonId] = useState<string | undefined>();
 
   // Sensors for drag and drop
   const sensors = useSensors(
@@ -212,74 +209,66 @@ export function TopicsPage() {
 
   // Queries
   const {
-    data: topicsData,
+    data: lessonsData,
     isLoading,
     refetch,
-  } = useTopicsByCourse(courseId!, {
+  } = useLessonsByTopic(topicId!, {
     page: currentPage,
     limit: 20,
     search: searchTerm || undefined,
     isActive: isActiveFilter === "all" ? undefined : isActiveFilter === "true",
   });
 
-  const { data: courseData } = useCourse(courseId!);
+  const { data: topicData } = useTopic(topicId!);
 
   // Mutations
-  const deleteTopicMutation = useDeleteTopic();
-  const toggleTopicStatusMutation = useToggleTopicStatus();
-  const reorderTopicsMutation = useReorderTopics();
+  const deleteLessonMutation = useDeleteLesson();
+  const toggleLessonStatusMutation = useToggleLessonStatus();
+  const reorderLessonsMutation = useReorderLessons();
 
   // Handlers
-  const handleDeleteTopic = async (topicId: string) => {
-    if (!window.confirm("Are you sure you want to delete this topic?")) {
+  const handleDeleteLesson = async (lessonId: string) => {
+    if (!window.confirm("Are you sure you want to delete this lesson?")) {
       return;
     }
 
     try {
-      await deleteTopicMutation.mutateAsync(topicId);
-      toast.success("Topic deleted successfully!");
+      await deleteLessonMutation.mutateAsync(lessonId);
+      toast.success("Lesson deleted successfully!");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete topic"
+        error instanceof Error ? error.message : "Failed to delete lesson"
       );
     }
   };
 
-  const handleToggleTopicStatus = async (
-    topicId: string,
+  const handleToggleLessonStatus = async (
+    lessonId: string,
     currentStatus: boolean
   ) => {
     try {
-      await toggleTopicStatusMutation.mutateAsync({
-        id: topicId,
+      await toggleLessonStatusMutation.mutateAsync({
+        id: lessonId,
         isActive: !currentStatus,
       });
       toast.success(
-        `Topic ${!currentStatus ? "activated" : "deactivated"} successfully!`
+        `Lesson ${!currentStatus ? "activated" : "deactivated"} successfully!`
       );
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update topic status"
+        error instanceof Error
+          ? error.message
+          : "Failed to update lesson status"
       );
     }
   };
 
-  const handleEditTopic = (topic: Topic) => {
-    setEditingTopicId(topic._id);
-    setDialogOpen(true);
+  const handleEditLesson = (lesson: Lesson) => {
+    navigate(`/dashboard/courses/topics/${topicId}/lessons/${lesson._id}/edit`);
   };
 
-  const handleViewLessons = (topicId: string) => {
-    navigate(`/dashboard/courses/topics/${topicId}/lessons`);
-  };
-
-  const handleCreateTopic = () => {
-    setEditingTopicId(undefined);
-    setDialogOpen(true);
-  };
-
-  const handleDialogSuccess = () => {
-    refetch();
+  const handleCreateLesson = () => {
+    navigate(`/dashboard/courses/topics/${topicId}/lessons/create`);
   };
 
   const handleSearch = () => {
@@ -300,53 +289,53 @@ export function TopicsPage() {
     const { active, over } = event;
 
     if (active.id !== over?.id) {
-      const oldIndex = topicsData?.data?.items?.findIndex(
-        (topic) => topic._id === active.id
+      const oldIndex = lessonsData?.data?.items?.findIndex(
+        (lesson) => lesson._id === active.id
       );
-      const newIndex = topicsData?.data?.items?.findIndex(
-        (topic) => topic._id === over?.id
+      const newIndex = lessonsData?.data?.items?.findIndex(
+        (lesson) => lesson._id === over?.id
       );
 
       if (oldIndex !== undefined && newIndex !== undefined) {
-        const reorderedTopics = arrayMove(
-          topicsData?.data?.items || [],
+        const reorderedLessons = arrayMove(
+          lessonsData?.data?.items || [],
           oldIndex,
           newIndex
         );
 
         // Create the reorder data
-        const topicOrders = reorderedTopics.map((topic, index) => ({
-          topicId: topic._id,
-          order: index + 1,
+        const reorderData = reorderedLessons.map((lesson, index) => ({
+          lessonId: lesson._id,
+          newOrder: index + 1,
         }));
 
         try {
-          await reorderTopicsMutation.mutateAsync({
-            courseId: courseId!,
-            data: { topicOrders },
+          await reorderLessonsMutation.mutateAsync({
+            topicId: topicId!,
+            data: { reorderData },
           });
-          toast.success("Topics reordered successfully!");
+          toast.success("Lessons reordered successfully!");
         } catch (error) {
           toast.error(
-            error instanceof Error ? error.message : "Failed to reorder topics"
+            error instanceof Error ? error.message : "Failed to reorder lessons"
           );
         }
       }
     }
   };
 
-  const canCreate = hasPermission("create_topics");
-  const canUpdate = hasPermission("update_topics");
-  const canDelete = hasPermission("delete_topics");
+  const canCreate = hasPermission("create_lessons");
+  const canUpdate = hasPermission("update_lessons");
+  const canDelete = hasPermission("delete_lessons");
 
-  // Helper function to get course name
-  const getCourseName = () => {
-    if (!courseData?.data) return "Loading...";
-    const course = courseData.data;
-    if (typeof course.name === "string") {
-      return course.name;
+  // Helper function to get topic name
+  const getTopicName = () => {
+    if (!topicData?.data) return "Loading...";
+    const topic = topicData.data;
+    if (typeof topic.name === "string") {
+      return topic.name;
     }
-    return course.name.en || "Unknown Course";
+    return topic.name.en || "Unknown Topic";
   };
 
   return (
@@ -355,9 +344,9 @@ export function TopicsPage() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 py-4 -mx-6 px-6 mb-6">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Course Topics</h1>
+            <h1 className="text-3xl font-bold">Topic Lessons</h1>
             <p className="text-gray-600">
-              Manage topics for: {getCourseName()}
+              Manage lessons for: {getTopicName()}
             </p>
           </div>
         </div>
@@ -365,15 +354,15 @@ export function TopicsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/dashboard/courses`)}
+            onClick={() => navigate(`/dashboard/courses/topics/${topicId}`)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Courses
+            Back to Topic
           </Button>
           {canCreate && (
-            <Button className="w-full md:w-auto" onClick={handleCreateTopic}>
+            <Button className="w-full md:w-auto" onClick={handleCreateLesson}>
               <Plus className="mr-2 h-4 w-4" />
-              Create Topic
+              Create Lesson
             </Button>
           )}
         </div>
@@ -382,9 +371,9 @@ export function TopicsPage() {
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Topics</CardTitle>
+          <CardTitle>Lessons</CardTitle>
           <CardDescription>
-            Manage and reorder topics for this course. Drag and drop to change
+            Manage and reorder lessons for this topic. Drag and drop to change
             the order.
           </CardDescription>
         </CardHeader>
@@ -394,7 +383,7 @@ export function TopicsPage() {
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search topics..."
+                  placeholder="Search lessons..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -417,15 +406,15 @@ export function TopicsPage() {
             </Button>
           </div>
 
-          {/* Topics Table */}
+          {/* Lessons Table */}
           {isLoading ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">Loading topics...</p>
+              <p className="text-gray-500">Loading lessons...</p>
             </div>
-          ) : topicsData?.data?.items?.length === 0 ? (
+          ) : lessonsData?.data?.items?.length === 0 ? (
             <div className="text-center py-8">
-              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No topics found for this course.</p>
+              <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No lessons found for this topic.</p>
             </div>
           ) : (
             <DndContext
@@ -435,28 +424,30 @@ export function TopicsPage() {
               onDragEnd={handleDragEnd}
             >
               <SortableContext
-                items={topicsData?.data?.items?.map((topic) => topic._id) || []}
+                items={
+                  lessonsData?.data?.items?.map((lesson) => lesson._id) || []
+                }
                 strategy={verticalListSortingStrategy}
               >
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12"></TableHead>
-                      <TableHead>Topic Name</TableHead>
-                      <TableHead>Price</TableHead>
+                      <TableHead>Lesson Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Recordings</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {topicsData?.data?.items?.map((topic) => (
-                      <SortableTopicRow
-                        key={topic._id}
-                        topic={topic}
-                        onEdit={handleEditTopic}
-                        onDelete={handleDeleteTopic}
-                        onToggleStatus={handleToggleTopicStatus}
-                        onViewLessons={handleViewLessons}
+                    {lessonsData?.data?.items?.map((lesson) => (
+                      <SortableLessonRow
+                        key={lesson._id}
+                        lesson={lesson}
+                        onEdit={handleEditLesson}
+                        onDelete={handleDeleteLesson}
+                        onToggleStatus={handleToggleLessonStatus}
                         canUpdate={canUpdate}
                         canDelete={canDelete}
                       />
@@ -468,27 +459,27 @@ export function TopicsPage() {
           )}
 
           {/* Pagination */}
-          {topicsData?.data?.pagination && (
+          {lessonsData?.data?.pagination && (
             <div className="flex items-center justify-between mt-6">
               <div className="text-sm text-muted-foreground">
                 Showing{" "}
-                {(topicsData.data.pagination.currentPage - 1) *
-                  topicsData.data.pagination.itemsPerPage +
+                {(lessonsData.data.pagination.currentPage - 1) *
+                  lessonsData.data.pagination.itemsPerPage +
                   1}{" "}
                 to{" "}
                 {Math.min(
-                  topicsData.data.pagination.currentPage *
-                    topicsData.data.pagination.itemsPerPage,
-                  topicsData.data.pagination.totalItems
+                  lessonsData.data.pagination.currentPage *
+                    lessonsData.data.pagination.itemsPerPage,
+                  lessonsData.data.pagination.totalItems
                 )}{" "}
-                of {topicsData.data.pagination.totalItems} results
+                of {lessonsData.data.pagination.totalItems} results
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={!topicsData.data.pagination.hasPrev}
+                  disabled={!lessonsData.data.pagination.hasPrev}
                 >
                   Previous
                 </Button>
@@ -496,7 +487,7 @@ export function TopicsPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={!topicsData.data.pagination.hasNext}
+                  disabled={!lessonsData.data.pagination.hasNext}
                 >
                   Next
                 </Button>
@@ -505,15 +496,6 @@ export function TopicsPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* Topic Dialog */}
-      <TopicDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        courseId={courseId!}
-        topicId={editingTopicId}
-        onSuccess={handleDialogSuccess}
-      />
     </div>
   );
 }

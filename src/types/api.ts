@@ -409,6 +409,76 @@ export interface ReorderTopicsInput {
   }>;
 }
 
+// Lesson Types
+export interface Lesson {
+  _id: string;
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string;
+  description: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string;
+  topicId: Topic | string;
+  main_recording_url: string;
+  recording_gvo_url?: string;
+  recording_vvt_url?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateLessonInput {
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  description?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  topicId: string;
+  main_recording_url: string;
+  recording_gvo_url?: string;
+  recording_vvt_url?: string;
+}
+
+export interface UpdateLessonInput {
+  name?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  description?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  topicId?: string;
+  main_recording_url?: string;
+  recording_gvo_url?: string;
+  recording_vvt_url?: string;
+  isActive?: boolean;
+}
+
+export interface LessonStats {
+  total: number;
+  active: number;
+  inactive: number;
+}
+
+export interface ReorderLessonsInput {
+  reorderData: Array<{
+    lessonId: string;
+    newOrder: number;
+  }>;
+}
+
 // Error Types
 export interface ValidationError {
   field: string;
