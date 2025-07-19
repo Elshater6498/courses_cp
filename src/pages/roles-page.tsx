@@ -61,6 +61,8 @@ import {
   Shield,
   Filter,
   RefreshCw,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
@@ -72,7 +74,12 @@ import {
   useHardDeleteRole,
   useRoleStats,
 } from "@/hooks/use-roles";
-import type { Role, CreateRoleInput, UpdateRoleInput } from "@/types/api";
+import type {
+  Role,
+  CreateRoleInput,
+  UpdateRoleInput,
+  PermissionGroup,
+} from "@/types/api";
 import { useAllPermissions } from "@/hooks/use-permissions";
 
 // Form schemas
@@ -94,6 +101,160 @@ const updateRoleSchema = z.object({
 
 type CreateRoleFormData = z.infer<typeof createRoleSchema>;
 type UpdateRoleFormData = z.infer<typeof updateRoleSchema>;
+
+// Component for displaying grouped permissions
+interface GroupedPermissionsProps {
+  permissionGroups: PermissionGroup[];
+  selectedPermissions: string[];
+  onPermissionChange: (permissionId: string, checked: boolean) => void;
+  onSelectAllInGroup: (resource: string, checked: boolean) => void;
+  onSelectAll: (checked: boolean) => void;
+}
+
+function GroupedPermissions({
+  permissionGroups,
+  selectedPermissions,
+  onPermissionChange,
+  onSelectAllInGroup,
+  onSelectAll,
+}: GroupedPermissionsProps) {
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (resource: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(resource)) {
+      newExpanded.delete(resource);
+    } else {
+      newExpanded.add(resource);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
+  const getTotalPermissions = () =>
+    permissionGroups.reduce(
+      (total, group) => total + group.permissions.length,
+      0
+    );
+  const getSelectedCount = () => selectedPermissions.length;
+  const isAllSelected =
+    getTotalPermissions() > 0 && getSelectedCount() === getTotalPermissions();
+
+  return (
+    <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
+      {/* Select All */}
+      <div
+        className="flex items-center space-x-2 p-3 bg-muted rounded-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Checkbox
+          id="select-all-permissions"
+          checked={isAllSelected}
+          onCheckedChange={onSelectAll}
+          onClick={(e) => e.stopPropagation()}
+        />
+        <label
+          htmlFor="select-all-permissions"
+          className="text-sm font-medium cursor-pointer"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Select All Permissions ({getSelectedCount()}/{getTotalPermissions()})
+        </label>
+      </div>
+
+      {/* Permission Groups */}
+      <div className="space-y-2 max-h-60 overflow-y-auto">
+        {permissionGroups.map((group) => {
+          const groupSelectedCount = group.permissions.filter((p) =>
+            selectedPermissions.includes(p._id)
+          ).length;
+          const isGroupAllSelected =
+            group.permissions.length > 0 &&
+            groupSelectedCount === group.permissions.length;
+          const isExpanded = expandedGroups.has(group.resource);
+
+          return (
+            <div
+              key={group.resource}
+              className="border rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-3 bg-muted/50">
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => toggleGroup(group.resource, e)}
+                    className="h-6 w-6 p-0"
+                    type="button"
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Checkbox
+                    id={`select-all-${group.resource}`}
+                    checked={isGroupAllSelected}
+                    onCheckedChange={(checked) => {
+                      onSelectAllInGroup(group.resource, checked === true);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <label
+                    htmlFor={`select-all-${group.resource}`}
+                    className="text-sm font-medium cursor-pointer capitalize"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {group.resource} ({groupSelectedCount}/
+                    {group.permissions.length})
+                  </label>
+                </div>
+              </div>
+
+              {isExpanded && (
+                <div
+                  className="p-3 space-y-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {group.permissions.map((permission) => (
+                    <div
+                      key={permission._id}
+                      className="flex items-center space-x-3 ml-6"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        id={permission._id}
+                        checked={selectedPermissions.includes(permission._id)}
+                        onCheckedChange={(checked) => {
+                          onPermissionChange(permission._id, checked === true);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <label
+                        htmlFor={permission._id}
+                        className="text-sm cursor-pointer flex-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {permission.name.replace(/_/g, " ")}
+                      </label>
+                      <Badge variant="outline" className="text-xs">
+                        {permission.action}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function RolesPage() {
   const { hasPermission } = useAuthStore();
@@ -214,6 +375,108 @@ export function RolesPage() {
     setIsEditDialogOpen(true);
   };
 
+  // Helper functions for permission handling
+  const getAllPermissionIds = () => {
+    if (!permissionsData?.data) return [];
+    return permissionsData.data.flatMap((group) =>
+      group.permissions.map((p) => p._id)
+    );
+  };
+
+  const handleSelectAllPermissions = (checked: boolean) => {
+    if (checked) {
+      createForm.setValue("permissions", getAllPermissionIds());
+    } else {
+      createForm.setValue("permissions", []);
+    }
+  };
+
+  const handleSelectAllPermissionsInGroup = (
+    resource: string,
+    checked: boolean
+  ) => {
+    const group = permissionsData?.data?.find((g) => g.resource === resource);
+    if (!group) return;
+
+    const currentPermissions = createForm.watch("permissions") || [];
+    const groupPermissionIds = group.permissions.map((p) => p._id);
+
+    if (checked) {
+      // Add all permissions from this group
+      const newPermissions = [
+        ...new Set([...currentPermissions, ...groupPermissionIds]),
+      ];
+      createForm.setValue("permissions", newPermissions);
+    } else {
+      // Remove all permissions from this group
+      const newPermissions = currentPermissions.filter(
+        (id) => !groupPermissionIds.includes(id)
+      );
+      createForm.setValue("permissions", newPermissions);
+    }
+  };
+
+  const handlePermissionChange = (permissionId: string, checked: boolean) => {
+    const currentPermissions = createForm.watch("permissions") || [];
+
+    if (checked) {
+      createForm.setValue("permissions", [...currentPermissions, permissionId]);
+    } else {
+      createForm.setValue(
+        "permissions",
+        currentPermissions.filter((id) => id !== permissionId)
+      );
+    }
+  };
+
+  // Similar functions for update form
+  const handleUpdateSelectAllPermissions = (checked: boolean) => {
+    if (checked) {
+      updateForm.setValue("permissions", getAllPermissionIds());
+    } else {
+      updateForm.setValue("permissions", []);
+    }
+  };
+
+  const handleUpdateSelectAllPermissionsInGroup = (
+    resource: string,
+    checked: boolean
+  ) => {
+    const group = permissionsData?.data?.find((g) => g.resource === resource);
+    if (!group) return;
+
+    const currentPermissions = updateForm.watch("permissions") || [];
+    const groupPermissionIds = group.permissions.map((p) => p._id);
+
+    if (checked) {
+      const newPermissions = [
+        ...new Set([...currentPermissions, ...groupPermissionIds]),
+      ];
+      updateForm.setValue("permissions", newPermissions);
+    } else {
+      const newPermissions = currentPermissions.filter(
+        (id) => !groupPermissionIds.includes(id)
+      );
+      updateForm.setValue("permissions", newPermissions);
+    }
+  };
+
+  const handleUpdatePermissionChange = (
+    permissionId: string,
+    checked: boolean
+  ) => {
+    const currentPermissions = updateForm.watch("permissions") || [];
+
+    if (checked) {
+      updateForm.setValue("permissions", [...currentPermissions, permissionId]);
+    } else {
+      updateForm.setValue(
+        "permissions",
+        currentPermissions.filter((id) => id !== permissionId)
+      );
+    }
+  };
+
   const handleSearch = () => {
     setCurrentPage(1);
     refetch();
@@ -277,77 +540,24 @@ export function RolesPage() {
                     name="permissions"
                     render={() => (
                       <FormItem>
-                        <div className="flex items-center justify-between">
-                          <FormLabel>Permissions</FormLabel>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="create-select-all"
-                              checked={
-                                (permissionsData?.data?.length || 0) > 0 &&
-                                createForm.watch("permissions")?.length ===
-                                  (permissionsData?.data?.length || 0)
-                              }
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  createForm.setValue(
-                                    "permissions",
-                                    permissionsData?.data?.map((p) => p._id) ||
-                                      []
-                                  );
-                                } else {
-                                  createForm.setValue("permissions", []);
-                                }
-                              }}
-                            />
-                            <label
-                              htmlFor="create-select-all"
-                              className="text-sm font-normal cursor-pointer"
-                            >
-                              Select All
-                            </label>
+                        <FormLabel>Permissions</FormLabel>
+                        {permissionsData?.data ? (
+                          <GroupedPermissions
+                            permissionGroups={permissionsData.data}
+                            selectedPermissions={
+                              createForm.watch("permissions") || []
+                            }
+                            onPermissionChange={handlePermissionChange}
+                            onSelectAllInGroup={
+                              handleSelectAllPermissionsInGroup
+                            }
+                            onSelectAll={handleSelectAllPermissions}
+                          />
+                        ) : (
+                          <div className="text-sm text-muted-foreground">
+                            Loading permissions...
                           </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                          {permissionsData?.data?.map((permission) => (
-                            <FormField
-                              key={permission._id}
-                              control={createForm.control}
-                              name="permissions"
-                              render={({ field }) => {
-                                return (
-                                  <FormItem
-                                    key={permission._id}
-                                    className="flex flex-row items-start space-x-3 space-y-0"
-                                  >
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(
-                                          permission._id
-                                        )}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([
-                                                ...(field.value || []),
-                                                permission._id,
-                                              ])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                  (value) =>
-                                                    value !== permission._id
-                                                )
-                                              );
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="text-sm font-normal">
-                                      {permission.name}
-                                    </FormLabel>
-                                  </FormItem>
-                                );
-                              }}
-                            />
-                          ))}
-                        </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -651,76 +861,24 @@ export function RolesPage() {
                 name="permissions"
                 render={() => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Permissions</FormLabel>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="edit-select-all"
-                          checked={
-                            (permissionsData?.data?.length || 0) > 0 &&
-                            updateForm.watch("permissions")?.length ===
-                              (permissionsData?.data?.length || 0)
-                          }
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              updateForm.setValue(
-                                "permissions",
-                                permissionsData?.data?.map((p) => p._id) || []
-                              );
-                            } else {
-                              updateForm.setValue("permissions", []);
-                            }
-                          }}
-                        />
-                        <label
-                          htmlFor="edit-select-all"
-                          className="text-sm font-normal cursor-pointer"
-                        >
-                          Select All
-                        </label>
+                    <FormLabel>Permissions</FormLabel>
+                    {permissionsData?.data ? (
+                      <GroupedPermissions
+                        permissionGroups={permissionsData.data}
+                        selectedPermissions={
+                          updateForm.watch("permissions") || []
+                        }
+                        onPermissionChange={handleUpdatePermissionChange}
+                        onSelectAllInGroup={
+                          handleUpdateSelectAllPermissionsInGroup
+                        }
+                        onSelectAll={handleUpdateSelectAllPermissions}
+                      />
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        Loading permissions...
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                      {permissionsData?.data?.map((permission) => (
-                        <FormField
-                          key={permission._id}
-                          control={updateForm.control}
-                          name="permissions"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={permission._id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(
-                                      permission._id
-                                    )}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([
-                                            ...(field.value || []),
-                                            permission._id,
-                                          ])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) =>
-                                                value !== permission._id
-                                            )
-                                          );
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="text-sm font-normal">
-                                  {permission.name}
-                                </FormLabel>
-                              </FormItem>
-                            );
-                          }}
-                        />
-                      ))}
-                    </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

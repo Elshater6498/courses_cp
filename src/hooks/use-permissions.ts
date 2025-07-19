@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import * as permissionService from '../services/permission-service';
-import type { PaginationParams, CreatePermissionInput, UpdatePermissionInput } from '../types/api';
+import type { PaginationParams, CreatePermissionInput, UpdatePermissionInput, GroupedPermissionsResponse } from '../types/api';
 
 // Query keys
 export const permissionKeys = {
@@ -11,6 +11,7 @@ export const permissionKeys = {
   detail: (id: string) => [...permissionKeys.details(), id] as const,
   stats: () => [...permissionKeys.all, 'stats'] as const,
   allPermissions: () => [...permissionKeys.all, 'all'] as const,
+  allPermissionsFlat: () => [...permissionKeys.all, 'allFlat'] as const,
 };
 
 // Get all permissions with pagination
@@ -22,11 +23,19 @@ export const usePermissions = (params: PaginationParams = {}) => {
   });
 };
 
-// Get all permissions without pagination (for dropdowns)
+// Get all permissions without pagination (grouped by resource)
 export const useAllPermissions = () => {
   return useQuery({
     queryKey: permissionKeys.allPermissions(),
     queryFn: () => permissionService.getAllPermissions(),
+  });
+};
+
+// Get all permissions as flat array (for backward compatibility)
+export const useAllPermissionsFlat = () => {
+  return useQuery({
+    queryKey: permissionKeys.allPermissionsFlat(),
+    queryFn: () => permissionService.getAllPermissionsFlat(),
   });
 };
 

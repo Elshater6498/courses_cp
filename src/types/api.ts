@@ -112,6 +112,19 @@ export interface Permission {
   updatedAt: string;
 }
 
+// New types for grouped permissions
+export interface PermissionGroup {
+  resource: string;
+  permissions: Permission[];
+}
+
+export interface GroupedPermissionsResponse {
+  success: boolean;
+  message: string;
+  data: PermissionGroup[];
+  count: number;
+}
+
 export type CreatePermissionInput = Pick<Permission, 'name' | 'resource' | 'action' | 'description'>;
 export type UpdatePermissionInput = Partial<Pick<Permission, 'name' | 'resource' | 'action' | 'description' | 'isActive'>>;
 

@@ -65,7 +65,7 @@ import {
   useReorderTopics,
 } from "@/hooks/use-topics";
 import { useCourse } from "@/hooks/use-courses";
-import { TopicDialog } from "@/components/TopicDialog";
+import { TopicDialog } from "@/pages/course/topic/topic-dialog";
 import type { Topic } from "@/types/api";
 
 // Sortable Topic Row Component

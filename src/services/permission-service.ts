@@ -4,7 +4,9 @@ import type {
   UpdatePermissionInput, 
   PaginationParams, 
   PaginatedResponse, 
-  ApiResponse 
+  ApiResponse,
+  GroupedPermissionsResponse,
+  PermissionGroup
 } from '../types/api';
 import { apiGet, apiPost, apiPut, apiDelete, apiGetPaginated } from './api';
 
@@ -15,9 +17,26 @@ export const getPermissions = async (params: PaginationParams = {}): Promise<Pag
   return apiGetPaginated<Permission>(PERMISSION_BASE_PATH, params);
 };
 
-// Get all permissions without pagination
-export const getAllPermissions = async (): Promise<ApiResponse<Permission[]>> => {
-  return apiGet<Permission[]>(`${PERMISSION_BASE_PATH}`);
+// Get all permissions without pagination (now returns grouped permissions)
+export const getAllPermissions = async (): Promise<GroupedPermissionsResponse> => {
+  const response = await apiGet<PermissionGroup[]>(`${PERMISSION_BASE_PATH}`);
+  return {
+    success: response.success,
+    message: response.message,
+    data: response.data || [],
+    count: response.data?.length || 0
+  };
+};
+
+// Get all permissions as flat array (for backward compatibility)
+export const getAllPermissionsFlat = async (): Promise<ApiResponse<Permission[]>> => {
+  const groupedResponse = await getAllPermissions();
+  const flatPermissions = groupedResponse.data.flatMap(group => group.permissions);
+  return {
+    success: groupedResponse.success,
+    message: groupedResponse.message,
+    data: flatPermissions
+  };
 };
 
 // Get permission by ID

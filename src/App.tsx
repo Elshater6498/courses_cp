@@ -10,7 +10,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { queryClient } from "./lib/queryClient";
 import { useAuthStore } from "./stores/auth-store";
 import { LoginPage } from "./pages/login-page";
-import { DashboardLayout } from "./components/layout/DashboardLayout";
+import { DashboardLayout } from "./components/layout/dashboard-layout";
 import { DashboardHome } from "./pages/dashboard-home";
 import { AdminsPage } from "./pages/admins-page";
 import { UsersPage } from "./pages/users-page";
@@ -19,10 +19,10 @@ import { FacultiesPage } from "./pages/faculties-page";
 import { RolesPage } from "./pages/roles-page";
 import { CoursesPage } from "./pages/course/courses-page";
 import { CreateCourse } from "./pages/course/create-update-course";
-import { TopicsPage } from "./pages/course/topics-page";
+import { TopicsPage } from "./pages/course/topic/topics-page";
 import { LessonsPage } from "./pages/course/lesson/lessons-page";
 import { CreateUpdateLesson } from "./pages/course/lesson/create-update-lesson";
-import { LoadingSpinner } from "./components/ui/LoadingSpinner";
+import { LoadingSpinner } from "./components/ui/loading-spinner";
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
