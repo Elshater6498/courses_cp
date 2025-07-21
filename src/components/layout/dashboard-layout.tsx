@@ -40,21 +40,57 @@ import {
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Admins", href: "/dashboard/admins", icon: ShieldCheck },
-  { name: "Roles", href: "/dashboard/roles", icon: Settings },
-  { name: "Users", href: "/dashboard/users", icon: Users },
-  { name: "Universities", href: "/dashboard/universities", icon: Building },
-  { name: "Faculties", href: "/dashboard/faculties", icon: GraduationCap },
-  { name: "Courses", href: "/dashboard/courses", icon: Book },
+  {
+    name: "Admins",
+    href: "/dashboard/admins",
+    icon: ShieldCheck,
+    permission: "read_admins",
+  },
+  {
+    name: "Roles",
+    href: "/dashboard/roles",
+    icon: Settings,
+    permission: "read_roles",
+  },
+  {
+    name: "Users",
+    href: "/dashboard/users",
+    icon: Users,
+    permission: "read_users",
+  },
+  {
+    name: "Universities",
+    href: "/dashboard/universities",
+    icon: Building,
+    permission: "read_universities",
+  },
+  {
+    name: "Faculties",
+    href: "/dashboard/faculties",
+    icon: GraduationCap,
+    permission: "read_faculties",
+  },
+  {
+    name: "Courses",
+    href: "/dashboard/courses",
+    icon: Book,
+    permission: "read_courses",
+  },
 ];
 
 export function DashboardLayout() {
   const location = useLocation();
-  const { admin, logout } = useAuthStore();
+  const { admin, logout, hasPermission } = useAuthStore();
 
   const handleLogout = () => {
     logout();
   };
+
+  const filteredNavigation = navigation.filter((item) => {
+    // If no permission is required, always show (e.g., Dashboard)
+    if (!item.permission) return true;
+    return hasPermission(item.permission);
+  });
 
   return (
     <SidebarProvider>
@@ -71,7 +107,7 @@ export function DashboardLayout() {
               <SidebarGroupLabel>Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {navigation.map((item) => {
+                  {filteredNavigation.map((item) => {
                     const Icon = item.icon;
                     const isActive = location.pathname === item.href;
 
