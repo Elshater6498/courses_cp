@@ -12,13 +12,20 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCreateTopic, useUpdateTopic, useTopic } from "@/hooks/use-topics";
-import type { CreateTopicInput, UpdateTopicInput, Topic } from "@/types/api";
+import type { CreateTopicInput, UpdateTopicInput } from "@/types/api";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 // Form validation schema
 const topicSchema = z.object({
@@ -27,8 +34,8 @@ const topicSchema = z.object({
     ar: z.string().optional(),
     he: z.string().optional(),
   }),
-  topicsPrice: z.number().min(0, "Price must be at least 0"),
-  discount: z.number().min(0).max(100, "Discount must be between 0 and 100"),
+  topicsPrice: z.number().min(1, "Price must be at least 1"),
+  discount: z.number().max(100, "Discount must be between 0 and 100"),
 });
 
 type TopicFormData = z.infer<typeof topicSchema>;
@@ -170,116 +177,147 @@ export function TopicDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          {/* Topic Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name-en">Topic Name (English) *</Label>
-            <Input
-              id="name-en"
-              {...form.register("name.en")}
-              placeholder="Enter topic name in English"
-            />
-            {form.formState.errors.name?.en && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.name.en.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name-ar">Topic Name (Arabic)</Label>
-            <Input
-              id="name-ar"
-              {...form.register("name.ar")}
-              placeholder="Enter topic name in Arabic"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name-he">Topic Name (Hebrew)</Label>
-            <Input
-              id="name-he"
-              {...form.register("name.he")}
-              placeholder="Enter topic name in Hebrew"
-            />
-          </div>
-
-          {/* Price */}
-          <div className="space-y-2">
-            <Label htmlFor="topicsPrice">Price *</Label>
-            <Input
-              id="topicsPrice"
-              type="number"
-              step="0.01"
-              min="0"
-              {...form.register("topicsPrice", { valueAsNumber: true })}
-              placeholder="Enter topic price"
-            />
-            {form.formState.errors.topicsPrice && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.topicsPrice.message}
-              </p>
-            )}
-          </div>
-
-          {/* Discount */}
-          <div className="space-y-2">
-            <Label htmlFor="discount">Discount (%)</Label>
-            <Input
-              id="discount"
-              type="number"
-              min="0"
-              max="100"
-              {...form.register("discount", { valueAsNumber: true })}
-              placeholder="Enter discount percentage"
-            />
-            {form.formState.errors.discount && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.discount.message}
-              </p>
-            )}
-          </div>
-
-          {/* Active Status */}
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isActive"
-              checked={isActive}
-              onCheckedChange={setIsActive}
-            />
-            <Label htmlFor="isActive">Active</Label>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={
-                createTopicMutation.isPending ||
-                updateTopicMutation.isPending ||
-                (isEditing && isLoadingTopic)
-              }
-            >
-              {createTopicMutation.isPending ||
-              updateTopicMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isEditing ? "Updating..." : "Creating..."}
-                </>
-              ) : isEditing ? (
-                "Update Topic"
-              ) : (
-                "Create Topic"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            {/* Topic Name - English */}
+            <FormField
+              control={form.control}
+              name="name.en"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Topic Name (English) *</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter topic name in English"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </Button>
-          </DialogFooter>
-        </form>
+            />
+
+            {/* Topic Name - Arabic */}
+            <FormField
+              control={form.control}
+              name="name.ar"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Topic Name (Arabic)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter topic name in Arabic"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Topic Name - Hebrew */}
+            <FormField
+              control={form.control}
+              name="name.he"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Topic Name (Hebrew)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter topic name in Hebrew"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Price */}
+            <FormField
+              control={form.control}
+              name="topicsPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Price *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Enter topic price"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Discount */}
+            <FormField
+              control={form.control}
+              name="discount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Discount (%)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="Enter discount percentage"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Active Status */}
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="isActive"
+                checked={isActive}
+                onCheckedChange={setIsActive}
+              />
+              <FormLabel htmlFor="isActive">Active</FormLabel>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  createTopicMutation.isPending ||
+                  updateTopicMutation.isPending ||
+                  (isEditing && isLoadingTopic)
+                }
+              >
+                {createTopicMutation.isPending ||
+                  updateTopicMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {isEditing ? "Updating..." : "Creating..."}
+                  </>
+                ) : isEditing ? (
+                  "Update Topic"
+                ) : (
+                  "Create Topic"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
