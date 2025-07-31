@@ -1,9 +1,9 @@
-import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Card,
   CardContent,
@@ -90,9 +90,8 @@ export function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
+                      <PasswordInput
                         {...field}
-                        type="password"
                         placeholder="Enter your password"
                         disabled={isLoading}
                       />

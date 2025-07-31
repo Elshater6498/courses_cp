@@ -72,7 +72,8 @@ import {
   useAllRoles,
   useUpdateAdminPassword,
 } from "@/hooks/use-admins";
-import type { Admin, CreateAdminInput, UpdateAdminInput } from "@/types/api";
+import type { Admin } from "@/types/api";
+import { PasswordInput } from "@/components/ui/password-input";
 
 // Form schemas
 const createAdminSchema = z.object({
@@ -365,8 +366,7 @@ export function AdminsPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
+                          <PasswordInput
                             placeholder="Enter password"
                             {...field}
                           />
@@ -669,7 +669,7 @@ export function AdminsPage() {
                 to{" "}
                 {Math.min(
                   adminsData.data.pagination.currentPage *
-                    adminsData.data.pagination.itemsPerPage,
+                  adminsData.data.pagination.itemsPerPage,
                   adminsData.data.pagination.totalItems
                 )}{" "}
                 of {adminsData.data.pagination.totalItems} results
@@ -824,8 +824,7 @@ export function AdminsPage() {
                   <FormItem>
                     <FormLabel>New Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
+                      <PasswordInput
                         placeholder="Enter new password"
                         {...field}
                       />

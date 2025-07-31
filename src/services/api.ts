@@ -11,6 +11,13 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://courses-api.alef-team.com/api/v1/"
 // const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:6060/api/v1/';
 
+// Token expiration handler
+let tokenExpirationHandler: (() => void) | null = null
+
+export const setTokenExpirationHandler = (handler: () => void) => {
+  tokenExpirationHandler = handler
+}
+
 // Create axios instance
 const createApiInstance = (): AxiosInstance => {
   const instance = axios.create({
@@ -38,8 +45,15 @@ const createApiInstance = (): AxiosInstance => {
     (response: any) => response,
     (error: AxiosError) => {
       if (error.response?.status === 401) {
-        // Token expired or invalid
+        // Token expired or invalid - clear auth state and redirect
         localStorage.removeItem("admin_token")
+
+        // Call the token expiration handler if set
+        if (tokenExpirationHandler) {
+          tokenExpirationHandler()
+        }
+
+        // Redirect to login page
         window.location.href = "/login"
       }
       return Promise.reject(error)

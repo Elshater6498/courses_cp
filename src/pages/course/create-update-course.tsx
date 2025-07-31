@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Form,
@@ -49,8 +48,8 @@ import {
   useCreateCourse,
   useUpdateCourse,
   useFacultiesGroupedByUniversity,
-  useAllAdmins,
 } from "@/hooks/use-courses";
+import { useAdminsByRoleName } from "@/hooks/use-admins";
 import { UploadService, type UploadProgress } from "@/services/upload-service";
 import { UploadProgressCard } from "@/components/ui/upload-progress";
 import RichTextEditor, {
@@ -169,7 +168,7 @@ export function CreateCourse() {
   // Queries
   const { data: courseData, isLoading: isLoadingCourse } = useCourse(id || "");
   const { data: facultiesData } = useFacultiesGroupedByUniversity();
-  const { data: adminsData } = useAllAdmins();
+  const { data: adminsData } = useAdminsByRoleName("Instructor");
   // Mutations
   const createCourseMutation = useCreateCourse();
   const updateCourseMutation = useUpdateCourse();
@@ -209,8 +208,8 @@ export function CreateCourse() {
 
       const facultyIds = Array.isArray(course.facultyIds)
         ? course.facultyIds.map((faculty) =>
-            typeof faculty === "string" ? faculty : faculty._id
-          )
+          typeof faculty === "string" ? faculty : faculty._id
+        )
         : [];
 
       const instructorId =
@@ -231,8 +230,8 @@ export function CreateCourse() {
         },
         whatWillYouLearn: Array.isArray(course.whatWillYouLearn)
           ? course.whatWillYouLearn.map((item) =>
-              typeof item === "string" ? { en: item, ar: "", he: "" } : item
-            )
+            typeof item === "string" ? { en: item, ar: "", he: "" } : item
+          )
           : [{ en: "", ar: "", he: "" }],
         numberOfCourseHours: course.numberOfCourseHours,
         coursePrice: course.coursePrice,
@@ -458,8 +457,8 @@ export function CreateCourse() {
               ? "Saving..."
               : imageUploadStatus === "uploading" ||
                 videoUploadStatus === "uploading"
-              ? "Uploading files..."
-              : "Save Course"}
+                ? "Uploading files..."
+                : "Save Course"}
           </Button>
         </div>
       </div>
@@ -771,7 +770,7 @@ export function CreateCourse() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {adminsData?.data?.items?.map((admin) => (
+                          {adminsData?.data?.map((admin) => (
                             <SelectItem key={admin._id} value={admin._id}>
                               {admin.userName} ({admin.email})
                             </SelectItem>
@@ -827,11 +826,10 @@ export function CreateCourse() {
                   facultiesData?.data?.map((group) => {
                     group.faculties.map((faculty) => {
                       options.push({
-                        label: `${
-                          typeof faculty.name === "string"
-                            ? faculty.name
-                            : faculty.name.en
-                        } (${group.universityName.en})`,
+                        label: `${typeof faculty.name === "string"
+                          ? faculty.name
+                          : faculty.name.en
+                          } (${group.universityName.en})`,
                         value: faculty._id,
                         group: group.universityName.en,
                       });
