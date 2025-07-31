@@ -1,6 +1,4 @@
-import React from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -16,7 +14,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -97,14 +94,13 @@ export function DashboardLayout() {
       <div className="min-h-screen bg-gray-50 flex w-full">
         <Sidebar collapsible="icon">
           <SidebarHeader>
-            <div className="flex items-center justify-center px-4 py-2">
-              <h1 className="text-xl font-bold text-gray-900">Course Admin</h1>
+            <div className="flex items-center justify-center p-2 lg:px-4 lg:py-2 min-h-12">
+              <img src="/logo-small.png" alt="logo" className="w-6 lg:w-24" />
             </div>
           </SidebarHeader>
 
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {filteredNavigation.map((item) => {
