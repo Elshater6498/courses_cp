@@ -132,22 +132,24 @@ export function DashboardLayout() {
               <SidebarMenuItem>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton className="w-full">
-                      <Avatar className="h-6 w-6">
-                        <AvatarFallback>
-                          {admin?.userName?.substring(0, 2).toUpperCase() ||
-                            "AD"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col items-start text-left">
-                        <span className="text-sm font-medium">
-                          {admin?.userName}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {admin?.email}
-                        </span>
-                      </div>
-                    </SidebarMenuButton>
+                    <div className="flex items-center gap-2">
+                      <SidebarMenuButton className="w-full">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback>
+                            {admin?.userName?.substring(0, 2).toUpperCase() ||
+                              "AD"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col items-start text-left">
+                          <span className="text-sm font-medium">
+                            {admin?.userName}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {admin?.email}
+                          </span>
+                        </div>
+                      </SidebarMenuButton>
+                    </div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
