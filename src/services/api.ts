@@ -8,7 +8,7 @@ import type { ApiResponse, PaginatedResponse } from "../types/api"
 
 // API Configuration
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://courses-api.alef-team.com/api/v1/"
+  import.meta.env.VITE_API_URL || "http://localhost:6060/api/v1/"
 // const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:6060/api/v1/';
 
 // Create axios instance
