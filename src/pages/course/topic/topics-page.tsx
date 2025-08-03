@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   DndContext,
@@ -8,7 +8,6 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -50,7 +49,6 @@ import {
   Edit,
   Trash2,
   BookOpen,
-  DollarSign,
   RefreshCw,
   GripVertical,
   ArrowLeft,
@@ -292,7 +290,7 @@ export function TopicsPage() {
     setCurrentPage(1);
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = () => {
     // Optional: Add visual feedback for drag start
   };
 
@@ -478,7 +476,7 @@ export function TopicsPage() {
                 to{" "}
                 {Math.min(
                   topicsData.data.pagination.currentPage *
-                    topicsData.data.pagination.itemsPerPage,
+                  topicsData.data.pagination.itemsPerPage,
                   topicsData.data.pagination.totalItems
                 )}{" "}
                 of {topicsData.data.pagination.totalItems} results

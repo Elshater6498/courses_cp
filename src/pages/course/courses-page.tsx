@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -30,8 +30,6 @@ import {
   Image,
   GraduationCap,
   RefreshCw,
-  Play,
-  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
@@ -470,7 +468,7 @@ export function CoursesPage() {
                 to{" "}
                 {Math.min(
                   coursesData.data.pagination.currentPage *
-                    coursesData.data.pagination.itemsPerPage,
+                  coursesData.data.pagination.itemsPerPage,
                   coursesData.data.pagination.totalItems
                 )}{" "}
                 of {coursesData.data.pagination.totalItems} results

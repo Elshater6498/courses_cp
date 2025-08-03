@@ -59,7 +59,6 @@ import {
   Edit,
   Trash2,
   Shield,
-  Filter,
   RefreshCw,
   ChevronDown,
   ChevronRight,
@@ -70,14 +69,11 @@ import {
   useRoles,
   useCreateRole,
   useUpdateRole,
-  useDeleteRole,
   useHardDeleteRole,
   useRoleStats,
 } from "@/hooks/use-roles";
 import type {
   Role,
-  CreateRoleInput,
-  UpdateRoleInput,
   PermissionGroup,
 } from "@/types/api";
 import { useAllPermissions } from "@/hooks/use-permissions";
@@ -283,7 +279,7 @@ export function RolesPage() {
   // Mutations
   const createRoleMutation = useCreateRole();
   const updateRoleMutation = useUpdateRole();
-  const deleteRoleMutation = useDeleteRole(); // Soft delete (for isActive toggle)
+
   const hardDeleteRoleMutation = useHardDeleteRole(); // Hard delete (for delete button)
 
   // Forms
@@ -800,7 +796,7 @@ export function RolesPage() {
                 to{" "}
                 {Math.min(
                   rolesData.data.pagination.currentPage *
-                    rolesData.data.pagination.itemsPerPage,
+                  rolesData.data.pagination.itemsPerPage,
                   rolesData.data.pagination.totalItems
                 )}{" "}
                 of {rolesData.data.pagination.totalItems} results

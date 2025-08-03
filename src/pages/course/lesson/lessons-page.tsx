@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   DndContext,
@@ -8,7 +8,6 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -49,7 +48,6 @@ import {
   Search,
   Edit,
   Trash2,
-  BookOpen,
   Video,
   RefreshCw,
   GripVertical,
@@ -197,7 +195,7 @@ export function LessonsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [editingLessonId, setEditingLessonId] = useState<string | undefined>();
+
 
   // Sensors for drag and drop
   const sensors = useSensors(
@@ -281,7 +279,7 @@ export function LessonsPage() {
     setCurrentPage(1);
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = () => {
     // Optional: Add visual feedback for drag start
   };
 
@@ -469,7 +467,7 @@ export function LessonsPage() {
                 to{" "}
                 {Math.min(
                   lessonsData.data.pagination.currentPage *
-                    lessonsData.data.pagination.itemsPerPage,
+                  lessonsData.data.pagination.itemsPerPage,
                   lessonsData.data.pagination.totalItems
                 )}{" "}
                 of {lessonsData.data.pagination.totalItems} results

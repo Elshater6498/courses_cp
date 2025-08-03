@@ -42,7 +42,7 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores/auth-store";
+
 import {
   useCourse,
   useCreateCourse,
@@ -146,7 +146,7 @@ type CourseFormData = z.infer<typeof courseSchema>;
 export function CreateCourse() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { hasPermission } = useAuthStore();
+
   const [isEditing, setIsEditing] = useState(false);
 
   // File upload state
@@ -926,7 +926,6 @@ export function CreateCourse() {
                     <UploadProgressCard
                       progress={imageUploadProgress}
                       fileName={selectedImage?.name || ""}
-                      fileSize={selectedImage?.size || 0}
                       status="uploading"
                     />
                   )}
@@ -935,7 +934,6 @@ export function CreateCourse() {
                     <UploadProgressCard
                       progress={imageUploadProgress!}
                       fileName={selectedImage?.name || ""}
-                      fileSize={selectedImage?.size || 0}
                       status="completed"
                     />
                   )}
@@ -944,7 +942,6 @@ export function CreateCourse() {
                     <UploadProgressCard
                       progress={imageUploadProgress!}
                       fileName={selectedImage?.name || ""}
-                      fileSize={selectedImage?.size || 0}
                       status="error"
                       error={uploadError}
                     />
@@ -1011,7 +1008,6 @@ export function CreateCourse() {
                     <UploadProgressCard
                       progress={videoUploadProgress}
                       fileName={selectedVideo?.name || ""}
-                      fileSize={selectedVideo?.size || 0}
                       status="uploading"
                     />
                   )}
@@ -1020,7 +1016,6 @@ export function CreateCourse() {
                     <UploadProgressCard
                       progress={videoUploadProgress!}
                       fileName={selectedVideo?.name || ""}
-                      fileSize={selectedVideo?.size || 0}
                       status="completed"
                     />
                   )}
@@ -1029,7 +1024,6 @@ export function CreateCourse() {
                     <UploadProgressCard
                       progress={videoUploadProgress!}
                       fileName={selectedVideo?.name || ""}
-                      fileSize={selectedVideo?.size || 0}
                       status="error"
                       error={uploadError}
                     />

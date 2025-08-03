@@ -12,11 +12,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -27,9 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   ArrowLeft,
   Save,
-  Upload,
   Video,
-  FileVideo,
   AlertCircle,
   BookOpen,
   Loader2,
@@ -439,12 +435,12 @@ export function CreateUpdateLesson() {
           },
           description: data.description
             ? {
-                en: data.description.en,
-                ...(data.description.ar &&
-                  data.description.ar.trim() && { ar: data.description.ar }),
-                ...(data.description.he &&
-                  data.description.he.trim() && { he: data.description.he }),
-              }
+              en: data.description.en,
+              ...(data.description.ar &&
+                data.description.ar.trim() && { ar: data.description.ar }),
+              ...(data.description.he &&
+                data.description.he.trim() && { he: data.description.he }),
+            }
             : undefined,
           topicId: data.topicId,
           main_recording_url: fileUrls.mainRecordingUrl,
@@ -702,7 +698,6 @@ export function CreateUpdateLesson() {
                       <UploadProgressCard
                         progress={mainRecordingUploadProgress}
                         fileName={selectedMainRecording?.name || ""}
-                        fileSize={selectedMainRecording?.size || 0}
                         status="uploading"
                       />
                     )}
@@ -712,7 +707,6 @@ export function CreateUpdateLesson() {
                       <UploadProgressCard
                         progress={mainRecordingUploadProgress}
                         fileName={selectedMainRecording?.name || ""}
-                        fileSize={selectedMainRecording?.size || 0}
                         status="completed"
                       />
                     )}
@@ -722,7 +716,6 @@ export function CreateUpdateLesson() {
                       <UploadProgressCard
                         progress={mainRecordingUploadProgress}
                         fileName={selectedMainRecording?.name || ""}
-                        fileSize={selectedMainRecording?.size || 0}
                         status="error"
                         error={uploadError}
                       />
@@ -789,7 +782,6 @@ export function CreateUpdateLesson() {
                       <UploadProgressCard
                         progress={gvoRecordingUploadProgress}
                         fileName={selectedGvoRecording?.name || ""}
-                        fileSize={selectedGvoRecording?.size || 0}
                         status="uploading"
                       />
                     )}
@@ -799,7 +791,6 @@ export function CreateUpdateLesson() {
                       <UploadProgressCard
                         progress={gvoRecordingUploadProgress}
                         fileName={selectedGvoRecording?.name || ""}
-                        fileSize={selectedGvoRecording?.size || 0}
                         status="completed"
                       />
                     )}
@@ -809,7 +800,6 @@ export function CreateUpdateLesson() {
                       <UploadProgressCard
                         progress={gvoRecordingUploadProgress}
                         fileName={selectedGvoRecording?.name || ""}
-                        fileSize={selectedGvoRecording?.size || 0}
                         status="error"
                         error={uploadError}
                       />
@@ -876,7 +866,6 @@ export function CreateUpdateLesson() {
                       <UploadProgressCard
                         progress={vvtRecordingUploadProgress}
                         fileName={selectedVvtRecording?.name || ""}
-                        fileSize={selectedVvtRecording?.size || 0}
                         status="uploading"
                       />
                     )}
@@ -886,7 +875,6 @@ export function CreateUpdateLesson() {
                       <UploadProgressCard
                         progress={vvtRecordingUploadProgress}
                         fileName={selectedVvtRecording?.name || ""}
-                        fileSize={selectedVvtRecording?.size || 0}
                         status="completed"
                       />
                     )}
@@ -896,7 +884,6 @@ export function CreateUpdateLesson() {
                       <UploadProgressCard
                         progress={vvtRecordingUploadProgress}
                         fileName={selectedVvtRecording?.name || ""}
-                        fileSize={selectedVvtRecording?.size || 0}
                         status="error"
                         error={uploadError}
                       />
@@ -1010,8 +997,8 @@ export function CreateUpdateLesson() {
                   ? "Updating..."
                   : "Creating..."
                 : isEditing
-                ? "Update Lesson"
-                : "Create Lesson"}
+                  ? "Update Lesson"
+                  : "Create Lesson"}
             </Button>
           </div>
         </form>

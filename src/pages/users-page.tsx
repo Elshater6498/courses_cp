@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,7 +28,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -513,7 +513,7 @@ export function UsersPage() {
                 to{" "}
                 {Math.min(
                   usersData.data.pagination.currentPage *
-                    usersData.data.pagination.itemsPerPage,
+                  usersData.data.pagination.itemsPerPage,
                   usersData.data.pagination.totalItems
                 )}{" "}
                 of {usersData.data.pagination.totalItems} results

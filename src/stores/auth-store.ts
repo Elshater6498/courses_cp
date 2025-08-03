@@ -141,6 +141,7 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: false })
           }
         } catch (error) {
+          console.log(error)
           // Error verifying token, clear it
           authService.clearAuth()
           set({

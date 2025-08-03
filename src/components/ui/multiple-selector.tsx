@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 "use client";
 
 import { Command as CommandPrimitive, useCommandState } from "cmdk";
@@ -201,7 +202,6 @@ const MultipleSelector = React.forwardRef<
       badgeClassName,
       selectFirstItem = true,
       creatable = false,
-      triggerSearchOnFocus = false,
       commandProps,
       inputProps,
       hideClearAllButton = false,
@@ -530,7 +530,7 @@ const MultipleSelector = React.forwardRef<
                 disabled ||
                 selected.length < 1 ||
                 selected.filter((s) => s.fixed).length === selected.length) &&
-                "hidden"
+              "hidden"
             )}
           >
             <X />
@@ -542,7 +542,7 @@ const MultipleSelector = React.forwardRef<
                 disabled ||
                 selected.length >= 1 ||
                 selected.filter((s) => s.fixed).length !== selected.length) &&
-                "hidden"
+              "hidden"
             )}
           />
         </div>
@@ -599,7 +599,7 @@ const MultipleSelector = React.forwardRef<
                               className={cn(
                                 "cursor-pointer",
                                 option.disable &&
-                                  "cursor-default text-muted-foreground"
+                                "cursor-default text-muted-foreground"
                               )}
                             >
                               {option.label}
