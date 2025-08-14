@@ -329,7 +329,7 @@ export function CoursesPage() {
                       {getCourseName(course)}
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
-                      {getCourseDescription(course)}
+                      <div dangerouslySetInnerHTML={{ __html: getCourseDescription(course) }} />
                     </CardDescription>
                   </CardHeader>
 
