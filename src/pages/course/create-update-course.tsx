@@ -163,6 +163,7 @@ export function CreateCourse() {
     "idle" | "uploading" | "completed" | "error"
   >("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [removeExistingVideo, setRemoveExistingVideo] = useState(false);
   const editorRef = useRef<RichTextEditorRef>(null);
 
   // Queries
@@ -279,8 +280,9 @@ export function CreateCourse() {
         instructorId: data.instructorId,
         instructorPercentage: data.instructorPercentage,
         imageUrl: uploadResults.imageUrl || data.imageUrl || "",
-        introductoryVideoUrl:
-          uploadResults.videoUrl || data.introductoryVideoUrl || "",
+        introductoryVideoUrl: removeExistingVideo
+          ? ""
+          : uploadResults.videoUrl || data.introductoryVideoUrl || "",
         isActive: data.isActive,
       };
 
@@ -345,6 +347,8 @@ export function CreateCourse() {
       setVideoUploadStatus("idle");
       setVideoUploadProgress(null);
       setUploadError(null);
+      // Reset remove flag when new video is selected
+      setRemoveExistingVideo(false);
     }
   };
 
@@ -396,6 +400,9 @@ export function CreateCourse() {
         );
         throw error;
       }
+    } else if (removeExistingVideo) {
+      // If user wants to remove existing video and no new video is selected
+      results.videoUrl = "";
     }
 
     return results;
@@ -990,7 +997,10 @@ export function CreateCourse() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedVideo(null)}
+                        onClick={() => {
+                          setSelectedVideo(null);
+                          setRemoveExistingVideo(false);
+                        }}
                       >
                         Clear
                       </Button>
@@ -1042,6 +1052,36 @@ export function CreateCourse() {
                           controls
                           className="max-w-xs h-auto rounded border"
                         />
+                        <div className="mt-3">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setRemoveExistingVideo(true)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Remove Current Video
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Show remove confirmation */}
+                  {isEditing &&
+                    courseData?.data?.introductoryVideoUrl &&
+                    removeExistingVideo && (
+                      <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
+                        <p className="text-sm text-red-600 mb-2">
+                          Current video will be removed. Upload a new video or save to confirm removal.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRemoveExistingVideo(false)}
+                        >
+                          Cancel Removal
+                        </Button>
                       </div>
                     )}
                 </div>

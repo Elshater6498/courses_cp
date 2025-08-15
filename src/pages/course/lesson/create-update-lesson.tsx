@@ -106,6 +106,9 @@ export function CreateUpdateLesson() {
   const [vvtRecordingUploadProgress, setVvtRecordingUploadProgress] =
     useState<UploadProgress | null>(null);
   const [uploadError, setUploadError] = useState<string>("");
+  const [removeExistingMainRecording, setRemoveExistingMainRecording] = useState(false);
+  const [removeExistingGvoRecording, setRemoveExistingGvoRecording] = useState(false);
+  const [removeExistingVvtRecording, setRemoveExistingVvtRecording] = useState(false);
 
   // Determine if we're editing or creating
   const isEditing = !!lessonId;
@@ -250,6 +253,8 @@ export function CreateUpdateLesson() {
       setMainRecordingUploadStatus("idle");
       setMainRecordingUploadProgress(null);
       setUploadError("");
+      // Reset remove flag when new file is selected
+      setRemoveExistingMainRecording(false);
     }
   };
 
@@ -267,6 +272,8 @@ export function CreateUpdateLesson() {
       setGvoRecordingUploadStatus("idle");
       setGvoRecordingUploadProgress(null);
       setUploadError("");
+      // Reset remove flag when new file is selected
+      setRemoveExistingGvoRecording(false);
     }
   };
 
@@ -284,6 +291,8 @@ export function CreateUpdateLesson() {
       setVvtRecordingUploadStatus("idle");
       setVvtRecordingUploadProgress(null);
       setUploadError("");
+      // Reset remove flag when new file is selected
+      setRemoveExistingVvtRecording(false);
     }
   };
 
@@ -348,10 +357,26 @@ export function CreateUpdateLesson() {
         setVvtRecordingUploadStatus("completed");
       }
 
+      // Handle removal of existing recordings
+      let mainRecordingUrl = results[0]?.downloadUrl || "";
+      let gvoRecordingUrl = results[1]?.downloadUrl || "";
+      let vvtRecordingUrl = results[2]?.downloadUrl || "";
+
+      // If user wants to remove existing recordings and no new ones are selected
+      if (removeExistingMainRecording && !selectedMainRecording) {
+        mainRecordingUrl = "";
+      }
+      if (removeExistingGvoRecording && !selectedGvoRecording) {
+        gvoRecordingUrl = "";
+      }
+      if (removeExistingVvtRecording && !selectedVvtRecording) {
+        vvtRecordingUrl = "";
+      }
+
       return {
-        mainRecordingUrl: results[0].downloadUrl,
-        gvoRecordingUrl: results[1]?.downloadUrl,
-        vvtRecordingUrl: results[2]?.downloadUrl,
+        mainRecordingUrl,
+        gvoRecordingUrl,
+        vvtRecordingUrl,
       };
     } catch (error) {
       // Set upload status to error
@@ -392,7 +417,10 @@ export function CreateUpdateLesson() {
       if (
         selectedMainRecording ||
         selectedGvoRecording ||
-        selectedVvtRecording
+        selectedVvtRecording ||
+        removeExistingMainRecording ||
+        removeExistingGvoRecording ||
+        removeExistingVvtRecording
       ) {
         fileUrls = await uploadFiles();
       }
@@ -679,7 +707,10 @@ export function CreateUpdateLesson() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedMainRecording(null)}
+                        onClick={() => {
+                          setSelectedMainRecording(null);
+                          setRemoveExistingMainRecording(false);
+                        }}
                       >
                         Clear
                       </Button>
@@ -734,6 +765,36 @@ export function CreateUpdateLesson() {
                           controls
                           className="max-w-xs h-auto rounded border"
                         />
+                        <div className="mt-3">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setRemoveExistingMainRecording(true)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Remove Current Recording
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Show remove confirmation for main recording */}
+                  {isEditing &&
+                    lessonData?.data?.main_recording_url &&
+                    removeExistingMainRecording && (
+                      <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
+                        <p className="text-sm text-red-600 mb-2">
+                          Current main recording will be removed. Upload a new recording or save to confirm removal.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRemoveExistingMainRecording(false)}
+                        >
+                          Cancel Removal
+                        </Button>
                       </div>
                     )}
                 </div>
@@ -763,7 +824,10 @@ export function CreateUpdateLesson() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedGvoRecording(null)}
+                        onClick={() => {
+                          setSelectedGvoRecording(null);
+                          setRemoveExistingGvoRecording(false);
+                        }}
                       >
                         Clear
                       </Button>
@@ -818,6 +882,36 @@ export function CreateUpdateLesson() {
                           controls
                           className="max-w-xs h-auto rounded border"
                         />
+                        <div className="mt-3">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setRemoveExistingGvoRecording(true)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Remove Current Recording
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Show remove confirmation for GVO recording */}
+                  {isEditing &&
+                    lessonData?.data?.recording_gvo_url &&
+                    removeExistingGvoRecording && (
+                      <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
+                        <p className="text-sm text-red-600 mb-2">
+                          Current GVO recording will be removed. Upload a new recording or save to confirm removal.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRemoveExistingGvoRecording(false)}
+                        >
+                          Cancel Removal
+                        </Button>
                       </div>
                     )}
                 </div>
@@ -847,7 +941,10 @@ export function CreateUpdateLesson() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedVvtRecording(null)}
+                        onClick={() => {
+                          setSelectedVvtRecording(null);
+                          setRemoveExistingVvtRecording(false);
+                        }}
                       >
                         Clear
                       </Button>
@@ -902,6 +999,36 @@ export function CreateUpdateLesson() {
                           controls
                           className="max-w-xs h-auto rounded border"
                         />
+                        <div className="mt-3">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setRemoveExistingVvtRecording(true)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Remove Current Recording
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Show remove confirmation for VVT recording */}
+                  {isEditing &&
+                    lessonData?.data?.recording_vvt_url &&
+                    removeExistingVvtRecording && (
+                      <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
+                        <p className="text-sm text-red-600 mb-2">
+                          Current VVT recording will be removed. Upload a new recording or save to confirm removal.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRemoveExistingVvtRecording(false)}
+                        >
+                          Cancel Removal
+                        </Button>
                       </div>
                     )}
                 </div>
