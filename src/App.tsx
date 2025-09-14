@@ -23,6 +23,7 @@ import { TopicsPage } from "./pages/course/topic/topics-page";
 import { LessonsPage } from "./pages/course/lesson/lessons-page";
 import { CreateUpdateLesson } from "./pages/course/lesson/create-update-lesson";
 import { LoadingSpinner } from "./components/ui/loading-spinner";
+import { CourseFilesPage } from "./pages/course/course-files/course-files-page";
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -89,16 +90,20 @@ function App() {
             <Route path="courses/:id/edit" element={<CreateCourse />} />
             <Route path="courses/:courseId/topics" element={<TopicsPage />} />
             <Route
-              path="courses/topics/:topicId/lessons"
+              path="courses/:courseId/topics/:topicId/lessons"
               element={<LessonsPage />}
             />
             <Route
-              path="courses/topics/:topicId/lessons/create"
+              path="courses/:courseId/topics/:topicId/lessons/create"
               element={<CreateUpdateLesson />}
             />
             <Route
-              path="courses/topics/:topicId/lessons/:lessonId/edit"
+              path="courses/:courseId/topics/:topicId/lessons/:lessonId/edit"
               element={<CreateUpdateLesson />}
+            />
+            <Route
+              path="courses/:courseId/files"
+              element={<CourseFilesPage />}
             />
           </Route>
 

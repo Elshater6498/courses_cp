@@ -30,6 +30,7 @@ import {
   Image,
   GraduationCap,
   RefreshCw,
+  File,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
@@ -329,7 +330,11 @@ export function CoursesPage() {
                       {getCourseName(course)}
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
-                      <div dangerouslySetInnerHTML={{ __html: getCourseDescription(course) }} />
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: getCourseDescription(course),
+                        }}
+                      />
                     </CardDescription>
                   </CardHeader>
 
@@ -404,52 +409,70 @@ export function CoursesPage() {
                       )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 pt-3 border-t">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() =>
-                          navigate(`/dashboard/courses/${course._id}/topics`)
-                        }
-                      >
-                        <BookOpen className="h-4 w-4 mr-1" />
-                        Topics
-                      </Button>
-                      {canUpdate && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              navigate(`/dashboard/courses/${course._id}/edit`)
-                            }
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Switch
-                            disabled={toggleCourseStatusMutation.isPending}
-                            checked={course.isActive}
-                            onCheckedChange={() =>
-                              handleToggleCourseStatus(
-                                course._id,
-                                course.isActive
-                              )
-                            }
-                          />
-                        </>
-                      )}
-                      {canDelete && (
+                    <div className="flex flex-wrap items-center gap-2 pt-3 border-t">
+                      <div className="flex items-center gap-2 w-full">
                         <Button
-                          variant="destructive"
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteCourse(course._id)}
-                          disabled={deleteCourseMutation.isPending}
+                          className="flex-1 w-full"
+                          onClick={() =>
+                            navigate(`/dashboard/courses/${course._id}/topics`)
+                          }
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <BookOpen className="h-4 w-4 mr-1" />
+                          Topics
                         </Button>
-                      )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 w-full"
+                          onClick={() =>
+                            navigate(`/dashboard/courses/${course._id}/files`)
+                          }
+                        >
+                          <File className="h-4 w-4 mr-1" />
+                          Files
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 w-full">
+                        {canUpdate && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 w-full"
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/courses/${course._id}/edit`
+                                )
+                              }
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Switch
+                              disabled={toggleCourseStatusMutation.isPending}
+                              checked={course.isActive}
+                              onCheckedChange={() =>
+                                handleToggleCourseStatus(
+                                  course._id,
+                                  course.isActive
+                                )
+                              }
+                            />
+                          </>
+                        )}
+                        {canDelete && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteCourse(course._id)}
+                            disabled={deleteCourseMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -468,7 +491,7 @@ export function CoursesPage() {
                 to{" "}
                 {Math.min(
                   coursesData.data.pagination.currentPage *
-                  coursesData.data.pagination.itemsPerPage,
+                    coursesData.data.pagination.itemsPerPage,
                   coursesData.data.pagination.totalItems
                 )}{" "}
                 of {coursesData.data.pagination.totalItems} results

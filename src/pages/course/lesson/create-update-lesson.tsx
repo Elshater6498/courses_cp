@@ -73,9 +73,10 @@ const lessonSchema = z.object({
 type LessonFormData = z.infer<typeof lessonSchema>;
 
 export function CreateUpdateLesson() {
-  const { topicId, lessonId } = useParams<{
+  const { topicId, lessonId, courseId } = useParams<{
     topicId: string;
     lessonId?: string;
+    courseId: string;
   }>();
   const navigate = useNavigate();
   const { hasPermission } = useAuthStore();
@@ -107,9 +108,12 @@ export function CreateUpdateLesson() {
   const [vvtRecordingUploadProgress, setVvtRecordingUploadProgress] =
     useState<UploadProgress | null>(null);
   const [uploadError, setUploadError] = useState<string>("");
-  const [removeExistingMainRecording, setRemoveExistingMainRecording] = useState(false);
-  const [removeExistingGvoRecording, setRemoveExistingGvoRecording] = useState(false);
-  const [removeExistingVvtRecording, setRemoveExistingVvtRecording] = useState(false);
+  const [removeExistingMainRecording, setRemoveExistingMainRecording] =
+    useState(false);
+  const [removeExistingGvoRecording, setRemoveExistingGvoRecording] =
+    useState(false);
+  const [removeExistingVvtRecording, setRemoveExistingVvtRecording] =
+    useState(false);
 
   // Determine if we're editing or creating
   const isEditing = !!lessonId;
@@ -464,12 +468,12 @@ export function CreateUpdateLesson() {
           },
           description: data.description
             ? {
-              en: data.description.en,
-              ...(data.description.ar &&
-                data.description.ar.trim() && { ar: data.description.ar }),
-              ...(data.description.he &&
-                data.description.he.trim() && { he: data.description.he }),
-            }
+                en: data.description.en,
+                ...(data.description.ar &&
+                  data.description.ar.trim() && { ar: data.description.ar }),
+                ...(data.description.he &&
+                  data.description.he.trim() && { he: data.description.he }),
+              }
             : undefined,
           topicId: data.topicId,
           main_recording_url: fileUrls.mainRecordingUrl,
@@ -534,7 +538,9 @@ export function CreateUpdateLesson() {
             variant="outline"
             size="sm"
             onClick={() =>
-              navigate(`/dashboard/courses/topics/${topicId}/lessons`)
+              navigate(
+                `/dashboard/courses/${courseId}/topics/${topicId}/lessons`
+              )
             }
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -786,7 +792,8 @@ export function CreateUpdateLesson() {
                     removeExistingMainRecording && (
                       <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
                         <p className="text-sm text-red-600 mb-2">
-                          Current main recording will be removed. Upload a new recording or save to confirm removal.
+                          Current main recording will be removed. Upload a new
+                          recording or save to confirm removal.
                         </p>
                         <Button
                           type="button"
@@ -903,7 +910,8 @@ export function CreateUpdateLesson() {
                     removeExistingGvoRecording && (
                       <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
                         <p className="text-sm text-red-600 mb-2">
-                          Current GVO recording will be removed. Upload a new recording or save to confirm removal.
+                          Current GVO recording will be removed. Upload a new
+                          recording or save to confirm removal.
                         </p>
                         <Button
                           type="button"
@@ -1020,7 +1028,8 @@ export function CreateUpdateLesson() {
                     removeExistingVvtRecording && (
                       <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
                         <p className="text-sm text-red-600 mb-2">
-                          Current VVT recording will be removed. Upload a new recording or save to confirm removal.
+                          Current VVT recording will be removed. Upload a new
+                          recording or save to confirm removal.
                         </p>
                         <Button
                           type="button"
@@ -1113,7 +1122,9 @@ export function CreateUpdateLesson() {
               type="button"
               variant="outline"
               onClick={() =>
-                navigate(`/dashboard/courses/topics/${topicId}/lessons`)
+                navigate(
+                  `/dashboard/courses/${courseId}/topics/${topicId}/lessons`
+                )
               }
             >
               Cancel
@@ -1125,8 +1136,8 @@ export function CreateUpdateLesson() {
                   ? "Updating..."
                   : "Creating..."
                 : isEditing
-                  ? "Update Lesson"
-                  : "Create Lesson"}
+                ? "Update Lesson"
+                : "Create Lesson"}
             </Button>
           </div>
         </form>

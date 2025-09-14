@@ -189,13 +189,15 @@ function SortableLessonRow({
 }
 
 export function LessonsPage() {
-  const { topicId } = useParams<{ topicId: string }>();
+  const { courseId, topicId } = useParams<{
+    courseId: string;
+    topicId: string;
+  }>();
   const navigate = useNavigate();
   const { hasPermission } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-
 
   // Sensors for drag and drop
   const sensors = useSensors(
@@ -262,11 +264,13 @@ export function LessonsPage() {
   };
 
   const handleEditLesson = (lesson: Lesson) => {
-    navigate(`/dashboard/courses/topics/${topicId}/lessons/${lesson._id}/edit`);
+    navigate(
+      `/dashboard/courses/${courseId}/topics/${topicId}/lessons/${lesson._id}/edit`
+    );
   };
 
   const handleCreateLesson = () => {
-    navigate(`/dashboard/courses/topics/${topicId}/lessons/create`);
+    navigate(`/dashboard/courses/${courseId}/topics/${topicId}/lessons/create`);
   };
 
   const handleSearch = () => {
@@ -352,10 +356,10 @@ export function LessonsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/dashboard/courses/topics/${topicId}`)}
+            onClick={() => navigate(`/dashboard/courses/${courseId}/topics`)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Topic
+            Back to Topics
           </Button>
           {canCreate && (
             <Button className="w-full md:w-auto" onClick={handleCreateLesson}>
@@ -467,7 +471,7 @@ export function LessonsPage() {
                 to{" "}
                 {Math.min(
                   lessonsData.data.pagination.currentPage *
-                  lessonsData.data.pagination.itemsPerPage,
+                    lessonsData.data.pagination.itemsPerPage,
                   lessonsData.data.pagination.totalItems
                 )}{" "}
                 of {lessonsData.data.pagination.totalItems} results

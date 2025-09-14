@@ -268,7 +268,7 @@ export function TopicsPage() {
   };
 
   const handleViewLessons = (topicId: string) => {
-    navigate(`/dashboard/courses/topics/${topicId}/lessons`);
+    navigate(`/dashboard/courses/${courseId}/topics/${topicId}/lessons`);
   };
 
   const handleCreateTopic = () => {
@@ -476,7 +476,7 @@ export function TopicsPage() {
                 to{" "}
                 {Math.min(
                   topicsData.data.pagination.currentPage *
-                  topicsData.data.pagination.itemsPerPage,
+                    topicsData.data.pagination.itemsPerPage,
                   topicsData.data.pagination.totalItems
                 )}{" "}
                 of {topicsData.data.pagination.totalItems} results

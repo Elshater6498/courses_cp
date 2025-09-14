@@ -4,7 +4,7 @@ export interface PresignedUrlRequest {
   fileName: string
   fileType: string
   fileSize: number
-  uploadType: "image" | "video"
+  uploadType: "image" | "video" | "document" | "audio" | "general"
   folder?: string
 }
 
@@ -125,7 +125,7 @@ export class UploadService {
    */
   static async uploadFileWithProgress(
     file: File,
-    uploadType: "image" | "video",
+    uploadType: "image" | "video" | "document" | "audio" | "general",
     folder?: string,
     onProgress?: (progress: UploadProgress) => void
   ): Promise<UploadResult> {
@@ -179,6 +179,55 @@ export class UploadService {
       const hours = Math.floor(seconds / 3600)
       const minutes = Math.floor((seconds % 3600) / 60)
       return `${hours}h ${minutes}m`
+    }
+  }
+  
+  /**
+   * Determine upload type based on file MIME type
+   */
+  static getUploadType(fileType: string): "image" | "video" | "document" | "audio" | "general" {
+    if (fileType.startsWith('image/')) {
+      return 'image';
+    } else if (fileType.startsWith('video/')) {
+      return 'video';
+    } else if (fileType.startsWith('audio/')) {
+      return 'audio';
+    } else if (
+      fileType.includes('pdf') ||
+      fileType.includes('word') ||
+      fileType.includes('excel') ||
+      fileType.includes('powerpoint') ||
+      fileType.includes('text') ||
+      fileType.includes('document')
+    ) {
+      return 'document';
+    } else {
+      return 'general';
+    }
+  }
+
+  /**
+   * Get file type category for display
+   */
+  static getFileTypeCategory(fileType: string): string {
+    if (fileType.startsWith('image/')) {
+      return 'Image';
+    } else if (fileType.startsWith('video/')) {
+      return 'Video';
+    } else if (fileType.startsWith('audio/')) {
+      return 'Audio';
+    } else if (fileType.includes('pdf')) {
+      return 'PDF Document';
+    } else if (fileType.includes('word')) {
+      return 'Word Document';
+    } else if (fileType.includes('excel')) {
+      return 'Excel Spreadsheet';
+    } else if (fileType.includes('powerpoint')) {
+      return 'PowerPoint Presentation';
+    } else if (fileType.includes('text')) {
+      return 'Text File';
+    } else {
+      return 'File';
     }
   }
 }
