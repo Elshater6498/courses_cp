@@ -37,24 +37,28 @@ import {
   Calendar,
   User,
 } from "lucide-react";
-import { useCourse } from "@/hooks/use-courses";
+import { useLesson } from "@/hooks/use-lessons";
 import {
   useAttachedFiles,
   useDeleteAttachedFile,
   usePresignedDownloadUrl,
 } from "@/hooks/use-attached-files";
 import { type AttachedFile } from "@/services/attached-files-service";
-import { UploadFileDialog } from "./upload-file-dialog";
+import { UploadFileDialog } from "../course-files/upload-file-dialog";
 import { UploadService } from "@/services/upload-service";
 
-export function CourseFilesPage() {
-  const { courseId } = useParams<{ courseId: string }>();
+export function LessonFilesPage() {
+  const { lessonId } = useParams<{
+    courseId: string;
+    topicId: string;
+    lessonId: string;
+  }>();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   // Queries
-  const { data: courseData } = useCourse(courseId!);
+  const { data: lessonData } = useLesson(lessonId!);
   const { data: attachedFilesData, isLoading: isLoadingFiles } =
-    useAttachedFiles("course", courseId!);
+    useAttachedFiles("lesson", lessonId!);
 
   // Mutations
   const deleteFileMutation = useDeleteAttachedFile();
@@ -125,12 +129,12 @@ export function CourseFilesPage() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Course Files</h1>
+          <h1 className="text-3xl font-bold">Lesson Files</h1>
           <p className="text-gray-600">
             Manage files attached to "
-            {typeof courseData?.data?.name === "string"
-              ? courseData.data.name
-              : courseData?.data?.name?.en || "this course"}
+            {typeof lessonData?.data?.name === "string"
+              ? lessonData.data.name
+              : lessonData?.data?.name?.en || "this lesson"}
             "
           </p>
         </div>
@@ -148,7 +152,7 @@ export function CourseFilesPage() {
             Attached Files ({attachedFiles.length})
           </CardTitle>
           <CardDescription>
-            Files that have been uploaded and attached to this course.
+            Files that have been uploaded and attached to this lesson.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -163,7 +167,7 @@ export function CourseFilesPage() {
                 No files uploaded
               </h3>
               <p className="text-gray-500 mb-4">
-                Get started by uploading your first file to this course.
+                Get started by uploading your first file to this lesson.
               </p>
               <Button onClick={() => setIsUploadDialogOpen(true)}>
                 <Upload className="h-4 w-4 mr-2" />
@@ -182,84 +186,77 @@ export function CourseFilesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {attachedFiles.map(
-                  (file) => (
-                    console.log(file),
-                    (
-                      <TableRow key={file._id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            {getFileIcon(file.fileType)}
-                            <div>
-                              <div className="font-medium">
-                                {file.name as any}
-                              </div>
-                              {file.name.ar && (
-                                <div className="text-sm text-gray-500">
-                                  {file.name.ar}
-                                </div>
-                              )}
-                              {file.name.he && (
-                                <div className="text-sm text-gray-500">
-                                  {file.name.he}
-                                </div>
-                              )}
+                {attachedFiles.map((file) => (
+                  <TableRow key={file._id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        {getFileIcon(file.fileType)}
+                        <div>
+                          <div className="font-medium">{file.name as any}</div>
+                          {file.name.ar && (
+                            <div className="text-sm text-gray-500">
+                              {file.name.ar}
                             </div>
+                          )}
+                          {file.name.he && (
+                            <div className="text-sm text-gray-500">
+                              {file.name.he}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        {UploadService.getFileTypeCategory(file.fileType)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm">
+                          {file.uploadedBy.userName}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm">
+                          {formatDate(file.createdAt)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <div className="h-8 w-8 p-0">
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {UploadService.getFileTypeCategory(file.fileType)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm">
-                              {file.uploadedBy.userName}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm">
-                              {formatDate(file.createdAt)}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <div className="h-8 w-8 p-0">
-                                <Button variant="ghost" size="sm">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => handleDownloadFile(file)}
-                              >
-                                <Download className="h-4 w-4 mr-2" />
-                                Download
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleDeleteFile(file._id, file.name as any)
-                                }
-                                className="text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  )
-                )}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleDownloadFile(file)}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleDeleteFile(file._id, file.name as any)
+                            }
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           )}
@@ -270,8 +267,8 @@ export function CourseFilesPage() {
       <UploadFileDialog
         isOpen={isUploadDialogOpen}
         onClose={() => setIsUploadDialogOpen(false)}
-        entityType="courses"
-        entityId={courseId!}
+        entityType="lessons"
+        entityId={lessonId!}
         onFileUploaded={handleFileUploaded}
       />
     </div>

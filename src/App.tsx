@@ -24,6 +24,8 @@ import { LessonsPage } from "./pages/course/lesson/lessons-page";
 import { CreateUpdateLesson } from "./pages/course/lesson/create-update-lesson";
 import { LoadingSpinner } from "./components/ui/loading-spinner";
 import { CourseFilesPage } from "./pages/course/course-files/course-files-page";
+import { TopicFilesPage } from "./pages/course/topic/topic-files-page";
+import { LessonFilesPage } from "./pages/course/lesson/lesson-files-page";
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -104,6 +106,14 @@ function App() {
             <Route
               path="courses/:courseId/files"
               element={<CourseFilesPage />}
+            />
+            <Route
+              path="courses/:courseId/topics/:topicId/files"
+              element={<TopicFilesPage />}
+            />
+            <Route
+              path="courses/:courseId/topics/:topicId/lessons/:lessonId/files"
+              element={<LessonFilesPage />}
             />
           </Route>
 

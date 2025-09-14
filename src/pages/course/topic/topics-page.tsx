@@ -53,6 +53,7 @@ import {
   GripVertical,
   ArrowLeft,
   Video,
+  File,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
@@ -86,6 +87,8 @@ function SortableTopicRow({
   canUpdate,
   canDelete,
 }: SortableTopicRowProps) {
+  const navigate = useNavigate();
+  const { courseId } = useParams<{ courseId: string }>();
   const {
     attributes,
     listeners,
@@ -153,6 +156,18 @@ function SortableTopicRow({
       </TableCell>
       <TableCell className="text-right">
         <div className="flex items-center gap-2 justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              navigate(
+                `/dashboard/courses/${courseId}/topics/${topic._id}/files`
+              )
+            }
+          >
+            <File className="h-4 w-4 mr-1" />
+            Files
+          </Button>
           <Button
             variant="outline"
             size="sm"

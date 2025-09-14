@@ -52,6 +52,7 @@ import {
   RefreshCw,
   GripVertical,
   ArrowLeft,
+  File,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
@@ -82,6 +83,11 @@ function SortableLessonRow({
   canUpdate,
   canDelete,
 }: SortableLessonRowProps) {
+  const { courseId, topicId } = useParams<{
+    courseId: string;
+    topicId: string;
+  }>();
+  const navigate = useNavigate();
   const {
     attributes,
     listeners,
@@ -157,6 +163,18 @@ function SortableLessonRow({
         <div className="flex items-center gap-2 justify-end">
           {canUpdate && (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  navigate(
+                    `/dashboard/courses/${courseId}/topics/${topicId}/lessons/${lesson._id}/files`
+                  )
+                }
+              >
+                <File className="h-4 w-4 mr-1" />
+                Files
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
