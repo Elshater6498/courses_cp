@@ -597,3 +597,5 @@ export interface EnrollmentFilters {
   startDate?: string
   endDate?: string
 }
+
+// Video Library Types are now defined in videos-library-service.ts

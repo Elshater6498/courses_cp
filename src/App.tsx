@@ -27,6 +27,7 @@ import { CourseFilesPage } from "./pages/course/course-files/course-files-page";
 import { TopicFilesPage } from "./pages/course/topic/topic-files-page";
 import { LessonFilesPage } from "./pages/course/lesson/lesson-files-page";
 import { EnrollmentsPage } from "./pages/enrollments-page";
+import { VideosLibraryPage } from "./pages/videos-library-page";
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -90,6 +91,7 @@ function App() {
             <Route path="faculties" element={<FacultiesPage />} />
             <Route path="courses" element={<CoursesPage />} />
             <Route path="enrollments" element={<EnrollmentsPage />} />
+            <Route path="videos-library" element={<VideosLibraryPage />} />
             <Route path="courses/new" element={<CreateCourse />} />
             <Route path="courses/:id/edit" element={<CreateCourse />} />
             <Route path="courses/:courseId/topics" element={<TopicsPage />} />
