@@ -33,6 +33,7 @@ import {
   Settings,
   LogOut,
   Book,
+  BookOpen,
 } from "lucide-react";
 
 const navigation = [
@@ -72,6 +73,12 @@ const navigation = [
     href: "/dashboard/courses",
     icon: Book,
     permission: "read_courses",
+  },
+  {
+    name: "Enrollments",
+    href: "/dashboard/enrollments",
+    icon: BookOpen,
+    permission: "read_enrollments",
   },
 ];
 

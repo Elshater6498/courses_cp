@@ -525,3 +525,75 @@ export interface ApiError {
   errors?: ValidationError[]
   error?: string
 }
+
+// Enrollment Types
+export interface Enrollment {
+  _id: string
+  userId: User
+  courseId: Course
+  enrollmentType: 'full_course' | 'individual_topic'
+  fullAccess: boolean
+  purchasedTopics: Topic[]
+  totalAmount: number
+  discountAmount: number
+  finalAmount: number
+  currency: 'usd' | 'eur' | 'gbp' | 'aed'
+  paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled'
+  stripePayment?: {
+    paymentIntentId: string
+    amount: number
+    currency: string
+    status: string
+    customerId?: string
+    invoiceId?: string
+    refundId?: string
+    metadata?: Record<string, any>
+    createdAt: Date
+    updatedAt: Date
+  }
+  expiresAt?: Date
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface CreateEnrollmentInput {
+  courseId: string
+  fullAccess: boolean
+  purchasedTopics?: string[]
+  currency?: 'usd' | 'eur' | 'gbp' | 'aed'
+}
+
+export interface UpdateEnrollmentInput {
+  fullAccess?: boolean
+  purchasedTopics?: string[]
+  totalAmount?: number
+  discountAmount?: number
+  finalAmount?: number
+  paymentStatus?: 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled'
+  isActive?: boolean
+  expiresAt?: Date
+}
+
+export interface RefundRequest {
+  amount?: number
+}
+
+export interface EnrollmentStats {
+  totalEnrollments: number
+  completedPayments: number
+  pendingPayments: number
+  totalRevenue: number
+  fullAccessEnrollments: number
+  individualTopicEnrollments: number
+}
+
+export interface EnrollmentFilters {
+  status?: 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled'
+  isActive?: boolean
+  fullAccess?: boolean
+  courseId?: string
+  userId?: string
+  startDate?: string
+  endDate?: string
+}
