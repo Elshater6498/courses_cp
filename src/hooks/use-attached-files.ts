@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { attachedFilesService, type AttachedFile, type CreateAttachedFileInput, type UpdateAttachedFileInput } from "@/services/attached-files-service";
+import { attachedFilesService, type CreateAttachedFileInput, type UpdateAttachedFileInput } from "@/services/attached-files-service";
 
 // Hook to get attached files by entity
 export function useAttachedFiles(

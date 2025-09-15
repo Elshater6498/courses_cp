@@ -589,7 +589,7 @@ export interface EnrollmentStats {
 }
 
 export interface EnrollmentFilters {
-  status?: 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled'
+  status?: 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled' | 'all'
   isActive?: boolean
   fullAccess?: boolean
   courseId?: string

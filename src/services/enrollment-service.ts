@@ -26,9 +26,9 @@ export class EnrollmentService {
     if (params.sort) searchParams.append('sort', params.sort)
     
     // Add filter params
-    if (params.status) searchParams.append('status', params.status)
-    if (params.isActive !== undefined) searchParams.append('isActive', params.isActive.toString())
-    if (params.fullAccess !== undefined) searchParams.append('fullAccess', params.fullAccess.toString())
+    if (params.status) searchParams.append('status', params.status === 'all' ? "" : params.status)
+    if (params.isActive !== undefined) searchParams.append('isActive', params.isActive.toString() === 'all' ? "" : params.isActive.toString())
+    if (params.fullAccess !== undefined) searchParams.append('fullAccess', params.fullAccess.toString() === 'all' ? "" : params.fullAccess.toString())
     if (params.courseId) searchParams.append('courseId', params.courseId)
     if (params.userId) searchParams.append('userId', params.userId)
     if (params.startDate) searchParams.append('startDate', params.startDate)

@@ -411,7 +411,7 @@ export function EnrollmentsPage() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="null">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="failed">Failed</SelectItem>
@@ -436,7 +436,7 @@ export function EnrollmentsPage() {
                   <SelectValue placeholder="All access types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="null">All access types</SelectItem>
+                  <SelectItem value="all">All access types</SelectItem>
                   <SelectItem value="true">Full Access</SelectItem>
                   <SelectItem value="false">Individual Topics</SelectItem>
                 </SelectContent>
@@ -458,7 +458,7 @@ export function EnrollmentsPage() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="null">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="true">Active</SelectItem>
                   <SelectItem value="false">Inactive</SelectItem>
                 </SelectContent>
