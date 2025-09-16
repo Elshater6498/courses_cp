@@ -50,6 +50,7 @@ import {
   useFacultiesGroupedByUniversity,
 } from "@/hooks/use-courses";
 import { useAdminsByRoleName } from "@/hooks/use-admins";
+import { useVideosForSelect } from "@/hooks/use-videos-library";
 import { UploadService, type UploadProgress } from "@/services/upload-service";
 import { UploadProgressCard } from "@/components/ui/upload-progress";
 import RichTextEditor, {
@@ -137,7 +138,7 @@ const courseSchema = z.object({
     .min(0, "Instructor percentage must be at least 0")
     .max(100, "Instructor percentage cannot exceed 100"),
   imageUrl: z.string().optional(),
-  introductoryVideoUrl: z.string().optional(),
+  introductoryVideoId: z.string().optional(),
   isActive: z.boolean(),
 });
 
@@ -151,25 +152,19 @@ export function CreateCourse() {
 
   // File upload state
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [imageUploadProgress, setImageUploadProgress] =
-    useState<UploadProgress | null>(null);
-  const [videoUploadProgress, setVideoUploadProgress] =
     useState<UploadProgress | null>(null);
   const [imageUploadStatus, setImageUploadStatus] = useState<
     "idle" | "uploading" | "completed" | "error"
   >("idle");
-  const [videoUploadStatus, setVideoUploadStatus] = useState<
-    "idle" | "uploading" | "completed" | "error"
-  >("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [removeExistingVideo, setRemoveExistingVideo] = useState(false);
   const editorRef = useRef<RichTextEditorRef>(null);
 
   // Queries
   const { data: courseData, isLoading: isLoadingCourse } = useCourse(id || "");
   const { data: facultiesData } = useFacultiesGroupedByUniversity();
   const { data: adminsData } = useAdminsByRoleName("Instructor");
+  const { data: videosData } = useVideosForSelect("course");
   // Mutations
   const createCourseMutation = useCreateCourse();
   const updateCourseMutation = useUpdateCourse();
@@ -188,7 +183,7 @@ export function CreateCourse() {
       instructorId: "",
       instructorPercentage: 0,
       imageUrl: "",
-      introductoryVideoUrl: "",
+      introductoryVideoId: "",
       isActive: true,
     },
   });
@@ -209,8 +204,8 @@ export function CreateCourse() {
 
       const facultyIds = Array.isArray(course.facultyIds)
         ? course.facultyIds.map((faculty) =>
-          typeof faculty === "string" ? faculty : faculty._id
-        )
+            typeof faculty === "string" ? faculty : faculty._id
+          )
         : [];
 
       const instructorId =
@@ -231,8 +226,8 @@ export function CreateCourse() {
         },
         whatWillYouLearn: Array.isArray(course.whatWillYouLearn)
           ? course.whatWillYouLearn.map((item) =>
-            typeof item === "string" ? { en: item, ar: "", he: "" } : item
-          )
+              typeof item === "string" ? { en: item, ar: "", he: "" } : item
+            )
           : [{ en: "", ar: "", he: "" }],
         numberOfCourseHours: course.numberOfCourseHours,
         coursePrice: course.coursePrice,
@@ -241,18 +236,67 @@ export function CreateCourse() {
         instructorId,
         instructorPercentage: course.instructorPercentage,
         imageUrl: course.imageUrl || "",
-        introductoryVideoUrl: course.introductoryVideoUrl || "",
+        introductoryVideoId: "", // Will be set after videos are loaded
         isActive: course.isActive,
       });
       setIsEditing(true);
     }
   }, [id, courseData, form]);
 
+  // Set video ID when videos are loaded and we have an existing video URL
+  useEffect(() => {
+    if (
+      isEditing &&
+      courseData?.data?.introductoryVideoUrl &&
+      videosData?.data
+    ) {
+      // Find the video that matches the current video URL
+      const matchingVideo = videosData.data.find(
+        (video) => video.videoUrl === courseData?.data?.introductoryVideoUrl
+      );
+      if (matchingVideo) {
+        form.setValue("introductoryVideoId", matchingVideo.id);
+      }
+    }
+  }, [isEditing, courseData, videosData, form]);
+
   // Handlers
   const handleSubmit = async (data: CourseFormData) => {
     try {
-      // Upload files first
-      const uploadResults = await uploadFiles();
+      // Upload image if selected
+      let imageUrl = data.imageUrl || "";
+      if (selectedImage) {
+        try {
+          setImageUploadStatus("uploading");
+          const imageResult = await UploadService.uploadFileWithProgress(
+            selectedImage,
+            "image",
+            "courses",
+            (progress) => setImageUploadProgress(progress)
+          );
+          imageUrl = imageResult.downloadUrl;
+          setImageUploadStatus("completed");
+        } catch (error) {
+          setImageUploadStatus("error");
+          setUploadError(
+            error instanceof Error ? error.message : "Image upload failed"
+          );
+          throw error;
+        }
+      } else if (!isEditing && !data.imageUrl) {
+        throw new Error("Course image is required");
+      }
+
+      // Get video URL from selected video ID
+      let introductoryVideoUrl = "";
+      if (data.introductoryVideoId) {
+        const selectedVideo = videosData?.data?.find(
+          (video) => video.id === data.introductoryVideoId
+        );
+        if (selectedVideo) {
+          introductoryVideoUrl = selectedVideo.videoUrl;
+        }
+      }
 
       // Clean up empty strings
       const processedData = {
@@ -279,10 +323,8 @@ export function CreateCourse() {
         facultyIds: data.facultyIds,
         instructorId: data.instructorId,
         instructorPercentage: data.instructorPercentage,
-        imageUrl: uploadResults.imageUrl || data.imageUrl || "",
-        introductoryVideoUrl: removeExistingVideo
-          ? ""
-          : uploadResults.videoUrl || data.introductoryVideoUrl || "",
+        imageUrl,
+        introductoryVideoUrl,
         isActive: data.isActive,
       };
 
@@ -335,79 +377,6 @@ export function CreateCourse() {
     }
   };
 
-  const handleVideoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("video/")) {
-        toast.error("Please select a valid video file");
-        return;
-      }
-      setSelectedVideo(file);
-      setVideoUploadStatus("idle");
-      setVideoUploadProgress(null);
-      setUploadError(null);
-      // Reset remove flag when new video is selected
-      setRemoveExistingVideo(false);
-    }
-  };
-
-  const uploadFiles = async (): Promise<{
-    imageUrl: string;
-    videoUrl: string;
-  }> => {
-    const results = { imageUrl: "", videoUrl: "" };
-
-    // Upload image (required)
-    if (selectedImage) {
-      try {
-        setImageUploadStatus("uploading");
-        const imageResult = await UploadService.uploadFileWithProgress(
-          selectedImage,
-          "image",
-          "courses",
-          (progress) => setImageUploadProgress(progress)
-        );
-        results.imageUrl = imageResult.downloadUrl;
-        setImageUploadStatus("completed");
-      } catch (error) {
-        setImageUploadStatus("error");
-        setUploadError(
-          error instanceof Error ? error.message : "Image upload failed"
-        );
-        throw error;
-      }
-    } else if (!isEditing && !form.getValues("imageUrl")) {
-      throw new Error("Course image is required");
-    }
-
-    // Upload video (optional)
-    if (selectedVideo) {
-      try {
-        setVideoUploadStatus("uploading");
-        const videoResult = await UploadService.uploadFileWithProgress(
-          selectedVideo,
-          "video",
-          "courses",
-          (progress) => setVideoUploadProgress(progress)
-        );
-        results.videoUrl = videoResult.downloadUrl;
-        setVideoUploadStatus("completed");
-      } catch (error) {
-        setVideoUploadStatus("error");
-        setUploadError(
-          error instanceof Error ? error.message : "Video upload failed"
-        );
-        throw error;
-      }
-    } else if (removeExistingVideo) {
-      // If user wants to remove existing video and no new video is selected
-      results.videoUrl = "";
-    }
-
-    return results;
-  };
-
   if (isLoadingCourse) {
     return (
       <div className="space-y-6">
@@ -455,17 +424,15 @@ export function CreateCourse() {
             disabled={
               createCourseMutation.isPending ||
               updateCourseMutation.isPending ||
-              imageUploadStatus === "uploading" ||
-              videoUploadStatus === "uploading"
+              imageUploadStatus === "uploading"
             }
           >
             <Save className="h-4 w-4 mr-2" />
             {createCourseMutation.isPending || updateCourseMutation.isPending
               ? "Saving..."
-              : imageUploadStatus === "uploading" ||
-                videoUploadStatus === "uploading"
-                ? "Uploading files..."
-                : "Save Course"}
+              : imageUploadStatus === "uploading"
+              ? "Uploading image..."
+              : "Save Course"}
           </Button>
         </div>
       </div>
@@ -833,10 +800,11 @@ export function CreateCourse() {
                   facultiesData?.data?.map((group) => {
                     group.faculties.map((faculty) => {
                       options.push({
-                        label: `${typeof faculty.name === "string"
-                          ? faculty.name
-                          : faculty.name.en
-                          } (${group.universityName.en})`,
+                        label: `${
+                          typeof faculty.name === "string"
+                            ? faculty.name
+                            : faculty.name.en
+                        } (${group.universityName.en})`,
                         value: faculty._id,
                         group: group.universityName.en,
                       });
@@ -972,137 +940,68 @@ export function CreateCourse() {
                 </div>
               </div>
 
-              {/* Video Upload */}
+              {/* Video Selection */}
               <div className="space-y-4">
                 <div>
                   <FormLabel className="text-base font-medium">
                     Introductory Video
                   </FormLabel>
                   <p className="text-sm text-gray-600 mb-3">
-                    Upload an introductory video for your course (MP4, MPEG,
-                    MOV, AVI, WebM, OGG)
+                    Select an introductory video from your video library
                   </p>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Input
-                      type="file"
-                      accept="video/*"
-                      onChange={handleVideoSelect}
-                      className="flex-1"
-                    />
-                    {selectedVideo && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedVideo(null);
-                          setRemoveExistingVideo(false);
-                        }}
+                <FormField
+                  control={form.control}
+                  name="introductoryVideoId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select Video</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
                       >
-                        Clear
-                      </Button>
-                    )}
-                  </div>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a video from library" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">No video selected</SelectItem>
+                          {videosData?.data?.map((video) => (
+                            <SelectItem key={video.id} value={video.id}>
+                              {video.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  {selectedVideo && (
-                    <div className="text-sm text-gray-600">
-                      Selected: {selectedVideo.name} (
-                      {UploadService.formatBytes(selectedVideo.size)})
+                {/* Show selected video preview */}
+                {form.watch("introductoryVideoId") && (
+                  <div className="mt-3 p-3 border rounded-lg bg-gray-50">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Selected video:
+                    </p>
+                    <div className="text-sm font-medium">
+                      {
+                        videosData?.data?.find(
+                          (video) =>
+                            video.id === form.watch("introductoryVideoId")
+                        )?.name
+                      }
                     </div>
-                  )}
-
-                  {videoUploadStatus === "uploading" && videoUploadProgress && (
-                    <UploadProgressCard
-                      progress={videoUploadProgress}
-                      fileName={selectedVideo?.name || ""}
-                      status="uploading"
-                    />
-                  )}
-
-                  {videoUploadStatus === "completed" && (
-                    <UploadProgressCard
-                      progress={videoUploadProgress!}
-                      fileName={selectedVideo?.name || ""}
-                      status="completed"
-                    />
-                  )}
-
-                  {videoUploadStatus === "error" && (
-                    <UploadProgressCard
-                      progress={videoUploadProgress!}
-                      fileName={selectedVideo?.name || ""}
-                      status="error"
-                      error={uploadError}
-                    />
-                  )}
-
-                  {/* Show existing video when editing */}
-                  {isEditing &&
-                    courseData?.data?.introductoryVideoUrl &&
-                    !selectedVideo && (
-                      <div className="mt-3 p-3 border rounded-lg bg-gray-50">
-                        <p className="text-sm text-gray-600 mb-2">
-                          Current video:
-                        </p>
-                        <video
-                          src={courseData.data.introductoryVideoUrl}
-                          controls
-                          className="max-w-xs h-auto rounded border"
-                        />
-                        <div className="mt-3">
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setRemoveExistingVideo(true)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Remove Current Video
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Show remove confirmation */}
-                  {isEditing &&
-                    courseData?.data?.introductoryVideoUrl &&
-                    removeExistingVideo && (
-                      <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
-                        <p className="text-sm text-red-600 mb-2">
-                          Current video will be removed. Upload a new video or save to confirm removal.
-                        </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setRemoveExistingVideo(false)}
-                        >
-                          Cancel Removal
-                        </Button>
-                      </div>
-                    )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Hidden form fields for validation */}
               <FormField
                 control={form.control}
                 name="imageUrl"
-                render={({ field }) => (
-                  <FormItem className="hidden">
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="introductoryVideoUrl"
                 render={({ field }) => (
                   <FormItem className="hidden">
                     <FormControl>

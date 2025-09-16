@@ -23,13 +23,19 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ArrowLeft,
   Save,
   Video,
   AlertCircle,
   BookOpen,
   Loader2,
-  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
@@ -39,12 +45,7 @@ import {
   useLesson,
 } from "@/hooks/use-lessons";
 import { useTopic } from "@/hooks/use-topics";
-import {
-  UploadService,
-  type UploadResult,
-  type UploadProgress,
-} from "@/services/upload-service";
-import { UploadProgressCard } from "@/components/ui/upload-progress";
+import { useVideosForSelect } from "@/hooks/use-videos-library";
 import type { CreateLessonInput, UpdateLessonInput } from "@/types/api";
 
 // Form validation schema
@@ -64,9 +65,9 @@ const lessonSchema = z.object({
     })
     .optional(),
   topicId: z.string().min(1, "Topic is required"),
-  main_recording_url: z.string().optional(),
-  recording_gvo_url: z.string().optional(),
-  recording_vvt_url: z.string().optional(),
+  main_recording_id: z.string().optional(),
+  recording_gvo_id: z.string().optional(),
+  recording_vvt_id: z.string().optional(),
   isActive: z.boolean(),
 });
 
@@ -81,39 +82,6 @@ export function CreateUpdateLesson() {
   const navigate = useNavigate();
   const { hasPermission } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedMainRecording, setSelectedMainRecording] =
-    useState<File | null>(null);
-  const [selectedGvoRecording, setSelectedGvoRecording] = useState<File | null>(
-    null
-  );
-  const [selectedVvtRecording, setSelectedVvtRecording] = useState<File | null>(
-    null
-  );
-
-  // Upload states
-  const [mainRecordingUploadStatus, setMainRecordingUploadStatus] = useState<
-    "idle" | "uploading" | "completed" | "error"
-  >("idle");
-  const [gvoRecordingUploadStatus, setGvoRecordingUploadStatus] = useState<
-    "idle" | "uploading" | "completed" | "error"
-  >("idle");
-  const [vvtRecordingUploadStatus, setVvtRecordingUploadStatus] = useState<
-    "idle" | "uploading" | "completed" | "error"
-  >("idle");
-
-  const [mainRecordingUploadProgress, setMainRecordingUploadProgress] =
-    useState<UploadProgress | null>(null);
-  const [gvoRecordingUploadProgress, setGvoRecordingUploadProgress] =
-    useState<UploadProgress | null>(null);
-  const [vvtRecordingUploadProgress, setVvtRecordingUploadProgress] =
-    useState<UploadProgress | null>(null);
-  const [uploadError, setUploadError] = useState<string>("");
-  const [removeExistingMainRecording, setRemoveExistingMainRecording] =
-    useState(false);
-  const [removeExistingGvoRecording, setRemoveExistingGvoRecording] =
-    useState(false);
-  const [removeExistingVvtRecording, setRemoveExistingVvtRecording] =
-    useState(false);
 
   // Determine if we're editing or creating
   const isEditing = !!lessonId;
@@ -121,6 +89,7 @@ export function CreateUpdateLesson() {
   // Queries
   const { data: lessonData, isLoading: isLoadingLesson } = useLesson(lessonId!);
   const { data: topicData } = useTopic(topicId!);
+  const { data: videosData } = useVideosForSelect("lesson");
 
   // Mutations
   const createLessonMutation = useCreateLesson();
@@ -141,9 +110,9 @@ export function CreateUpdateLesson() {
         he: "",
       },
       topicId: topicId || "",
-      main_recording_url: "",
-      recording_gvo_url: "",
-      recording_vvt_url: "",
+      main_recording_id: "",
+      recording_gvo_id: "",
+      recording_vvt_id: "",
       isActive: true,
     },
   });
@@ -171,9 +140,9 @@ export function CreateUpdateLesson() {
           typeof lesson.topicId === "string"
             ? lesson.topicId
             : lesson.topicId._id,
-        main_recording_url: lesson.main_recording_url,
-        recording_gvo_url: lesson.recording_gvo_url || "",
-        recording_vvt_url: lesson.recording_vvt_url || "",
+        main_recording_id: "", // Will be set after videos are loaded
+        recording_gvo_id: "", // Will be set after videos are loaded
+        recording_vvt_id: "", // Will be set after videos are loaded
         isActive: lesson.isActive,
       });
     }
@@ -185,6 +154,41 @@ export function CreateUpdateLesson() {
       form.setValue("topicId", topicId);
     }
   }, [topicId, form]);
+
+  // Set video IDs when videos are loaded and we have existing video URLs
+  useEffect(() => {
+    if (isEditing && lessonData?.data && videosData?.data) {
+      const lesson = lessonData.data;
+
+      // Find matching videos for each recording type
+      if (lesson.main_recording_url) {
+        const mainVideo = videosData.data.find(
+          (video) => video.videoUrl === lesson.main_recording_url
+        );
+        if (mainVideo) {
+          form.setValue("main_recording_id", mainVideo.id);
+        }
+      }
+
+      if (lesson.recording_gvo_url) {
+        const gvoVideo = videosData.data.find(
+          (video) => video.videoUrl === lesson.recording_gvo_url
+        );
+        if (gvoVideo) {
+          form.setValue("recording_gvo_id", gvoVideo.id);
+        }
+      }
+
+      if (lesson.recording_vvt_url) {
+        const vvtVideo = videosData.data.find(
+          (video) => video.videoUrl === lesson.recording_vvt_url
+        );
+        if (vvtVideo) {
+          form.setValue("recording_vvt_id", vvtVideo.id);
+        }
+      }
+    }
+  }, [isEditing, lessonData, videosData, form]);
 
   // Check permissions
   const canCreate = hasPermission("create_lessons");
@@ -243,191 +247,43 @@ export function CreateUpdateLesson() {
     );
   }
 
-  // File selection handlers
-  const handleMainRecordingSelect = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("video/")) {
-        toast.error("Please select a valid video file");
-        return;
-      }
-      setSelectedMainRecording(file);
-      setMainRecordingUploadStatus("idle");
-      setMainRecordingUploadProgress(null);
-      setUploadError("");
-      // Reset remove flag when new file is selected
-      setRemoveExistingMainRecording(false);
-    }
-  };
-
-  const handleGvoRecordingSelect = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("video/")) {
-        toast.error("Please select a valid video file");
-        return;
-      }
-      setSelectedGvoRecording(file);
-      setGvoRecordingUploadStatus("idle");
-      setGvoRecordingUploadProgress(null);
-      setUploadError("");
-      // Reset remove flag when new file is selected
-      setRemoveExistingGvoRecording(false);
-    }
-  };
-
-  const handleVvtRecordingSelect = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("video/")) {
-        toast.error("Please select a valid video file");
-        return;
-      }
-      setSelectedVvtRecording(file);
-      setVvtRecordingUploadStatus("idle");
-      setVvtRecordingUploadProgress(null);
-      setUploadError("");
-      // Reset remove flag when new file is selected
-      setRemoveExistingVvtRecording(false);
-    }
-  };
-
-  // Upload files
-  const uploadFiles = async (): Promise<{
-    mainRecordingUrl: string;
-    gvoRecordingUrl?: string;
-    vvtRecordingUrl?: string;
-  }> => {
-    const uploads: Promise<UploadResult>[] = [];
-
-    // Upload main recording (required)
-    if (selectedMainRecording) {
-      setMainRecordingUploadStatus("uploading");
-      const mainUpload = UploadService.uploadFileWithProgress(
-        selectedMainRecording,
-        "video",
-        "lessons",
-        (progress) => setMainRecordingUploadProgress(progress)
-      );
-      uploads.push(mainUpload);
-    } else if (!isEditing) {
-      // Only require main recording for new lessons
-      throw new Error("Main recording is required");
-    }
-
-    // Upload GVO recording (optional)
-    if (selectedGvoRecording) {
-      setGvoRecordingUploadStatus("uploading");
-      const gvoUpload = UploadService.uploadFileWithProgress(
-        selectedGvoRecording,
-        "video",
-        "lessons",
-        (progress) => setGvoRecordingUploadProgress(progress)
-      );
-      uploads.push(gvoUpload);
-    }
-
-    // Upload VVT recording (optional)
-    if (selectedVvtRecording) {
-      setVvtRecordingUploadStatus("uploading");
-      const vvtUpload = UploadService.uploadFileWithProgress(
-        selectedVvtRecording,
-        "video",
-        "lessons",
-        (progress) => setVvtRecordingUploadProgress(progress)
-      );
-      uploads.push(vvtUpload);
-    }
-
-    try {
-      const results = await Promise.all(uploads);
-
-      // Set upload status to completed
-      if (selectedMainRecording) {
-        setMainRecordingUploadStatus("completed");
-      }
-      if (selectedGvoRecording) {
-        setGvoRecordingUploadStatus("completed");
-      }
-      if (selectedVvtRecording) {
-        setVvtRecordingUploadStatus("completed");
-      }
-
-      // Handle removal of existing recordings
-      let mainRecordingUrl = results[0]?.downloadUrl || "";
-      let gvoRecordingUrl = results[1]?.downloadUrl || "";
-      let vvtRecordingUrl = results[2]?.downloadUrl || "";
-
-      // If user wants to remove existing recordings and no new ones are selected
-      if (removeExistingMainRecording && !selectedMainRecording) {
-        mainRecordingUrl = "";
-      }
-      if (removeExistingGvoRecording && !selectedGvoRecording) {
-        gvoRecordingUrl = "";
-      }
-      if (removeExistingVvtRecording && !selectedVvtRecording) {
-        vvtRecordingUrl = "";
-      }
-
-      return {
-        mainRecordingUrl,
-        gvoRecordingUrl,
-        vvtRecordingUrl,
-      };
-    } catch (error) {
-      // Set upload status to error
-      if (selectedMainRecording) {
-        setMainRecordingUploadStatus("error");
-      }
-      if (selectedGvoRecording) {
-        setGvoRecordingUploadStatus("error");
-      }
-      if (selectedVvtRecording) {
-        setVvtRecordingUploadStatus("error");
-      }
-
-      setUploadError(error instanceof Error ? error.message : "Upload failed");
-      throw error;
-    }
-  };
-
   // Form submission
   const handleSubmit = async (data: LessonFormData) => {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
-    setUploadError("");
 
     try {
-      // Upload files if selected
-      let fileUrls: {
-        mainRecordingUrl: string;
-        gvoRecordingUrl?: string;
-        vvtRecordingUrl?: string;
-      } = {
-        mainRecordingUrl: data.main_recording_url || "",
-        gvoRecordingUrl: data.recording_gvo_url || "",
-        vvtRecordingUrl: data.recording_vvt_url || "",
-      };
+      // Get video URLs from selected video IDs
+      let mainRecordingUrl = "";
+      let gvoRecordingUrl = "";
+      let vvtRecordingUrl = "";
 
-      if (
-        selectedMainRecording ||
-        selectedGvoRecording ||
-        selectedVvtRecording ||
-        removeExistingMainRecording ||
-        removeExistingGvoRecording ||
-        removeExistingVvtRecording
-      ) {
-        fileUrls = await uploadFiles();
+      if (data.main_recording_id) {
+        const mainVideo = videosData?.data?.find(
+          (video) => video.id === data.main_recording_id
+        );
+        if (mainVideo) {
+          mainRecordingUrl = mainVideo.videoUrl;
+        }
+      }
+
+      if (data.recording_gvo_id) {
+        const gvoVideo = videosData?.data?.find(
+          (video) => video.id === data.recording_gvo_id
+        );
+        if (gvoVideo) {
+          gvoRecordingUrl = gvoVideo.videoUrl;
+        }
+      }
+
+      if (data.recording_vvt_id) {
+        const vvtVideo = videosData?.data?.find(
+          (video) => video.id === data.recording_vvt_id
+        );
+        if (vvtVideo) {
+          vvtRecordingUrl = vvtVideo.videoUrl;
+        }
       }
 
       if (isEditing) {
@@ -445,10 +301,10 @@ export function CreateUpdateLesson() {
             ...(data.description?.he &&
               data.description?.he.trim() && { he: data.description?.he }),
           },
-          topicId: data.topicId,
-          main_recording_url: fileUrls.mainRecordingUrl,
-          recording_gvo_url: fileUrls.gvoRecordingUrl || undefined,
-          recording_vvt_url: fileUrls.vvtRecordingUrl || undefined,
+          topicId: data.topicId!,
+          main_recording_url: mainRecordingUrl || undefined,
+          recording_gvo_url: gvoRecordingUrl || undefined,
+          recording_vvt_url: vvtRecordingUrl || undefined,
           isActive: data.isActive,
         };
 
@@ -475,10 +331,10 @@ export function CreateUpdateLesson() {
                   data.description.he.trim() && { he: data.description.he }),
               }
             : undefined,
-          topicId: data.topicId,
-          main_recording_url: fileUrls.mainRecordingUrl,
-          recording_gvo_url: fileUrls.gvoRecordingUrl || undefined,
-          recording_vvt_url: fileUrls.vvtRecordingUrl || undefined,
+          topicId: data.topicId!,
+          main_recording_url: mainRecordingUrl || "",
+          recording_gvo_url: gvoRecordingUrl || undefined,
+          recording_vvt_url: vvtRecordingUrl || undefined,
         };
 
         await createLessonMutation.mutateAsync(lessonData);
@@ -676,411 +532,162 @@ export function CreateUpdateLesson() {
             </CardContent>
           </Card>
 
-          {/* Recording Uploads */}
+          {/* Recording Selection */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Video className="h-5 w-5" />
-                Recording Uploads
+                Recording Selection
               </CardTitle>
               <CardDescription>
-                Upload video recordings for your lesson. Main recording is
-                {isEditing ? " optional when editing" : " required"}.
+                Select video recordings from your video library for this lesson.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Main Recording */}
               <div className="space-y-4">
-                <div>
-                  <FormLabel className="text-base font-medium">
-                    Main Recording {!isEditing && "*"}
-                  </FormLabel>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Upload the main video recording for this lesson (MP4, MPEG,
-                    MOV, AVI, WebM, OGG)
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Input
-                      type="file"
-                      accept="video/*"
-                      onChange={handleMainRecordingSelect}
-                      className="flex-1"
-                    />
-                    {selectedMainRecording && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedMainRecording(null);
-                          setRemoveExistingMainRecording(false);
-                        }}
+                <FormField
+                  control={form.control}
+                  name="main_recording_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Main Recording</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
                       >
-                        Clear
-                      </Button>
-                    )}
-                  </div>
-
-                  {selectedMainRecording && (
-                    <div className="text-sm text-gray-600">
-                      Selected: {selectedMainRecording.name} (
-                      {UploadService.formatBytes(selectedMainRecording.size)})
-                    </div>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select main recording" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">No main recording</SelectItem>
+                          {videosData?.data?.map((video) => (
+                            <SelectItem key={video.id} value={video.id}>
+                              {video.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
                   )}
+                />
 
-                  {mainRecordingUploadStatus === "uploading" &&
-                    mainRecordingUploadProgress && (
-                      <UploadProgressCard
-                        progress={mainRecordingUploadProgress}
-                        fileName={selectedMainRecording?.name || ""}
-                        status="uploading"
-                      />
-                    )}
-
-                  {mainRecordingUploadStatus === "completed" &&
-                    mainRecordingUploadProgress && (
-                      <UploadProgressCard
-                        progress={mainRecordingUploadProgress}
-                        fileName={selectedMainRecording?.name || ""}
-                        status="completed"
-                      />
-                    )}
-
-                  {mainRecordingUploadStatus === "error" &&
-                    mainRecordingUploadProgress && (
-                      <UploadProgressCard
-                        progress={mainRecordingUploadProgress}
-                        fileName={selectedMainRecording?.name || ""}
-                        status="error"
-                        error={uploadError}
-                      />
-                    )}
-
-                  {/* Show existing recording when editing and not uploading new one */}
-                  {isEditing &&
-                    !selectedMainRecording &&
-                    lessonData?.data?.main_recording_url && (
-                      <div className="mt-3 p-3 border rounded-lg bg-gray-50">
-                        <p className="text-sm text-gray-600 mb-2">
-                          Current main recording:
-                        </p>
-                        <video
-                          src={lessonData.data.main_recording_url}
-                          controls
-                          className="max-w-xs h-auto rounded border"
-                        />
-                        <div className="mt-3">
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setRemoveExistingMainRecording(true)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Remove Current Recording
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Show remove confirmation for main recording */}
-                  {isEditing &&
-                    lessonData?.data?.main_recording_url &&
-                    removeExistingMainRecording && (
-                      <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
-                        <p className="text-sm text-red-600 mb-2">
-                          Current main recording will be removed. Upload a new
-                          recording or save to confirm removal.
-                        </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setRemoveExistingMainRecording(false)}
-                        >
-                          Cancel Removal
-                        </Button>
-                      </div>
-                    )}
-                </div>
+                {/* Show selected main recording */}
+                {form.watch("main_recording_id") && (
+                  <div className="mt-3 p-3 border rounded-lg bg-gray-50">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Selected main recording:
+                    </p>
+                    <div className="text-sm font-medium">
+                      {
+                        videosData?.data?.find(
+                          (video) =>
+                            video.id === form.watch("main_recording_id")
+                        )?.name
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* GVO Recording */}
               <div className="space-y-4">
-                <div>
-                  <FormLabel className="text-base font-medium">
-                    GVO Recording
-                  </FormLabel>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Upload GVO video recording (optional)
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Input
-                      type="file"
-                      accept="video/*"
-                      onChange={handleGvoRecordingSelect}
-                      className="flex-1"
-                    />
-                    {selectedGvoRecording && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedGvoRecording(null);
-                          setRemoveExistingGvoRecording(false);
-                        }}
+                <FormField
+                  control={form.control}
+                  name="recording_gvo_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>GVO Recording</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
                       >
-                        Clear
-                      </Button>
-                    )}
-                  </div>
-
-                  {selectedGvoRecording && (
-                    <div className="text-sm text-gray-600">
-                      Selected: {selectedGvoRecording.name} (
-                      {UploadService.formatBytes(selectedGvoRecording.size)})
-                    </div>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select GVO recording" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">No GVO recording</SelectItem>
+                          {videosData?.data?.map((video) => (
+                            <SelectItem key={video.id} value={video.id}>
+                              {video.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
                   )}
+                />
 
-                  {gvoRecordingUploadStatus === "uploading" &&
-                    gvoRecordingUploadProgress && (
-                      <UploadProgressCard
-                        progress={gvoRecordingUploadProgress}
-                        fileName={selectedGvoRecording?.name || ""}
-                        status="uploading"
-                      />
-                    )}
-
-                  {gvoRecordingUploadStatus === "completed" &&
-                    gvoRecordingUploadProgress && (
-                      <UploadProgressCard
-                        progress={gvoRecordingUploadProgress}
-                        fileName={selectedGvoRecording?.name || ""}
-                        status="completed"
-                      />
-                    )}
-
-                  {gvoRecordingUploadStatus === "error" &&
-                    gvoRecordingUploadProgress && (
-                      <UploadProgressCard
-                        progress={gvoRecordingUploadProgress}
-                        fileName={selectedGvoRecording?.name || ""}
-                        status="error"
-                        error={uploadError}
-                      />
-                    )}
-
-                  {/* Show existing recording when editing and not uploading new one */}
-                  {isEditing &&
-                    !selectedGvoRecording &&
-                    lessonData?.data?.recording_gvo_url && (
-                      <div className="mt-3 p-3 border rounded-lg bg-gray-50">
-                        <p className="text-sm text-gray-600 mb-2">
-                          Current GVO recording:
-                        </p>
-                        <video
-                          src={lessonData.data.recording_gvo_url}
-                          controls
-                          className="max-w-xs h-auto rounded border"
-                        />
-                        <div className="mt-3">
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setRemoveExistingGvoRecording(true)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Remove Current Recording
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Show remove confirmation for GVO recording */}
-                  {isEditing &&
-                    lessonData?.data?.recording_gvo_url &&
-                    removeExistingGvoRecording && (
-                      <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
-                        <p className="text-sm text-red-600 mb-2">
-                          Current GVO recording will be removed. Upload a new
-                          recording or save to confirm removal.
-                        </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setRemoveExistingGvoRecording(false)}
-                        >
-                          Cancel Removal
-                        </Button>
-                      </div>
-                    )}
-                </div>
+                {/* Show selected GVO recording */}
+                {form.watch("recording_gvo_id") && (
+                  <div className="mt-3 p-3 border rounded-lg bg-gray-50">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Selected GVO recording:
+                    </p>
+                    <div className="text-sm font-medium">
+                      {
+                        videosData?.data?.find(
+                          (video) => video.id === form.watch("recording_gvo_id")
+                        )?.name
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* VVT Recording */}
               <div className="space-y-4">
-                <div>
-                  <FormLabel className="text-base font-medium">
-                    VVT Recording
-                  </FormLabel>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Upload VVT video recording (optional)
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Input
-                      type="file"
-                      accept="video/*"
-                      onChange={handleVvtRecordingSelect}
-                      className="flex-1"
-                    />
-                    {selectedVvtRecording && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedVvtRecording(null);
-                          setRemoveExistingVvtRecording(false);
-                        }}
+                <FormField
+                  control={form.control}
+                  name="recording_vvt_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>VVT Recording</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
                       >
-                        Clear
-                      </Button>
-                    )}
-                  </div>
-
-                  {selectedVvtRecording && (
-                    <div className="text-sm text-gray-600">
-                      Selected: {selectedVvtRecording.name} (
-                      {UploadService.formatBytes(selectedVvtRecording.size)})
-                    </div>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select VVT recording" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">No VVT recording</SelectItem>
+                          {videosData?.data?.map((video) => (
+                            <SelectItem key={video.id} value={video.id}>
+                              {video.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
                   )}
+                />
 
-                  {vvtRecordingUploadStatus === "uploading" &&
-                    vvtRecordingUploadProgress && (
-                      <UploadProgressCard
-                        progress={vvtRecordingUploadProgress}
-                        fileName={selectedVvtRecording?.name || ""}
-                        status="uploading"
-                      />
-                    )}
-
-                  {vvtRecordingUploadStatus === "completed" &&
-                    vvtRecordingUploadProgress && (
-                      <UploadProgressCard
-                        progress={vvtRecordingUploadProgress}
-                        fileName={selectedVvtRecording?.name || ""}
-                        status="completed"
-                      />
-                    )}
-
-                  {vvtRecordingUploadStatus === "error" &&
-                    vvtRecordingUploadProgress && (
-                      <UploadProgressCard
-                        progress={vvtRecordingUploadProgress}
-                        fileName={selectedVvtRecording?.name || ""}
-                        status="error"
-                        error={uploadError}
-                      />
-                    )}
-
-                  {/* Show existing recording when editing and not uploading new one */}
-                  {isEditing &&
-                    !selectedVvtRecording &&
-                    lessonData?.data?.recording_vvt_url && (
-                      <div className="mt-3 p-3 border rounded-lg bg-gray-50">
-                        <p className="text-sm text-gray-600 mb-2">
-                          Current VVT recording:
-                        </p>
-                        <video
-                          src={lessonData.data.recording_vvt_url}
-                          controls
-                          className="max-w-xs h-auto rounded border"
-                        />
-                        <div className="mt-3">
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setRemoveExistingVvtRecording(true)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Remove Current Recording
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Show remove confirmation for VVT recording */}
-                  {isEditing &&
-                    lessonData?.data?.recording_vvt_url &&
-                    removeExistingVvtRecording && (
-                      <div className="mt-3 p-3 border rounded-lg bg-red-50 border-red-200">
-                        <p className="text-sm text-red-600 mb-2">
-                          Current VVT recording will be removed. Upload a new
-                          recording or save to confirm removal.
-                        </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setRemoveExistingVvtRecording(false)}
-                        >
-                          Cancel Removal
-                        </Button>
-                      </div>
-                    )}
-                </div>
+                {/* Show selected VVT recording */}
+                {form.watch("recording_vvt_id") && (
+                  <div className="mt-3 p-3 border rounded-lg bg-gray-50">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Selected VVT recording:
+                    </p>
+                    <div className="text-sm font-medium">
+                      {
+                        videosData?.data?.find(
+                          (video) => video.id === form.watch("recording_vvt_id")
+                        )?.name
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {/* Hidden form fields for validation */}
-              <FormField
-                control={form.control}
-                name="main_recording_url"
-                render={({ field }) => (
-                  <FormItem className="hidden">
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="recording_gvo_url"
-                render={({ field }) => (
-                  <FormItem className="hidden">
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="recording_vvt_url"
-                render={({ field }) => (
-                  <FormItem className="hidden">
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </CardContent>
           </Card>
 
