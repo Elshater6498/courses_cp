@@ -598,4 +598,90 @@ export interface EnrollmentFilters {
   endDate?: string
 }
 
-// Video Library Types are now defined in videos-library-service.ts
+// Video Library Types
+export interface VideoLibrary {
+  _id: string;
+  name: string; // Backend returns string, not multilingual object
+  videoUrl: string;
+  videoType: string;
+  fileSize: number;
+  entityType: 'lesson' | 'course';
+  uploadedBy: {
+    _id: string;
+    userName: string;
+    email: string;
+  };
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface VideoLibraryResponse {
+  success: boolean;
+  message: string;
+  data: {
+    docs: VideoLibrary[];
+    totalDocs: number;
+    limit: number;
+    totalPages: number;
+    page: number;
+    pagingCounter: number;
+    hasPrevPage: boolean;
+    hasNextPage: boolean;
+    prevPage: number | null;
+    nextPage: number | null;
+    meta: {
+      filter: {
+        isActive: boolean;
+      };
+    };
+  };
+}
+
+export interface CreateVideoLibraryInput {
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  videoUrl: string;
+  videoType: string;
+  fileSize?: number;
+  entityType: 'lesson' | 'course';
+  uploadedBy?: string;
+}
+
+export interface UpdateVideoLibraryInput {
+  name?: {
+    en?: string;
+    ar?: string;
+    he?: string;
+  };
+  isActive?: boolean;
+}
+
+export interface VideoLibraryQueryParams extends PaginationParams {
+  entityType?: 'lesson' | 'course';
+  videoType?: string;
+  uploadedBy?: string;
+  isActive?: boolean;
+  search?: string;
+  fileSizeMin?: number;
+  fileSizeMax?: number;
+  language?: 'en' | 'ar' | 'he' | 'all';
+  includePresignedUrls?: boolean;
+}
+
+export interface VideoLibraryStats {
+  totalVideos: number;
+  totalFileSize: number;
+  averageFileSize: number;
+  videoTypes: { [key: string]: number };
+}
+
+export interface VideoForSelect {
+  id: string;
+  name: string;
+  videoUrl: string;
+}

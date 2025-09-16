@@ -85,7 +85,7 @@ const navigation = [
     name: "Videos Library",
     href: "/dashboard/videos-library",
     icon: Video,
-    permission: "read_videos_library",
+    permission: "read_video_library",
   },
 ];
 

@@ -5,8 +5,7 @@ import type {
   CreateVideoLibraryInput,
   UpdateVideoLibraryInput,
   VideoLibraryQueryParams,
-  GenerateUploadUrlRequest,
-} from '@/services/videos-library-service';
+} from '@/types/api';
 
 // Query Keys
 export const videoLibraryKeys = {
@@ -88,16 +87,7 @@ export function useSearchVideoLibraries(
   });
 }
 
-// Generate upload URL
-export function useGenerateUploadUrl() {
-  return useMutation({
-    mutationFn: (data: GenerateUploadUrlRequest) => 
-      videoLibraryService.generateUploadUrl(data),
-    onError: (error: Error) => {
-      toast.error(`Failed to generate upload URL: ${error.message}`);
-    },
-  });
-}
+// Remove generateUploadUrl hook as we're using the standard UploadService
 
 // Create video library
 export function useCreateVideoLibrary() {

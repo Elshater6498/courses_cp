@@ -1,103 +1,22 @@
-import { apiGet, apiPost, apiPut, apiDelete, apiGetPaginated } from './api';
+import { apiGet, apiPost, apiPut, apiDelete } from './api';
+import { UploadService, type UploadProgress } from './upload-service';
 import type { 
   ApiResponse, 
-  PaginatedResponse, 
-  PaginationParams 
+  VideoLibrary,
+  VideoLibraryResponse,
+  CreateVideoLibraryInput,
+  UpdateVideoLibraryInput,
+  VideoLibraryQueryParams,
+  VideoLibraryStats,
+  VideoForSelect
 } from '../types/api';
 
-// Types for Video Library
-export interface VideoLibrary {
-  _id: string;
-  name: {
-    en: string;
-    ar?: string;
-    he?: string;
-  };
-  videoUrl: string;
-  videoType: string;
-  fileSize?: number;
-  entityType: 'lesson' | 'course';
-  uploadedBy: {
-    _id: string;
-    userName: string;
-    email: string;
-  };
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  // Virtual fields
-  videoExtension?: string;
-  formattedFileSize?: string;
-  presignedVideoUrl?: string;
-}
-
-export interface CreateVideoLibraryInput {
-  name: {
-    en: string;
-    ar?: string;
-    he?: string;
-  };
-  videoUrl: string;
-  videoType: string;
-  fileSize?: number;
-  entityType: 'lesson' | 'course';
-  uploadedBy?: string;
-}
-
-export interface UpdateVideoLibraryInput {
-  name?: {
-    en?: string;
-    ar?: string;
-    he?: string;
-  };
-  isActive?: boolean;
-}
-
-export interface VideoLibraryQueryParams extends PaginationParams {
-  entityType?: 'lesson' | 'course';
-  videoType?: string;
-  uploadedBy?: string;
-  isActive?: boolean;
-  search?: string;
-  fileSizeMin?: number;
-  fileSizeMax?: number;
-  language?: 'en' | 'ar' | 'he' | 'all';
-  includePresignedUrls?: boolean;
-}
-
-export interface VideoLibraryStats {
-  totalVideos: number;
-  totalFileSize: number;
-  averageFileSize: number;
-  videoTypes: { [key: string]: number };
-}
-
-export interface VideoForSelect {
-  id: string;
-  name: string;
-  videoUrl: string;
-}
-
-export interface GenerateUploadUrlRequest {
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  uploadType: 'video';
-  entityType?: 'lesson' | 'course';
-  entityId?: string;
-}
-
-export interface GenerateUploadUrlResponse {
-  presignedUrl: string;
-  downloadUrl: string;
-  key: string;
-}
+// Remove these interfaces as we'll use the UploadService instead
 
 // Video Library API endpoints
 const VIDEO_LIBRARY_ENDPOINTS = {
   VIDEO_LIBRARY: 'dashboard/video-library',
   VIDEO_LIBRARY_BY_ID: (id: string) => `dashboard/video-library/${id}`,
-  GENERATE_UPLOAD_URL: 'dashboard/video-library/upload-url',
   PRESIGNED_VIDEO_URL: (id: string) => `dashboard/video-library/${id}/video-url`,
   VIDEO_STATS: (entityType: string) => `dashboard/video-library/stats/${entityType}`,
   SEARCH_VIDEOS: 'dashboard/video-library/search',
@@ -107,10 +26,6 @@ const VIDEO_LIBRARY_ENDPOINTS = {
 
 // Video Library service functions
 export const videoLibraryService = {
-  // Generate presigned URL for video upload
-  async generateUploadUrl(data: GenerateUploadUrlRequest): Promise<ApiResponse<GenerateUploadUrlResponse>> {
-    return apiPost<GenerateUploadUrlResponse>(VIDEO_LIBRARY_ENDPOINTS.GENERATE_UPLOAD_URL, data);
-  },
 
   // Create video library record after successful upload
   async createVideoLibrary(data: CreateVideoLibraryInput): Promise<ApiResponse<VideoLibrary>> {
@@ -118,8 +33,13 @@ export const videoLibraryService = {
   },
 
   // Get all video libraries with pagination and filters
-  async getVideoLibraries(params?: VideoLibraryQueryParams): Promise<PaginatedResponse<VideoLibrary>> {
-    return apiGetPaginated<VideoLibrary>(VIDEO_LIBRARY_ENDPOINTS.VIDEO_LIBRARY, params);
+  async getVideoLibraries(params?: VideoLibraryQueryParams): Promise<VideoLibraryResponse> {
+    const response = await apiGet<VideoLibraryResponse['data']>(VIDEO_LIBRARY_ENDPOINTS.VIDEO_LIBRARY, { params });
+    return {
+      success: response.success,
+      message: response.message,
+      data: response.data!
+    };
   },
 
   // Get video library by ID
@@ -197,14 +117,19 @@ export const videoLibraryService = {
     } = {},
     options: { page?: number; limit?: number } = {},
     language: 'en' | 'ar' | 'he' | 'all' = 'en'
-  ): Promise<PaginatedResponse<VideoLibrary>> {
+  ): Promise<VideoLibraryResponse> {
     const params = {
       search,
       ...filters,
       ...options,
       language,
     };
-    return apiGetPaginated<VideoLibrary>(VIDEO_LIBRARY_ENDPOINTS.SEARCH_VIDEOS, params);
+    const response = await apiGet<VideoLibraryResponse['data']>(VIDEO_LIBRARY_ENDPOINTS.SEARCH_VIDEOS, { params });
+    return {
+      success: response.success,
+      message: response.message,
+      data: response.data!
+    };
   },
 
   // Get videos for select input (id, name, videoUrl only)
@@ -219,42 +144,37 @@ export const videoLibraryService = {
     return apiGet<VideoForSelect[]>(VIDEO_LIBRARY_ENDPOINTS.VIDEOS_FOR_SELECT, { params });
   },
 
-  // Upload video with progress tracking
+  // Upload video with progress tracking using the standard UploadService
   async uploadVideoWithProgress(
     file: File,
-    entityType: 'lesson' | 'course',
-    entityId?: string,
-    _onProgress?: (progress: { loaded: number; total: number; percentage: number }) => void
+    _entityType: 'lesson' | 'course',
+    _entityId?: string,
+    onProgress?: (progress: { loaded: number; total: number; percentage: number }) => void
   ): Promise<{ downloadUrl: string; key: string }> {
     try {
-      // Generate upload URL
-      const uploadUrlResponse = await this.generateUploadUrl({
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        uploadType: 'video',
-        entityType,
-        entityId,
-      });
+      // Use the standard UploadService for video uploads
+      const uploadType = UploadService.getUploadType(file.type);
+      const folder = `videos`;
 
-      const uploadUrlData = uploadUrlResponse.data!;
+      // Convert progress callback format to match UploadService
+      const uploadProgressCallback = onProgress ? (progress: UploadProgress) => {
+        onProgress({
+          loaded: progress.uploadedBytes,
+          total: progress.totalBytes,
+          percentage: progress.percentage,
+        });
+      } : undefined;
 
-      // Upload file to S3
-      const uploadResponse = await fetch(uploadUrlData.presignedUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file to S3');
-      }
+      const result = await UploadService.uploadFileWithProgress(
+        file,
+        uploadType,
+        folder,
+        uploadProgressCallback
+      );
 
       return {
-        downloadUrl: uploadUrlData.downloadUrl,
-        key: uploadUrlData.key,
+        downloadUrl: result.downloadUrl,
+        key: result.key,
       };
     } catch (error) {
       console.error('Error uploading video:', error);

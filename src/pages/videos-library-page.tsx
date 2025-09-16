@@ -61,7 +61,7 @@ import {
 } from "@/hooks/use-videos-library";
 import { UploadVideoDialog } from "@/components/shared/upload-video-dialog";
 import { videoLibraryService } from "@/services/videos-library-service";
-import type { VideoLibrary } from "@/services/videos-library-service";
+import type { VideoLibrary } from "@/types/api";
 
 export function VideosLibraryPage() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -99,6 +99,7 @@ export function VideosLibraryPage() {
     isLoading,
     refetch,
   } = useVideoLibraries(queryParams);
+  console.log("videosData", videosData);
 
   const handleVideoUploaded = () => {
     refetch();
@@ -122,9 +123,7 @@ export function VideosLibraryPage() {
   const handleSoftDelete = async (video: VideoLibrary) => {
     if (
       window.confirm(
-        `Are you sure you want to delete "${
-          typeof video.name === "string" ? video.name : video.name.en
-        }"? This action will mark the video as inactive.`
+        `Are you sure you want to delete "${video.name}"? This action will mark the video as inactive.`
       )
     ) {
       try {
@@ -245,7 +244,7 @@ export function VideosLibraryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {videosData?.data?.pagination?.totalItems || 0}
+              {videosData?.data?.totalDocs || 0}
             </div>
           </CardContent>
         </Card>
@@ -257,7 +256,7 @@ export function VideosLibraryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {videosData?.data?.items?.filter((video) => video.isActive)
+              {videosData?.data?.docs?.filter((video) => video.isActive)
                 .length || 0}
             </div>
           </CardContent>
@@ -271,7 +270,7 @@ export function VideosLibraryPage() {
           <CardContent>
             <div className="text-2xl font-bold">
               {videoLibraryService.formatBytes(
-                videosData?.data?.items?.reduce(
+                videosData?.data?.docs?.reduce(
                   (total, video) => total + (video.fileSize || 0),
                   0
                 ) || 0
@@ -287,7 +286,7 @@ export function VideosLibraryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {videosData?.data?.items?.length || 0}
+              {videosData?.data?.docs?.length || 0}
             </div>
           </CardContent>
         </Card>
@@ -353,7 +352,7 @@ export function VideosLibraryPage() {
           <CardDescription>Manage your video library files</CardDescription>
         </CardHeader>
         <CardContent>
-          {videosData?.data?.items?.length === 0 ? (
+          {videosData?.data?.docs?.length === 0 ? (
             <div className="text-center py-8">
               <FileVideo className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -391,17 +390,13 @@ export function VideosLibraryPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {videosData?.data?.items?.map((video) => (
+                  {videosData?.data?.docs?.map((video) => (
                     <TableRow key={video._id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {getFileIcon()}
                           <div>
-                            <div className="font-medium">
-                              {typeof video.name === "string"
-                                ? video.name
-                                : video.name.en}
-                            </div>
+                            <div className="font-medium">{video.name}</div>
                             <div className="text-sm text-gray-500">
                               {video.videoType}
                             </div>
@@ -434,9 +429,7 @@ export function VideosLibraryPage() {
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-gray-400" />
                           <span className="text-sm">
-                            {typeof video.uploadedBy === "string"
-                              ? video.uploadedBy
-                              : video.uploadedBy.userName}
+                            {video.uploadedBy.userName}
                           </span>
                         </div>
                       </TableCell>
@@ -451,9 +444,11 @@ export function VideosLibraryPage() {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            <div>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
@@ -484,16 +479,16 @@ export function VideosLibraryPage() {
               </Table>
 
               {/* Pagination */}
-              {videosData?.data?.pagination && (
+              {videosData?.data && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-700">
                       Showing {(currentPage - 1) * pageSize + 1} to{" "}
                       {Math.min(
                         currentPage * pageSize,
-                        videosData.data.pagination.totalItems
+                        videosData.data.totalDocs
                       )}{" "}
-                      of {videosData.data.pagination.totalItems} videos
+                      of {videosData.data.totalDocs} videos
                     </span>
                     <Select
                       value={pageSize.toString()}
@@ -516,19 +511,18 @@ export function VideosLibraryPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={!videosData.data.pagination.hasPrev}
+                      disabled={!videosData.data.hasPrevPage}
                     >
                       Previous
                     </Button>
                     <span className="text-sm">
-                      Page {currentPage} of{" "}
-                      {videosData.data.pagination.totalPages}
+                      Page {currentPage} of {videosData.data.totalPages}
                     </span>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={!videosData.data.pagination.hasNext}
+                      disabled={!videosData.data.hasNextPage}
                     >
                       Next
                     </Button>
@@ -551,12 +545,7 @@ export function VideosLibraryPage() {
       <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>
-              {selectedVideo &&
-                (typeof selectedVideo.name === "string"
-                  ? selectedVideo.name
-                  : selectedVideo.name.en)}
-            </DialogTitle>
+            <DialogTitle>{selectedVideo?.name}</DialogTitle>
             <DialogDescription>
               Video Preview - {selectedVideo?.videoType}
             </DialogDescription>
