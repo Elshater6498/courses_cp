@@ -30,6 +30,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -142,6 +153,11 @@ export function UniversitiesPage() {
     null
   );
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [deleteUniversityId, setDeleteUniversityId] = useState<string>("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [hardDeleteUniversityId, setHardDeleteUniversityId] =
+    useState<string>("");
+  const [isHardDeleteDialogOpen, setIsHardDeleteDialogOpen] = useState(false);
 
   // Queries
   const {
@@ -248,13 +264,16 @@ export function UniversitiesPage() {
   };
 
   const handleDeleteUniversity = async (universityId: string) => {
-    if (!window.confirm("Are you sure you want to delete this university?")) {
-      return;
-    }
+    setDeleteUniversityId(universityId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const confirmDeleteUniversity = async () => {
     try {
-      await deleteUniversityMutation.mutateAsync(universityId);
+      await deleteUniversityMutation.mutateAsync(deleteUniversityId);
       toast.success("University deleted successfully!");
+      setIsDeleteDialogOpen(false);
+      setDeleteUniversityId("");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete university"
@@ -263,17 +282,16 @@ export function UniversitiesPage() {
   };
 
   const handleHardDeleteUniversity = async (universityId: string) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to permanently delete this university? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+    setHardDeleteUniversityId(universityId);
+    setIsHardDeleteDialogOpen(true);
+  };
 
+  const confirmHardDeleteUniversity = async () => {
     try {
-      await hardDeleteUniversityMutation.mutateAsync(universityId);
+      await hardDeleteUniversityMutation.mutateAsync(hardDeleteUniversityId);
       toast.success("University permanently deleted!");
+      setIsHardDeleteDialogOpen(false);
+      setHardDeleteUniversityId("");
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -822,6 +840,56 @@ export function UniversitiesPage() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete University Alert Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete University</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this university? This action will
+              mark the university as inactive.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUniversity}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Hard Delete University Alert Dialog */}
+      <AlertDialog
+        open={isHardDeleteDialogOpen}
+        onOpenChange={setIsHardDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently Delete University</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete this university? This
+              action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmHardDeleteUniversity}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Permanently Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

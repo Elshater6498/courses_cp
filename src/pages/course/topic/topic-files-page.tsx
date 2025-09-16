@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -50,6 +61,9 @@ import { UploadService } from "@/services/upload-service";
 export function TopicFilesPage() {
   const { topicId } = useParams<{ courseId: string; topicId: string }>();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [deleteFileId, setDeleteFileId] = useState<string>("");
+  const [deleteFileName, setDeleteFileName] = useState<string>("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Queries
   const { data: topicData } = useTopic(topicId!);
@@ -66,13 +80,16 @@ export function TopicFilesPage() {
   };
 
   const handleDeleteFile = (fileId: string, fileName: string) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete "${fileName}"? This action cannot be undone.`
-      )
-    ) {
-      deleteFileMutation.mutate(fileId);
-    }
+    setDeleteFileId(fileId);
+    setDeleteFileName(fileName);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteFile = () => {
+    deleteFileMutation.mutate(deleteFileId);
+    setIsDeleteDialogOpen(false);
+    setDeleteFileId("");
+    setDeleteFileName("");
   };
 
   const handleDownloadFile = async (file: AttachedFile) => {
@@ -267,6 +284,31 @@ export function TopicFilesPage() {
         entityId={topicId!}
         onFileUploaded={handleFileUploaded}
       />
+
+      {/* Delete File Alert Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete File</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteFileName}"? This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteFile}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

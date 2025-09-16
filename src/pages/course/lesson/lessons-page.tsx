@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   DndContext,
   closestCenter,
   KeyboardSensor,
@@ -216,6 +227,8 @@ export function LessonsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteLessonId, setDeleteLessonId] = useState<string>("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Sensors for drag and drop
   const sensors = useSensors(
@@ -246,13 +259,16 @@ export function LessonsPage() {
 
   // Handlers
   const handleDeleteLesson = async (lessonId: string) => {
-    if (!window.confirm("Are you sure you want to delete this lesson?")) {
-      return;
-    }
+    setDeleteLessonId(lessonId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const confirmDeleteLesson = async () => {
     try {
-      await deleteLessonMutation.mutateAsync(lessonId);
+      await deleteLessonMutation.mutateAsync(deleteLessonId);
       toast.success("Lesson deleted successfully!");
+      setIsDeleteDialogOpen(false);
+      setDeleteLessonId("");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete lesson"
@@ -516,6 +532,31 @@ export function LessonsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Lesson Alert Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Lesson</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this lesson? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteLesson}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

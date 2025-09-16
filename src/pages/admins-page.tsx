@@ -30,6 +30,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -139,6 +149,8 @@ export function AdminsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [passwordAdminId, setPasswordAdminId] = useState<string>("");
+  const [deleteAdminId, setDeleteAdminId] = useState<string>("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Queries
   const {
@@ -221,13 +233,16 @@ export function AdminsPage() {
   };
 
   const handleDeleteAdmin = async (adminId: string) => {
-    if (!window.confirm("Are you sure you want to delete this admin?")) {
-      return;
-    }
+    setDeleteAdminId(adminId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const confirmDeleteAdmin = async () => {
     try {
-      await deleteAdminMutation.mutateAsync(adminId);
+      await deleteAdminMutation.mutateAsync(deleteAdminId);
       toast.success("Admin deleted successfully!");
+      setIsDeleteDialogOpen(false);
+      setDeleteAdminId("");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete admin"
@@ -669,7 +684,7 @@ export function AdminsPage() {
                 to{" "}
                 {Math.min(
                   adminsData.data.pagination.currentPage *
-                  adminsData.data.pagination.itemsPerPage,
+                    adminsData.data.pagination.itemsPerPage,
                   adminsData.data.pagination.totalItems
                 )}{" "}
                 of {adminsData.data.pagination.totalItems} results
@@ -854,6 +869,31 @@ export function AdminsPage() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Admin Alert Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Admin</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this admin? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteAdmin}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

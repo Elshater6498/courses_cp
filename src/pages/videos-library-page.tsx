@@ -30,6 +30,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -68,6 +78,8 @@ export function VideosLibraryPage() {
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<VideoLibrary | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [deleteVideoId, setDeleteVideoId] = useState<string>("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Filters and search
   const [searchTerm, setSearchTerm] = useState("");
@@ -121,17 +133,19 @@ export function VideosLibraryPage() {
   };
 
   const handleSoftDelete = async (video: VideoLibrary) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete "${video.name}"? This action will mark the video as inactive.`
-      )
-    ) {
-      try {
-        await softDeleteMutation.mutateAsync({ id: video._id });
-        setSelectedVideo(null);
-      } catch (error) {
-        // Error is handled by the mutation
-      }
+    setDeleteVideoId(video._id);
+    setSelectedVideo(video);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmSoftDelete = async () => {
+    try {
+      await softDeleteMutation.mutateAsync({ id: deleteVideoId });
+      setSelectedVideo(null);
+      setIsDeleteDialogOpen(false);
+      setDeleteVideoId("");
+    } catch (error) {
+      // Error is handled by the mutation
     }
   };
 
@@ -585,6 +599,31 @@ export function VideosLibraryPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Video Alert Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Video</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{selectedVideo?.name}"? This
+              action will mark the video as inactive.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmSoftDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

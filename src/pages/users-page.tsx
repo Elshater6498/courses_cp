@@ -30,6 +30,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -101,6 +112,11 @@ export function UsersPage() {
     null
   );
   const [isDevicesDialogOpen, setIsDevicesDialogOpen] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState<string>("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [removeDeviceId, setRemoveDeviceId] = useState<string>("");
+  const [isRemoveDeviceDialogOpen, setIsRemoveDeviceDialogOpen] =
+    useState(false);
 
   // Queries
   const {
@@ -157,13 +173,16 @@ export function UsersPage() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) {
-      return;
-    }
+    setDeleteUserId(userId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const confirmDeleteUser = async () => {
     try {
-      await deleteUserMutation.mutateAsync(userId);
+      await deleteUserMutation.mutateAsync(deleteUserId);
       toast.success("User deleted successfully!");
+      setIsDeleteDialogOpen(false);
+      setDeleteUserId("");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete user"
@@ -209,17 +228,20 @@ export function UsersPage() {
 
   const handleRemoveDevice = async (deviceId: string) => {
     if (!viewingDevicesUser) return;
+    setRemoveDeviceId(deviceId);
+    setIsRemoveDeviceDialogOpen(true);
+  };
 
-    if (!window.confirm("Are you sure you want to remove this device?")) {
-      return;
-    }
-
+  const confirmRemoveDevice = async () => {
+    if (!viewingDevicesUser) return;
     try {
       await removeDeviceMutation.mutateAsync({
         id: viewingDevicesUser._id,
-        deviceId,
+        deviceId: removeDeviceId,
       });
       toast.success("Device removed successfully!");
+      setIsRemoveDeviceDialogOpen(false);
+      setRemoveDeviceId("");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to remove device"
@@ -513,7 +535,7 @@ export function UsersPage() {
                 to{" "}
                 {Math.min(
                   usersData.data.pagination.currentPage *
-                  usersData.data.pagination.itemsPerPage,
+                    usersData.data.pagination.itemsPerPage,
                   usersData.data.pagination.totalItems
                 )}{" "}
                 of {usersData.data.pagination.totalItems} results
@@ -725,6 +747,56 @@ export function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Alert Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this user? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUser}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Remove Device Alert Dialog */}
+      <AlertDialog
+        open={isRemoveDeviceDialogOpen}
+        onOpenChange={setIsRemoveDeviceDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Device</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this device? The user will need to
+              re-authenticate on this device.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemoveDevice}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Remove Device
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

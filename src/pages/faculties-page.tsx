@@ -30,6 +30,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -154,6 +164,10 @@ export function FacultiesPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [deleteFacultyId, setDeleteFacultyId] = useState<string>("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [hardDeleteFacultyId, setHardDeleteFacultyId] = useState<string>("");
+  const [isHardDeleteDialogOpen, setIsHardDeleteDialogOpen] = useState(false);
 
   // Queries
   const {
@@ -278,13 +292,16 @@ export function FacultiesPage() {
   };
 
   const handleDeleteFaculty = async (facultyId: string) => {
-    if (!window.confirm("Are you sure you want to delete this faculty?")) {
-      return;
-    }
+    setDeleteFacultyId(facultyId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const confirmDeleteFaculty = async () => {
     try {
-      await deleteFacultyMutation.mutateAsync(facultyId);
+      await deleteFacultyMutation.mutateAsync(deleteFacultyId);
       toast.success("Faculty deleted successfully!");
+      setIsDeleteDialogOpen(false);
+      setDeleteFacultyId("");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete faculty"
@@ -293,17 +310,16 @@ export function FacultiesPage() {
   };
 
   const handleHardDeleteFaculty = async (facultyId: string) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to permanently delete this faculty? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+    setHardDeleteFacultyId(facultyId);
+    setIsHardDeleteDialogOpen(true);
+  };
 
+  const confirmHardDeleteFaculty = async () => {
     try {
-      await hardDeleteFacultyMutation.mutateAsync(facultyId);
+      await hardDeleteFacultyMutation.mutateAsync(hardDeleteFacultyId);
       toast.success("Faculty permanently deleted!");
+      setIsHardDeleteDialogOpen(false);
+      setHardDeleteFacultyId("");
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -1002,6 +1018,56 @@ export function FacultiesPage() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Faculty Alert Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Faculty</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this faculty? This action will
+              mark the faculty as inactive.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteFaculty}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Hard Delete Faculty Alert Dialog */}
+      <AlertDialog
+        open={isHardDeleteDialogOpen}
+        onOpenChange={setIsHardDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently Delete Faculty</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete this faculty? This
+              action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmHardDeleteFaculty}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Permanently Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

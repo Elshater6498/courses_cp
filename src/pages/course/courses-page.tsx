@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -49,6 +60,8 @@ export function CoursesPage() {
   const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
   const [priceFilter, setPriceFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteCourseId, setDeleteCourseId] = useState<string>("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Queries
   const {
@@ -70,13 +83,16 @@ export function CoursesPage() {
 
   // Handlers
   const handleDeleteCourse = async (courseId: string) => {
-    if (!window.confirm("Are you sure you want to delete this course?")) {
-      return;
-    }
+    setDeleteCourseId(courseId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const confirmDeleteCourse = async () => {
     try {
-      await deleteCourseMutation.mutateAsync(courseId);
+      await deleteCourseMutation.mutateAsync(deleteCourseId);
       toast.success("Course deleted successfully!");
+      setIsDeleteDialogOpen(false);
+      setDeleteCourseId("");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete course"
@@ -518,6 +534,31 @@ export function CoursesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Course Alert Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Course</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this course? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteCourse}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
