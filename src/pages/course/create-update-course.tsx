@@ -967,7 +967,9 @@ export function CreateCourse() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No video selected</SelectItem>
+                          <SelectItem value={null as any}>
+                            No video selected
+                          </SelectItem>
                           {videosData?.data?.map((video) => (
                             <SelectItem key={video.id} value={video.id}>
                               {video.name}

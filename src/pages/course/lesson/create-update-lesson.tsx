@@ -562,7 +562,9 @@ export function CreateUpdateLesson() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No main recording</SelectItem>
+                          <SelectItem value={null as any}>
+                            No main recording
+                          </SelectItem>
                           {videosData?.data?.map((video) => (
                             <SelectItem key={video.id} value={video.id}>
                               {video.name}
@@ -611,7 +613,9 @@ export function CreateUpdateLesson() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No GVO recording</SelectItem>
+                          <SelectItem value={null as any}>
+                            No GVO recording
+                          </SelectItem>
                           {videosData?.data?.map((video) => (
                             <SelectItem key={video.id} value={video.id}>
                               {video.name}
@@ -659,7 +663,9 @@ export function CreateUpdateLesson() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No VVT recording</SelectItem>
+                          <SelectItem value={null as any}>
+                            No VVT recording
+                          </SelectItem>
                           {videosData?.data?.map((video) => (
                             <SelectItem key={video.id} value={video.id}>
                               {video.name}
