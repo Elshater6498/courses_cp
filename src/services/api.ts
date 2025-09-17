@@ -119,7 +119,19 @@ export const apiGetPaginated = async <T>(
     ...config,
     params,
   })
-  return response.data
+  
+  // Handle nested response structure from backend
+  const responseData = response.data
+  if (responseData.data && responseData.data.data) {
+    // If the response has nested data structure, flatten it
+    return {
+      success: responseData.success,
+      message: responseData.message,
+      data: responseData.data.data
+    }
+  }
+  
+  return responseData
 }
 
 // Export instance for direct use if needed
