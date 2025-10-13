@@ -35,6 +35,7 @@ import {
   Book,
   BookOpen,
   Video,
+  ClipboardCheck,
 } from "lucide-react";
 
 const navigation = [
@@ -80,6 +81,12 @@ const navigation = [
     href: "/dashboard/enrollments",
     icon: BookOpen,
     permission: "read_enrollments",
+  },
+  {
+    name: "Quizzes",
+    href: "/dashboard/quizzes",
+    icon: ClipboardCheck,
+    permission: "read_quizzes",
   },
   {
     name: "Videos Library",

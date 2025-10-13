@@ -685,3 +685,202 @@ export interface VideoForSelect {
   name: string;
   videoUrl: string;
 }
+
+// Quiz Types
+export enum QuizType {
+  COURSE = 'course',
+  TOPIC = 'topic',
+  LESSON = 'lesson',
+  FREECOURSE = 'freeCourse',
+  SECTION = 'section',
+}
+
+export enum QuestionType {
+  MCQ = 'mcq',
+}
+
+export enum QuizAttemptStatus {
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  ABANDONED = 'abandoned',
+  EXPIRED = 'expired',
+}
+
+export interface MCQOption {
+  text: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  isCorrect: boolean;
+  order: number;
+}
+
+export interface Question {
+  question: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  type: QuestionType;
+  options: MCQOption[];
+  explanation?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  points: number;
+  order: number;
+}
+
+export interface Quiz {
+  _id: string;
+  title: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string;
+  description?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string;
+  quizType: QuizType;
+  entityId: string;
+  questions: Question[];
+  totalPoints: number;
+  passingScore: number;
+  timeLimit?: number;
+  maxAttempts?: number;
+  showCorrectAnswers: boolean;
+  shuffleQuestions: boolean;
+  shuffleOptions: boolean;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateQuizInput {
+  title: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  description?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  quizType: QuizType;
+  entityId: string;
+  questions: Question[];
+  passingScore?: number;
+  timeLimit?: number;
+  maxAttempts?: number;
+  showCorrectAnswers?: boolean;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
+}
+
+export interface UpdateQuizInput {
+  title?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  description?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  questions?: Question[];
+  passingScore?: number;
+  timeLimit?: number;
+  maxAttempts?: number;
+  showCorrectAnswers?: boolean;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
+  isActive?: boolean;
+}
+
+export interface QuizAnswer {
+  questionOrder: number;
+  selectedOptions: number[];
+}
+
+export interface QuizSubmission {
+  answers: QuizAnswer[];
+}
+
+export interface QuestionResult {
+  questionOrder: number;
+  selectedOptions: number[];
+  correctOptions: number[];
+  isCorrect: boolean;
+  pointsEarned: number;
+  maxPoints: number;
+  timeSpent?: number;
+}
+
+export interface QuizAttempt {
+  attemptNumber: number;
+  status: QuizAttemptStatus;
+  startedAt: Date;
+  completedAt?: Date;
+  timeSpent?: number;
+  answers: QuizAnswer[];
+  results?: QuestionResult[];
+  totalScore: number;
+  totalPoints: number;
+  percentage: number;
+  passed: boolean;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export interface QuizProgress {
+  _id: string;
+  userId: string;
+  quizId: string;
+  attempts: QuizAttempt[];
+  bestScore: number;
+  bestPercentage: number;
+  totalAttempts: number;
+  passedAttempts: number;
+  isPassed: boolean;
+  lastAttemptAt: Date;
+  firstAttemptAt: Date;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface QuizStatistics {
+  totalUsers: number;
+  passedUsers: number;
+  failedUsers: number;
+  passRate: number;
+  averageBestScore: number;
+  averageBestPercentage: number;
+  totalAttempts: number;
+  averageAttempts: number;
+}
+
+export interface QuizLeaderboardEntry {
+  userId: {
+    _id: string;
+    fullName: string;
+    email: string;
+  };
+  bestScore: number;
+  bestPercentage: number;
+  totalAttempts: number;
+  isPassed: boolean;
+  lastAttemptAt: Date;
+}
+
+export interface QuizQueryParams extends PaginationParams {
+  quizType?: QuizType;
+  entityId?: string;
+  isActive?: boolean;
+}

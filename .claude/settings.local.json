@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/Ctrl-Z/courses/courses_backend_api/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
