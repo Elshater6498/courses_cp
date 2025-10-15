@@ -3,11 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -18,6 +17,15 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { toast } from "sonner";
 import { useQuiz, useCreateQuiz, useUpdateQuiz } from "@/hooks/use-quizzes";
 import { useCourses } from "@/hooks/use-courses";
@@ -34,14 +42,16 @@ const quizSchema = z.object({
   description_en: z.string().optional(),
   description_ar: z.string().optional(),
   description_he: z.string().optional(),
-  quizType: z.enum(["course", "topic", "lesson", "freeCourse", "section"]),
+  quizType: z.enum(["course", "topic", "lesson", "freeCourse", "section"], {
+    required_error: "Please select a quiz type",
+  }),
   entityId: z.string().min(1, "Please select an entity"),
-  passingScore: z.number().min(0).max(100).default(70),
+  passingScore: z.number().min(0).max(100),
   timeLimit: z.number().min(1).max(300).optional(),
   maxAttempts: z.number().min(1).max(10).optional(),
-  showCorrectAnswers: z.boolean().default(true),
-  shuffleQuestions: z.boolean().default(false),
-  shuffleOptions: z.boolean().default(false),
+  showCorrectAnswers: z.boolean(),
+  shuffleQuestions: z.boolean(),
+  shuffleOptions: z.boolean(),
 });
 
 type QuizFormData = z.infer<typeof quizSchema>;
@@ -52,74 +62,78 @@ export function CreateUpdateQuiz() {
   const isEditMode = !!id;
 
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [selectedQuizType, setSelectedQuizType] = useState<QuizType | "">("");
 
   const { data: quizData, isLoading: isLoadingQuiz } = useQuiz(id || "");
   const createQuizMutation = useCreateQuiz();
   const updateQuizMutation = useUpdateQuiz();
 
   // Fetch entities based on quiz type
-  const { data: coursesData } = useCourses({ limit: 1000 });
-  const { data: topicsData } = useTopics({ limit: 1000 });
-  const { data: lessonsData } = useLessons({ limit: 1000 });
+  const { data: coursesData } = useCourses({ limit: 100 });
+  const { data: topicsData } = useTopics({ limit: 100 });
+  const { data: lessonsData } = useLessons({ limit: 100 });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-  } = useForm<QuizFormData>({
+  const form = useForm<QuizFormData>({
     resolver: zodResolver(quizSchema),
     defaultValues: {
+      title_en: "",
+      title_ar: "",
+      title_he: "",
+      description_en: "",
+      description_ar: "",
+      description_he: "",
+      quizType: undefined,
+      entityId: "",
       passingScore: 70,
+      timeLimit: undefined,
+      maxAttempts: undefined,
       showCorrectAnswers: true,
       shuffleQuestions: false,
       shuffleOptions: false,
     },
   });
 
-  const quizType = watch("quizType");
+  const quizType = form.watch("quizType");
+  const dataTest = form.watch();
+  console.log(dataTest);
 
   useEffect(() => {
-    if (quizType) {
-      setSelectedQuizType(quizType as QuizType);
-      setValue("entityId", ""); // Reset entity selection when type changes
+    // Only reset entityId when quizType changes in create mode (not during initial load in edit mode)
+    if (quizType && !isEditMode) {
+      form.setValue("entityId", ""); // Reset entity selection when type changes
     }
-  }, [quizType, setValue]);
+  }, [quizType, form, isEditMode]);
 
   useEffect(() => {
     if (isEditMode && quizData?.data) {
       const quiz = quizData.data;
 
       // Set form values
-      if (typeof quiz.title === 'object') {
-        setValue("title_en", quiz.title.en);
-        setValue("title_ar", quiz.title.ar || "");
-        setValue("title_he", quiz.title.he || "");
+      if (typeof quiz.title === "object") {
+        form.setValue("title_en", quiz.title.en);
+        form.setValue("title_ar", quiz.title.ar || "");
+        form.setValue("title_he", quiz.title.he || "");
       } else {
-        setValue("title_en", quiz.title);
+        form.setValue("title_en", quiz.title);
       }
 
-      if (quiz.description && typeof quiz.description === 'object') {
-        setValue("description_en", quiz.description.en);
-        setValue("description_ar", quiz.description.ar || "");
-        setValue("description_he", quiz.description.he || "");
+      if (quiz.description && typeof quiz.description === "object") {
+        form.setValue("description_en", quiz.description.en);
+        form.setValue("description_ar", quiz.description.ar || "");
+        form.setValue("description_he", quiz.description.he || "");
       }
 
-      setValue("quizType", quiz.quizType);
-      setValue("entityId", quiz.entityId);
-      setValue("passingScore", quiz.passingScore);
-      setValue("timeLimit", quiz.timeLimit);
-      setValue("maxAttempts", quiz.maxAttempts);
-      setValue("showCorrectAnswers", quiz.showCorrectAnswers);
-      setValue("shuffleQuestions", quiz.shuffleQuestions);
-      setValue("shuffleOptions", quiz.shuffleOptions);
+      form.setValue("quizType", quiz.quizType);
+      form.setValue("entityId", quiz.entityId);
+      form.setValue("passingScore", quiz.passingScore);
+      form.setValue("timeLimit", quiz.timeLimit);
+      form.setValue("maxAttempts", quiz.maxAttempts);
+      form.setValue("showCorrectAnswers", quiz.showCorrectAnswers);
+      form.setValue("shuffleQuestions", quiz.shuffleQuestions);
+      form.setValue("shuffleOptions", quiz.shuffleOptions);
 
       setQuestions(quiz.questions);
-      setSelectedQuizType(quiz.quizType);
     }
-  }, [isEditMode, quizData, setValue]);
+  }, [isEditMode, quizData, form]);
 
   const onSubmit = async (data: QuizFormData) => {
     if (questions.length === 0) {
@@ -127,17 +141,19 @@ export function CreateUpdateQuiz() {
       return;
     }
 
-    const quizData = {
+    const quizPayload = {
       title: {
         en: data.title_en,
         ar: data.title_ar,
         he: data.title_he,
       },
-      description: data.description_en ? {
-        en: data.description_en,
-        ar: data.description_ar,
-        he: data.description_he,
-      } : undefined,
+      description: data.description_en
+        ? {
+            en: data.description_en,
+            ar: data.description_ar,
+            he: data.description_he,
+          }
+        : undefined,
       quizType: data.quizType as QuizType,
       entityId: data.entityId,
       questions,
@@ -151,10 +167,10 @@ export function CreateUpdateQuiz() {
 
     try {
       if (isEditMode) {
-        await updateQuizMutation.mutateAsync({ id: id!, data: quizData });
+        await updateQuizMutation.mutateAsync({ id: id!, data: quizPayload });
         toast.success("Quiz updated successfully");
       } else {
-        await createQuizMutation.mutateAsync(quizData);
+        await createQuizMutation.mutateAsync(quizPayload);
         toast.success("Quiz created successfully");
       }
       navigate("/dashboard/quizzes");
@@ -164,24 +180,32 @@ export function CreateUpdateQuiz() {
   };
 
   const getEntityOptions = () => {
-    if (!selectedQuizType) return [];
+    if (!quizType) return [];
 
-    switch (selectedQuizType) {
+    switch (quizType) {
       case "course":
-        return coursesData?.data?.items?.map((course: any) => ({
-          id: course._id,
-          name: typeof course.name === 'string' ? course.name : course.name.en,
-        })) || [];
+        return (
+          coursesData?.data?.items?.map((course: any) => ({
+            id: course._id,
+            name:
+              typeof course.name === "string" ? course.name : course.name.en,
+          })) || []
+        );
       case "topic":
-        return topicsData?.data?.items?.map((topic: any) => ({
-          id: topic._id,
-          name: typeof topic.name === 'string' ? topic.name : topic.name.en,
-        })) || [];
+        return (
+          topicsData?.data?.items?.map((topic: any) => ({
+            id: topic._id,
+            name: typeof topic.name === "string" ? topic.name : topic.name.en,
+          })) || []
+        );
       case "lesson":
-        return lessonsData?.data?.items?.map((lesson: any) => ({
-          id: lesson._id,
-          name: typeof lesson.name === 'string' ? lesson.name : lesson.name.en,
-        })) || [];
+        return (
+          lessonsData?.data?.items?.map((lesson: any) => ({
+            id: lesson._id,
+            name:
+              typeof lesson.name === "string" ? lesson.name : lesson.name.en,
+          })) || []
+        );
       default:
         return [];
     }
@@ -195,7 +219,11 @@ export function CreateUpdateQuiz() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard/quizzes")}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/dashboard/quizzes")}
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
@@ -204,207 +232,359 @@ export function CreateUpdateQuiz() {
             {isEditMode ? "Edit Quiz" : "Create New Quiz"}
           </h1>
           <p className="text-gray-500 mt-1">
-            {isEditMode ? "Update quiz details and questions" : "Add a new quiz to your content"}
+            {isEditMode
+              ? "Update quiz details and questions"
+              : "Add a new quiz to your content"}
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Basic Information */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="title_en">Title (English) *</Label>
-              <Input id="title_en" {...register("title_en")} />
-              {errors.title_en && (
-                <p className="text-sm text-red-500 mt-1">{errors.title_en.message}</p>
-              )}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Basic Information */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="title_en"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title (English) *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter English title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="title_ar"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title (Arabic)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="أدخل العنوان بالعربية" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="title_he"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title (Hebrew)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="הזן כותרת בעברית" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <div>
-              <Label htmlFor="title_ar">Title (Arabic)</Label>
-              <Input id="title_ar" {...register("title_ar")} />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <FormField
+                control={form.control}
+                name="description_en"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (English)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter English description"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description_ar"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Arabic)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="أدخل الوصف بالعربية"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description_he"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (Hebrew)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="הזן תיאור בעברית"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <div>
-              <Label htmlFor="title_he">Title (Hebrew)</Label>
-              <Input id="title_he" {...register("title_he")} />
+          </Card>
+
+          {/* Quiz Configuration */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Quiz Configuration</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="quizType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quiz Type *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                      // disabled={isEditMode}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select quiz type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="course">Course</SelectItem>
+                        <SelectItem value="topic">Topic</SelectItem>
+                        <SelectItem value="lesson">Lesson</SelectItem>
+                        <SelectItem value="freeCourse">Free Course</SelectItem>
+                        <SelectItem value="section">Section</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="entityId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{quizType && `Select ${quizType}`} *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={!quizType}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={`Select ${quizType || "entity"}`}
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {getEntityOptions().map((entity) => (
+                          <SelectItem key={entity.id} value={entity.id}>
+                            {entity.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="passingScore"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Passing Score (%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value))
+                        }
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Minimum score required to pass the quiz
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="timeLimit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Time Limit (minutes)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="300"
+                        placeholder="Optional"
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value ? parseFloat(value) : undefined);
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Leave empty for no time limit
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="maxAttempts"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max Attempts</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="10"
+                        placeholder="Optional"
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value ? parseFloat(value) : undefined);
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Leave empty for unlimited attempts
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
+
+            <Separator className="my-4" />
+
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="showCorrectAnswers"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <div>
+                      <FormLabel>Show Correct Answers</FormLabel>
+                      <FormDescription>
+                        Show answers after quiz completion
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="shuffleQuestions"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <div>
+                      <FormLabel>Shuffle Questions</FormLabel>
+                      <FormDescription>
+                        Randomize question order
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="shuffleOptions"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between">
+                    <div>
+                      <FormLabel>Shuffle Options</FormLabel>
+                      <FormDescription>Randomize option order</FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Card>
+
+          {/* Questions */}
+          <Card className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Questions</h2>
+              <span className="text-sm text-gray-500">
+                {questions.length} question{questions.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <QuestionBuilder questions={questions} onChange={setQuestions} />
+          </Card>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/dashboard/quizzes")}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={
+                createQuizMutation.isPending || updateQuizMutation.isPending
+              }
+            >
+              {isEditMode ? "Update Quiz" : "Create Quiz"}
+            </Button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            <div>
-              <Label htmlFor="description_en">Description (English)</Label>
-              <Textarea id="description_en" {...register("description_en")} rows={3} />
-            </div>
-            <div>
-              <Label htmlFor="description_ar">Description (Arabic)</Label>
-              <Textarea id="description_ar" {...register("description_ar")} rows={3} />
-            </div>
-            <div>
-              <Label htmlFor="description_he">Description (Hebrew)</Label>
-              <Textarea id="description_he" {...register("description_he")} rows={3} />
-            </div>
-          </div>
-        </Card>
-
-        {/* Quiz Configuration */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Quiz Configuration</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="quizType">Quiz Type *</Label>
-              <Select
-                value={watch("quizType")}
-                onValueChange={(value) => setValue("quizType", value as any)}
-                disabled={isEditMode}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select quiz type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="course">Course</SelectItem>
-                  <SelectItem value="topic">Topic</SelectItem>
-                  <SelectItem value="lesson">Lesson</SelectItem>
-                  <SelectItem value="freeCourse">Free Course</SelectItem>
-                  <SelectItem value="section">Section</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.quizType && (
-                <p className="text-sm text-red-500 mt-1">{errors.quizType.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="entityId">
-                {selectedQuizType && `Select ${selectedQuizType}`} *
-              </Label>
-              <Select
-                value={watch("entityId")}
-                onValueChange={(value) => setValue("entityId", value)}
-                disabled={!selectedQuizType || isEditMode}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={`Select ${selectedQuizType || 'entity'}`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {getEntityOptions().map((entity) => (
-                    <SelectItem key={entity.id} value={entity.id}>
-                      {entity.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.entityId && (
-                <p className="text-sm text-red-500 mt-1">{errors.entityId.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="passingScore">Passing Score (%)</Label>
-              <Input
-                type="number"
-                id="passingScore"
-                {...register("passingScore", { valueAsNumber: true })}
-                min="0"
-                max="100"
-              />
-              {errors.passingScore && (
-                <p className="text-sm text-red-500 mt-1">{errors.passingScore.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="timeLimit">Time Limit (minutes)</Label>
-              <Input
-                type="number"
-                id="timeLimit"
-                {...register("timeLimit", { valueAsNumber: true })}
-                min="1"
-                max="300"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="maxAttempts">Max Attempts</Label>
-              <Input
-                type="number"
-                id="maxAttempts"
-                {...register("maxAttempts", { valueAsNumber: true })}
-                min="1"
-                max="10"
-              />
-            </div>
-          </div>
-
-          <Separator className="my-4" />
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="showCorrectAnswers">Show Correct Answers</Label>
-                <p className="text-sm text-gray-500">Show answers after quiz completion</p>
-              </div>
-              <Switch
-                id="showCorrectAnswers"
-                checked={watch("showCorrectAnswers")}
-                onCheckedChange={(checked) => setValue("showCorrectAnswers", checked)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="shuffleQuestions">Shuffle Questions</Label>
-                <p className="text-sm text-gray-500">Randomize question order</p>
-              </div>
-              <Switch
-                id="shuffleQuestions"
-                checked={watch("shuffleQuestions")}
-                onCheckedChange={(checked) => setValue("shuffleQuestions", checked)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="shuffleOptions">Shuffle Options</Label>
-                <p className="text-sm text-gray-500">Randomize option order</p>
-              </div>
-              <Switch
-                id="shuffleOptions"
-                checked={watch("shuffleOptions")}
-                onCheckedChange={(checked) => setValue("shuffleOptions", checked)}
-              />
-            </div>
-          </div>
-        </Card>
-
-        {/* Questions */}
-        <Card className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Questions</h2>
-            <span className="text-sm text-gray-500">
-              {questions.length} question{questions.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <QuestionBuilder questions={questions} onChange={setQuestions} />
-        </Card>
-
-        {/* Actions */}
-        <div className="flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/dashboard/quizzes")}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={createQuizMutation.isPending || updateQuizMutation.isPending}
-          >
-            {isEditMode ? "Update Quiz" : "Create Quiz"}
-          </Button>
-        </div>
-      </form>
+        </form>
+      </Form>
     </div>
   );
 }

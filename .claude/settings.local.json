@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Read(//d/Ctrl-Z/courses/courses_backend_api/**)"
+      "Read(//d/Ctrl-Z/courses/courses_backend_api/**)",
+      "Bash(npm run dev)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []
