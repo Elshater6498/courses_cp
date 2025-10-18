@@ -30,6 +30,8 @@ import { EnrollmentsPage } from "./pages/enrollments-page";
 import { VideosLibraryPage } from "./pages/videos-library-page";
 import { QuizzesPage } from "./pages/quizzes-page";
 import { CreateUpdateQuiz } from "./pages/quiz/create-update-quiz";
+import FreeCoursesPage from "./pages/free-courses-page";
+import CreateUpdateFreeCourse from "./pages/free-course/create-update-free-course";
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -97,6 +99,9 @@ function App() {
             <Route path="quizzes/new" element={<CreateUpdateQuiz />} />
             <Route path="quizzes/:id/edit" element={<CreateUpdateQuiz />} />
             <Route path="videos-library" element={<VideosLibraryPage />} />
+            <Route path="free-courses" element={<FreeCoursesPage />} />
+            <Route path="free-courses/create" element={<CreateUpdateFreeCourse />} />
+            <Route path="free-courses/:id/edit" element={<CreateUpdateFreeCourse />} />
             <Route path="courses/new" element={<CreateCourse />} />
             <Route path="courses/:id/edit" element={<CreateCourse />} />
             <Route path="courses/:courseId/topics" element={<TopicsPage />} />

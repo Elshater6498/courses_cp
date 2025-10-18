@@ -884,3 +884,155 @@ export interface QuizQueryParams extends PaginationParams {
   entityId?: string;
   isActive?: boolean;
 }
+
+// Free Course Types
+export enum ContentItemType {
+  FILE = 'file',
+  VIDEO = 'video',
+  QUIZ = 'quiz',
+}
+
+export interface ContentItem {
+  _id: string;
+  type: ContentItemType;
+  title: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  order: number;
+  resourceId?: string; // AttachedFile, VideoLibrary, or Quiz ID
+  url?: string; // For external videos
+}
+
+export interface Section {
+  _id: string;
+  title: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  description?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  order: number;
+  isVisible: boolean;
+  contentItems: ContentItem[];
+}
+
+export interface FreeCourse {
+  _id: string;
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string;
+  overview: {
+    en: string;
+    ar?: string;
+    he?: string;
+  } | string;
+  universityId: University | string;
+  facultyId: Faculty | string;
+  instructorId: Admin | string;
+  imageUrl: string;
+  sections: Section[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  totalSections?: number;
+  totalContentItems?: number;
+}
+
+export interface CreateFreeCourseInput {
+  name: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  overview: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  universityId: string;
+  facultyId: string;
+  instructorId: string;
+  imageUrl: string;
+  sections?: Section[];
+}
+
+export interface UpdateFreeCourseInput {
+  name?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  overview?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  universityId?: string;
+  facultyId?: string;
+  instructorId?: string;
+  imageUrl?: string;
+  isActive?: boolean;
+}
+
+export interface CreateSectionInput {
+  title: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  description?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  order?: number;
+  isVisible?: boolean;
+  contentItems?: ContentItem[];
+}
+
+export interface UpdateSectionInput {
+  title?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  description?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  order?: number;
+  isVisible?: boolean;
+}
+
+export interface CreateContentItemInput {
+  type: ContentItemType;
+  title: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+  order?: number;
+  resourceId?: string;
+  url?: string;
+}
+
+export interface FreeCourseQueryParams extends PaginationParams {
+  universityId?: string;
+  facultyId?: string;
+  instructorId?: string;
+  isActive?: boolean;
+}
+
+export interface FreeCourseEnrollment extends Enrollment {
+  freeCourseId: FreeCourse;
+  enrollmentType: 'free_course';
+}
