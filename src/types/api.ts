@@ -157,12 +157,12 @@ export type PermissionAction =
 export interface University {
   _id: string
   name:
-    | {
-        en: string
-        ar?: string
-        he?: string
-      }
-    | string // Support both multilingual and simple string for display
+  | {
+    en: string
+    ar?: string
+    he?: string
+  }
+  | string // Support both multilingual and simple string for display
   isActive: boolean
   createdAt: Date
   updatedAt: Date
@@ -189,12 +189,12 @@ export interface UpdateUniversityInput {
 export interface Faculty {
   _id: string
   name:
-    | {
-        en: string
-        ar?: string
-        he?: string
-      }
-    | string // Support both multilingual and simple string for display
+  | {
+    en: string
+    ar?: string
+    he?: string
+  }
+  | string // Support both multilingual and simple string for display
   universityId: University | string
   no_academic_year: number
   isActive: boolean
@@ -279,26 +279,26 @@ export interface UpdateUserInput {
 export interface Course {
   _id: string
   name:
-    | {
-        en: string
-        ar?: string
-        he?: string
-      }
-    | string
+  | {
+    en: string
+    ar?: string
+    he?: string
+  }
+  | string
   aboutCourse:
-    | {
-        en: string
-        ar?: string
-        he?: string
-      }
-    | string
+  | {
+    en: string
+    ar?: string
+    he?: string
+  }
+  | string
   whatWillYouLearn:
-    | Array<{
-        en: string
-        ar?: string
-        he?: string
-      }>
-    | string[]
+  | Array<{
+    en: string
+    ar?: string
+    he?: string
+  }>
+  | string[]
   numberOfCourseHours: number
   coursePrice: number
   discount: number
@@ -380,12 +380,12 @@ export interface CourseStats {
 export interface Topic {
   _id: string
   name:
-    | {
-        en: string
-        ar?: string
-        he?: string
-      }
-    | string
+  | {
+    en: string
+    ar?: string
+    he?: string
+  }
+  | string
   courseId: Course | string
   topicsPrice: number
   discount: number
@@ -443,19 +443,19 @@ export interface ReorderTopicsInput {
 export interface Lesson {
   _id: string
   name:
-    | {
-        en: string
-        ar?: string
-        he?: string
-      }
-    | string
+  | {
+    en: string
+    ar?: string
+    he?: string
+  }
+  | string
   description:
-    | {
-        en: string
-        ar?: string
-        he?: string
-      }
-    | string
+  | {
+    en: string
+    ar?: string
+    he?: string
+  }
+  | string
   topicId: Topic | string
   main_recording_url: string
   recording_gvo_url?: string
@@ -531,7 +531,7 @@ export interface Enrollment {
   _id: string
   userId: User
   courseId: Course
-  enrollmentType: 'full_course' | 'individual_topic'
+  enrollmentType: 'full_course' | 'individual_topic' | 'free_course'
   fullAccess: boolean
   purchasedTopics: Topic[]
   totalAmount: number
@@ -687,24 +687,30 @@ export interface VideoForSelect {
 }
 
 // Quiz Types
-export enum QuizType {
-  COURSE = 'course',
-  TOPIC = 'topic',
-  LESSON = 'lesson',
-  FREECOURSE = 'freeCourse',
-  SECTION = 'section',
-}
+export const QuizType = {
+  COURSE: 'course',
+  TOPIC: 'topic',
+  LESSON: 'lesson',
+  FREECOURSE: 'freeCourse',
+  SECTION: 'section',
+} as const
 
-export enum QuestionType {
-  MCQ = 'mcq',
-}
+export type QuizType = typeof QuizType[keyof typeof QuizType]
 
-export enum QuizAttemptStatus {
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  ABANDONED = 'abandoned',
-  EXPIRED = 'expired',
-}
+export const QuestionType = {
+  MCQ: 'mcq',
+} as const
+
+export type QuestionType = typeof QuestionType[keyof typeof QuestionType]
+
+export const QuizAttemptStatus = {
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  ABANDONED: 'abandoned',
+  EXPIRED: 'expired',
+} as const
+
+export type QuizAttemptStatus = typeof QuizAttemptStatus[keyof typeof QuizAttemptStatus]
 
 export interface MCQOption {
   text: {
@@ -886,11 +892,13 @@ export interface QuizQueryParams extends PaginationParams {
 }
 
 // Free Course Types
-export enum ContentItemType {
-  FILE = 'file',
-  VIDEO = 'video',
-  QUIZ = 'quiz',
-}
+export const ContentItemType = {
+  FILE: 'file',
+  VIDEO: 'video',
+  QUIZ: 'quiz',
+} as const
+
+export type ContentItemType = typeof ContentItemType[keyof typeof ContentItemType]
 
 export interface ContentItem {
   _id: string;

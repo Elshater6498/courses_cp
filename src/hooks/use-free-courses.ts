@@ -15,7 +15,6 @@ import {
   getFreeCourseEnrollments,
 } from '@/services/free-course-service'
 import type {
-  FreeCourse,
   CreateFreeCourseInput,
   UpdateFreeCourseInput,
   CreateSectionInput,
@@ -111,7 +110,7 @@ export const useUpdateFreeCourse = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateFreeCourseInput }) =>
       updateFreeCourse(id, data),
-    onSuccess: (response, { id }) => {
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.lists() })
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.detail(id) })
     },
@@ -136,7 +135,7 @@ export const useAddSection = () => {
   return useMutation({
     mutationFn: ({ freeCourseId, data }: { freeCourseId: string; data: CreateSectionInput }) =>
       addSection(freeCourseId, data),
-    onSuccess: (response, { freeCourseId }) => {
+    onSuccess: (_, { freeCourseId }) => {
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.detail(freeCourseId) })
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.lists() })
     },
@@ -156,7 +155,7 @@ export const useUpdateSection = () => {
       sectionId: string
       data: UpdateSectionInput
     }) => updateSection(freeCourseId, sectionId, data),
-    onSuccess: (response, { freeCourseId }) => {
+    onSuccess: (_, { freeCourseId }) => {
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.detail(freeCourseId) })
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.lists() })
     },
@@ -169,7 +168,7 @@ export const useDeleteSection = () => {
   return useMutation({
     mutationFn: ({ freeCourseId, sectionId }: { freeCourseId: string; sectionId: string }) =>
       deleteSection(freeCourseId, sectionId),
-    onSuccess: (response, { freeCourseId }) => {
+    onSuccess: (_, { freeCourseId }) => {
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.detail(freeCourseId) })
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.lists() })
     },
@@ -190,7 +189,7 @@ export const useAddContentToSection = () => {
       sectionId: string
       data: CreateContentItemInput
     }) => addContentToSection(freeCourseId, sectionId, data),
-    onSuccess: (response, { freeCourseId }) => {
+    onSuccess: (_, { freeCourseId }) => {
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.detail(freeCourseId) })
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.lists() })
     },
@@ -210,7 +209,7 @@ export const useRemoveContentFromSection = () => {
       sectionId: string
       contentId: string
     }) => removeContentFromSection(freeCourseId, sectionId, contentId),
-    onSuccess: (response, { freeCourseId }) => {
+    onSuccess: (_, { freeCourseId }) => {
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.detail(freeCourseId) })
       queryClient.invalidateQueries({ queryKey: freeCourseKeys.lists() })
     },

@@ -1,32 +1,33 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+} from "@/components/ui/select"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
-import { Plus, Trash2, GripVertical, FileText, Video, ClipboardList } from 'lucide-react'
-import type { Section, ContentItem, ContentItemType } from '@/types/api'
+} from "@/components/ui/accordion"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import {
+  Plus,
+  Trash2,
+  GripVertical,
+  FileText,
+  Video,
+  ClipboardList,
+} from "lucide-react"
+import type { Section, ContentItem, ContentItemType } from "@/types/api"
 
 interface SectionBuilderProps {
   sections: Section[]
@@ -39,8 +40,8 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
   const addSection = () => {
     const newSection: Section = {
       _id: `temp-${Date.now()}`,
-      title: { en: '' },
-      description: { en: '' },
+      title: { en: "" },
+      description: { en: "" },
       order: sections.length + 1,
       isVisible: true,
       contentItems: [],
@@ -55,7 +56,11 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
     onChange(updated)
   }
 
-  const updateSectionTitle = (index: number, lang: 'en' | 'ar' | 'he', value: string) => {
+  const updateSectionTitle = (
+    index: number,
+    lang: "en" | "ar" | "he",
+    value: string
+  ) => {
     const updated = [...sections]
     updated[index] = {
       ...updated[index],
@@ -64,11 +69,16 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
     onChange(updated)
   }
 
-  const updateSectionDescription = (index: number, lang: 'en' | 'ar' | 'he', value: string) => {
+  const updateSectionDescription = (
+    index: number,
+    lang: "en" | "ar" | "he",
+    value: string
+  ) => {
     const updated = [...sections]
+    const currentDescription = updated[index].description || { en: "" }
     updated[index] = {
       ...updated[index],
-      description: { ...updated[index].description, [lang]: value },
+      description: { ...currentDescription, [lang]: value },
     }
     onChange(updated)
   }
@@ -85,12 +95,15 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
   const addContentItem = (sectionIndex: number) => {
     const newContent: ContentItem = {
       _id: `temp-content-${Date.now()}`,
-      type: 'file' as ContentItemType,
-      title: { en: '' },
+      type: "file" as ContentItemType,
+      title: { en: "" },
       order: sections[sectionIndex].contentItems.length + 1,
     }
     const updated = [...sections]
-    updated[sectionIndex].contentItems = [...updated[sectionIndex].contentItems, newContent]
+    updated[sectionIndex].contentItems = [
+      ...updated[sectionIndex].contentItems,
+      newContent,
+    ]
     onChange(updated)
   }
 
@@ -111,22 +124,25 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
   const updateContentTitle = (
     sectionIndex: number,
     contentIndex: number,
-    lang: 'en' | 'ar' | 'he',
+    lang: "en" | "ar" | "he",
     value: string
   ) => {
     const updated = [...sections]
     updated[sectionIndex].contentItems[contentIndex] = {
       ...updated[sectionIndex].contentItems[contentIndex],
-      title: { ...updated[sectionIndex].contentItems[contentIndex].title, [lang]: value },
+      title: {
+        ...updated[sectionIndex].contentItems[contentIndex].title,
+        [lang]: value,
+      },
     }
     onChange(updated)
   }
 
   const deleteContentItem = (sectionIndex: number, contentIndex: number) => {
     const updated = [...sections]
-    updated[sectionIndex].contentItems = updated[sectionIndex].contentItems.filter(
-      (_, i) => i !== contentIndex
-    )
+    updated[sectionIndex].contentItems = updated[
+      sectionIndex
+    ].contentItems.filter((_, i) => i !== contentIndex)
     // Reorder remaining content items
     updated[sectionIndex].contentItems.forEach((item, i) => {
       item.order = i + 1
@@ -136,11 +152,11 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
 
   const getContentIcon = (type: ContentItemType) => {
     switch (type) {
-      case 'file':
+      case "file":
         return <FileText className="h-4 w-4" />
-      case 'video':
+      case "video":
         return <Video className="h-4 w-4" />
-      case 'quiz':
+      case "quiz":
         return <ClipboardList className="h-4 w-4" />
     }
   }
@@ -151,7 +167,8 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
         <div>
           <h3 className="text-lg font-semibold">Course Sections</h3>
           <p className="text-sm text-muted-foreground">
-            Organize your course content into sections with various content types
+            Organize your course content into sections with various content
+            types
           </p>
         </div>
         <Button type="button" onClick={addSection} variant="outline">
@@ -171,7 +188,11 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
           </CardContent>
         </Card>
       ) : (
-        <Accordion type="multiple" value={expandedSections} onValueChange={setExpandedSections}>
+        <Accordion
+          type="multiple"
+          value={expandedSections}
+          onValueChange={setExpandedSections}
+        >
           {sections.map((section, sectionIndex) => (
             <AccordionItem key={section._id} value={section._id}>
               <Card>
@@ -181,7 +202,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                     <div className="flex items-center gap-3 flex-1">
                       <Badge variant="outline">Section {section.order}</Badge>
                       <span className="font-medium">
-                        {section.title.en || 'Untitled Section'}
+                        {section.title.en || "Untitled Section"}
                       </span>
                       <Badge variant="secondary" className="ml-auto">
                         {section.contentItems.length} items
@@ -201,10 +222,12 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                             id={`visible-${section._id}`}
                             checked={section.isVisible}
                             onCheckedChange={(checked) =>
-                              updateSection(sectionIndex, 'isVisible', checked)
+                              updateSection(sectionIndex, "isVisible", checked)
                             }
                           />
-                          <Label htmlFor={`visible-${section._id}`}>Visible to students</Label>
+                          <Label htmlFor={`visible-${section._id}`}>
+                            Visible to students
+                          </Label>
                         </div>
                       </div>
                       <Button
@@ -223,7 +246,11 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                         <Input
                           value={section.title.en}
                           onChange={(e) =>
-                            updateSectionTitle(sectionIndex, 'en', e.target.value)
+                            updateSectionTitle(
+                              sectionIndex,
+                              "en",
+                              e.target.value
+                            )
                           }
                           placeholder="Enter section title in English"
                         />
@@ -232,9 +259,13 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                       <div>
                         <Label>Title (Arabic)</Label>
                         <Input
-                          value={section.title.ar || ''}
+                          value={section.title.ar || ""}
                           onChange={(e) =>
-                            updateSectionTitle(sectionIndex, 'ar', e.target.value)
+                            updateSectionTitle(
+                              sectionIndex,
+                              "ar",
+                              e.target.value
+                            )
                           }
                           placeholder="Enter section title in Arabic"
                         />
@@ -243,9 +274,13 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                       <div>
                         <Label>Title (Hebrew)</Label>
                         <Input
-                          value={section.title.he || ''}
+                          value={section.title.he || ""}
                           onChange={(e) =>
-                            updateSectionTitle(sectionIndex, 'he', e.target.value)
+                            updateSectionTitle(
+                              sectionIndex,
+                              "he",
+                              e.target.value
+                            )
                           }
                           placeholder="Enter section title in Hebrew"
                         />
@@ -254,9 +289,13 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                       <div>
                         <Label>Description (English)</Label>
                         <Textarea
-                          value={section.description?.en || ''}
+                          value={section.description?.en || ""}
                           onChange={(e) =>
-                            updateSectionDescription(sectionIndex, 'en', e.target.value)
+                            updateSectionDescription(
+                              sectionIndex,
+                              "en",
+                              e.target.value
+                            )
                           }
                           placeholder="Enter section description in English"
                           rows={3}
@@ -266,9 +305,13 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                       <div>
                         <Label>Description (Arabic)</Label>
                         <Textarea
-                          value={section.description?.ar || ''}
+                          value={section.description?.ar || ""}
                           onChange={(e) =>
-                            updateSectionDescription(sectionIndex, 'ar', e.target.value)
+                            updateSectionDescription(
+                              sectionIndex,
+                              "ar",
+                              e.target.value
+                            )
                           }
                           placeholder="Enter section description in Arabic"
                           rows={3}
@@ -278,9 +321,13 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                       <div>
                         <Label>Description (Hebrew)</Label>
                         <Textarea
-                          value={section.description?.he || ''}
+                          value={section.description?.he || ""}
                           onChange={(e) =>
-                            updateSectionDescription(sectionIndex, 'he', e.target.value)
+                            updateSectionDescription(
+                              sectionIndex,
+                              "he",
+                              e.target.value
+                            )
                           }
                           placeholder="Enter section description in Hebrew"
                           rows={3}
@@ -323,7 +370,12 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                       type="button"
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => deleteContentItem(sectionIndex, contentIndex)}
+                                      onClick={() =>
+                                        deleteContentItem(
+                                          sectionIndex,
+                                          contentIndex
+                                        )
+                                      }
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -338,7 +390,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                           updateContentItem(
                                             sectionIndex,
                                             contentIndex,
-                                            'type',
+                                            "type",
                                             value as ContentItemType
                                           )
                                         }
@@ -347,9 +399,15 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="file">File</SelectItem>
-                                          <SelectItem value="video">Video</SelectItem>
-                                          <SelectItem value="quiz">Quiz</SelectItem>
+                                          <SelectItem value="file">
+                                            File
+                                          </SelectItem>
+                                          <SelectItem value="video">
+                                            Video
+                                          </SelectItem>
+                                          <SelectItem value="quiz">
+                                            Quiz
+                                          </SelectItem>
                                         </SelectContent>
                                       </Select>
                                     </div>
@@ -362,7 +420,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                           updateContentTitle(
                                             sectionIndex,
                                             contentIndex,
-                                            'en',
+                                            "en",
                                             e.target.value
                                           )
                                         }
@@ -373,12 +431,12 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                     <div>
                                       <Label>Title (Arabic)</Label>
                                       <Input
-                                        value={item.title.ar || ''}
+                                        value={item.title.ar || ""}
                                         onChange={(e) =>
                                           updateContentTitle(
                                             sectionIndex,
                                             contentIndex,
-                                            'ar',
+                                            "ar",
                                             e.target.value
                                           )
                                         }
@@ -389,12 +447,12 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                     <div>
                                       <Label>Title (Hebrew)</Label>
                                       <Input
-                                        value={item.title.he || ''}
+                                        value={item.title.he || ""}
                                         onChange={(e) =>
                                           updateContentTitle(
                                             sectionIndex,
                                             contentIndex,
-                                            'he',
+                                            "he",
                                             e.target.value
                                           )
                                         }
@@ -402,16 +460,16 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                       />
                                     </div>
 
-                                    {item.type === 'video' && (
+                                    {item.type === "video" && (
                                       <div>
                                         <Label>Video URL</Label>
                                         <Input
-                                          value={item.url || ''}
+                                          value={item.url || ""}
                                           onChange={(e) =>
                                             updateContentItem(
                                               sectionIndex,
                                               contentIndex,
-                                              'url',
+                                              "url",
                                               e.target.value
                                             )
                                           }
@@ -423,19 +481,20 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                     <div>
                                       <Label>Resource ID (optional)</Label>
                                       <Input
-                                        value={item.resourceId || ''}
+                                        value={item.resourceId || ""}
                                         onChange={(e) =>
                                           updateContentItem(
                                             sectionIndex,
                                             contentIndex,
-                                            'resourceId',
+                                            "resourceId",
                                             e.target.value
                                           )
                                         }
                                         placeholder="Enter resource ID (file/video/quiz)"
                                       />
                                       <p className="text-xs text-muted-foreground mt-1">
-                                        ID of the file, video from library, or quiz
+                                        ID of the file, video from library, or
+                                        quiz
                                       </p>
                                     </div>
                                   </div>

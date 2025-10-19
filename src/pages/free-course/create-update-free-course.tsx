@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { useEffect, useState } from "react"
+import { useNavigate, useParams } from "react-router"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
   useFreeCourse,
   useCreateFreeCourse,
   useUpdateFreeCourse,
-} from '@/hooks/use-free-courses'
-import { useUniversities } from '@/hooks/use-universities'
-import { useFaculties } from '@/hooks/use-faculties'
-import { useAdmins } from '@/hooks/use-admins'
-import { Button } from '@/components/ui/button'
+} from "@/hooks/use-free-courses"
+import { useUniversities } from "@/hooks/use-universities"
+import { useFaculties } from "@/hooks/use-faculties"
+import { useAdmins } from "@/hooks/use-admins"
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -20,36 +20,45 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { SectionBuilder } from '@/components/free-course/section-builder'
-import { ArrowLeft, Loader2 } from 'lucide-react'
-import type { Section, University, Faculty, Admin } from '@/types/api'
+} from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SectionBuilder } from "@/components/free-course/section-builder"
+import { ArrowLeft, Loader2 } from "lucide-react"
+import type { Section } from "@/types/api"
 
 const freeCourseSchema = z.object({
   name: z.object({
-    en: z.string().min(2, 'English name must be at least 2 characters').max(200),
+    en: z
+      .string()
+      .min(2, "English name must be at least 2 characters")
+      .max(200),
     ar: z.string().max(200).optional(),
     he: z.string().max(200).optional(),
   }),
   overview: z.object({
-    en: z.string().min(10, 'English overview must be at least 10 characters').max(2000),
+    en: z
+      .string()
+      .min(10, "English overview must be at least 10 characters")
+      .max(2000),
     ar: z.string().max(2000).optional(),
     he: z.string().max(2000).optional(),
   }),
-  universityId: z.string().min(1, 'University is required'),
-  facultyId: z.string().min(1, 'Faculty is required'),
-  instructorId: z.string().min(1, 'Instructor is required'),
-  imageUrl: z.string().url('Must be a valid URL').min(1, 'Image URL is required'),
+  universityId: z.string().min(1, "University is required"),
+  facultyId: z.string().min(1, "Faculty is required"),
+  instructorId: z.string().min(1, "Instructor is required"),
+  imageUrl: z
+    .string()
+    .url("Must be a valid URL")
+    .min(1, "Image URL is required"),
   sections: z.array(z.any()).optional(),
 })
 
@@ -61,9 +70,10 @@ export default function CreateUpdateFreeCourse() {
   const isEditMode = !!id
 
   const [sections, setSections] = useState<Section[]>([])
-  const [selectedUniversity, setSelectedUniversity] = useState<string>('')
+  const [selectedUniversity, setSelectedUniversity] = useState<string>("")
 
-  const { data: freeCourseData, isLoading: isLoadingFreeCourse } = useFreeCourse(id || '')
+  const { data: freeCourseData, isLoading: isLoadingFreeCourse } =
+    useFreeCourse(id || "")
   const { data: universitiesData } = useUniversities({ isActive: true })
   const { data: facultiesData } = useFaculties({
     universityId: selectedUniversity,
@@ -77,12 +87,12 @@ export default function CreateUpdateFreeCourse() {
   const form = useForm<FreeCourseFormValues>({
     resolver: zodResolver(freeCourseSchema),
     defaultValues: {
-      name: { en: '', ar: '', he: '' },
-      overview: { en: '', ar: '', he: '' },
-      universityId: '',
-      facultyId: '',
-      instructorId: '',
-      imageUrl: '',
+      name: { en: "", ar: "", he: "" },
+      overview: { en: "", ar: "", he: "" },
+      universityId: "",
+      facultyId: "",
+      instructorId: "",
+      imageUrl: "",
       sections: [],
     },
   })
@@ -91,28 +101,33 @@ export default function CreateUpdateFreeCourse() {
   useEffect(() => {
     if (isEditMode && freeCourseData?.data) {
       const course = freeCourseData.data
-      const nameObj = typeof course.name === 'string' ? { en: course.name } : course.name
+      const nameObj =
+        typeof course.name === "string" ? { en: course.name } : course.name
       const overviewObj =
-        typeof course.overview === 'string' ? { en: course.overview } : course.overview
+        typeof course.overview === "string"
+          ? { en: course.overview }
+          : course.overview
 
       form.reset({
         name: nameObj,
         overview: overviewObj,
         universityId:
-          typeof course.universityId === 'string'
+          typeof course.universityId === "string"
             ? course.universityId
             : course.universityId._id,
         facultyId:
-          typeof course.facultyId === 'string' ? course.facultyId : course.facultyId._id,
+          typeof course.facultyId === "string"
+            ? course.facultyId
+            : course.facultyId._id,
         instructorId:
-          typeof course.instructorId === 'string'
+          typeof course.instructorId === "string"
             ? course.instructorId
             : course.instructorId._id,
         imageUrl: course.imageUrl,
       })
 
       setSelectedUniversity(
-        typeof course.universityId === 'string'
+        typeof course.universityId === "string"
           ? course.universityId
           : course.universityId._id
       )
@@ -133,15 +148,15 @@ export default function CreateUpdateFreeCourse() {
         await createMutation.mutateAsync(payload)
       }
 
-      navigate('/dashboard/free-courses')
+      navigate("/dashboard/free-courses")
     } catch (error) {
-      console.error('Failed to save free course:', error)
+      console.error("Failed to save free course:", error)
     }
   }
 
   const getDisplayName = (value: any) => {
-    if (typeof value === 'string') return value
-    return value?.en || value?.name?.en || 'N/A'
+    if (typeof value === "string") return value
+    return value?.en || value?.name?.en || "N/A"
   }
 
   if (isEditMode && isLoadingFreeCourse) {
@@ -155,17 +170,21 @@ export default function CreateUpdateFreeCourse() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard/free-courses')}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/dashboard/free-courses")}
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {isEditMode ? 'Edit Free Course' : 'Create Free Course'}
+            {isEditMode ? "Edit Free Course" : "Create Free Course"}
           </h1>
           <p className="text-muted-foreground">
             {isEditMode
-              ? 'Update the free course details and sections'
-              : 'Create a new university-specific free course'}
+              ? "Update the free course details and sections"
+              : "Create a new university-specific free course"}
           </p>
         </div>
       </div>
@@ -188,7 +207,7 @@ export default function CreateUpdateFreeCourse() {
                         onValueChange={(value) => {
                           field.onChange(value)
                           setSelectedUniversity(value)
-                          form.setValue('facultyId', '') // Reset faculty when university changes
+                          form.setValue("facultyId", "") // Reset faculty when university changes
                         }}
                         value={field.value}
                       >
@@ -199,7 +218,10 @@ export default function CreateUpdateFreeCourse() {
                         </FormControl>
                         <SelectContent>
                           {universitiesData?.data?.items?.map((university) => (
-                            <SelectItem key={university._id} value={university._id}>
+                            <SelectItem
+                              key={university._id}
+                              value={university._id}
+                            >
                               {getDisplayName(university.name)}
                             </SelectItem>
                           ))}
@@ -248,7 +270,10 @@ export default function CreateUpdateFreeCourse() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Instructor *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select instructor" />
@@ -274,7 +299,10 @@ export default function CreateUpdateFreeCourse() {
                     <FormItem>
                       <FormLabel>Image URL *</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://example.com/image.jpg" {...field} />
+                        <Input
+                          placeholder="https://example.com/image.jpg"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -291,7 +319,10 @@ export default function CreateUpdateFreeCourse() {
                       <FormItem>
                         <FormLabel>Course Name (English) *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter course name in English" {...field} />
+                          <Input
+                            placeholder="Enter course name in English"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -305,7 +336,10 @@ export default function CreateUpdateFreeCourse() {
                       <FormItem>
                         <FormLabel>Course Name (Arabic)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter course name in Arabic" {...field} />
+                          <Input
+                            placeholder="Enter course name in Arabic"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -319,7 +353,10 @@ export default function CreateUpdateFreeCourse() {
                       <FormItem>
                         <FormLabel>Course Name (Hebrew)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter course name in Hebrew" {...field} />
+                          <Input
+                            placeholder="Enter course name in Hebrew"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -396,7 +433,7 @@ export default function CreateUpdateFreeCourse() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/dashboard/free-courses')}
+              onClick={() => navigate("/dashboard/free-courses")}
             >
               Cancel
             </Button>
@@ -407,12 +444,12 @@ export default function CreateUpdateFreeCourse() {
               {createMutation.isPending || updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isEditMode ? 'Updating...' : 'Creating...'}
+                  {isEditMode ? "Updating..." : "Creating..."}
                 </>
               ) : isEditMode ? (
-                'Update Free Course'
+                "Update Free Course"
               ) : (
-                'Create Free Course'
+                "Create Free Course"
               )}
             </Button>
           </div>
