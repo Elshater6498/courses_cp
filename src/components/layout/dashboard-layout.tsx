@@ -1,5 +1,5 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Outlet, Link, useLocation } from "react-router-dom"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,7 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 import {
   Sidebar,
   SidebarContent,
@@ -22,8 +22,8 @@ import {
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { useAuthStore } from "@/stores/auth-store";
+} from "@/components/ui/sidebar"
+import { useAuthStore } from "@/stores/auth-store"
 import {
   Home,
   Users,
@@ -37,7 +37,7 @@ import {
   Video,
   ClipboardCheck,
   BookText,
-} from "lucide-react";
+} from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -81,7 +81,7 @@ const navigation = [
     name: "Free Courses",
     href: "/dashboard/free-courses",
     icon: BookText,
-    permission: "read_free_courses",
+    permission: "read_courses",
   },
   {
     name: "Enrollments",
@@ -101,21 +101,21 @@ const navigation = [
     icon: Video,
     permission: "read_video_library",
   },
-];
+]
 
 export function DashboardLayout() {
-  const location = useLocation();
-  const { admin, logout, hasPermission } = useAuthStore();
+  const location = useLocation()
+  const { admin, logout, hasPermission } = useAuthStore()
 
   const handleLogout = () => {
-    logout();
-  };
+    logout()
+  }
 
   const filteredNavigation = navigation.filter((item) => {
     // If no permission is required, always show (e.g., Dashboard)
-    if (!item.permission) return true;
-    return hasPermission(item.permission);
-  });
+    if (!item.permission) return true
+    return hasPermission(item.permission)
+  })
 
   return (
     <SidebarProvider>
@@ -132,8 +132,8 @@ export function DashboardLayout() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {filteredNavigation.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = location.pathname === item.href;
+                    const Icon = item.icon
+                    const isActive = location.pathname === item.href
 
                     return (
                       <SidebarMenuItem key={item.name}>
@@ -148,7 +148,7 @@ export function DashboardLayout() {
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
-                    );
+                    )
                   })}
                 </SidebarMenu>
               </SidebarGroupContent>
@@ -226,5 +226,5 @@ export function DashboardLayout() {
         </SidebarInset>
       </div>
     </SidebarProvider>
-  );
+  )
 }

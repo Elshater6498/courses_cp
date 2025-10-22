@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import { Link } from 'react-router'
-import { useFreeCourses, useDeleteFreeCourse } from '@/hooks/use-free-courses'
-import { useAuthStore } from '@/stores/auth-store'
-import { Button } from '@/components/ui/button'
+import { useState } from "react"
+import { Link } from "react-router"
+import { useFreeCourses, useDeleteFreeCourse } from "@/hooks/use-free-courses"
+import { useAuthStore } from "@/stores/auth-store"
+import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -10,13 +10,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,38 +26,43 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+} from "@/components/ui/alert-dialog"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { MoreHorizontal, Plus, Pencil, Trash2, Eye } from 'lucide-react'
-import type { FreeCourse, University, Faculty, Admin } from '@/types/api'
+} from "@/components/ui/select"
+import { MoreHorizontal, Plus, Pencil, Trash2, Eye } from "lucide-react"
+import type { FreeCourse, University, Faculty, Admin } from "@/types/api"
 
 export default function FreeCoursesPage() {
   const { hasPermission, hasAnyPermission } = useAuthStore()
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
-  const [isActiveFilter, setIsActiveFilter] = useState<string>('all')
+  const [search, setSearch] = useState("")
+  const [isActiveFilter, setIsActiveFilter] = useState<string>("all")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState<FreeCourse | null>(null)
 
-  const canCreate = hasPermission('create_free_courses')
-  const canUpdate = hasPermission('update_free_courses')
-  const canDelete = hasPermission('delete_free_courses')
-  const canView = hasAnyPermission(['read_free_courses', 'create_free_courses', 'update_free_courses'])
+  const canCreate = hasPermission("create_courses")
+  const canUpdate = hasPermission("update_courses")
+  const canDelete = hasPermission("delete_courses")
+  const canView = hasAnyPermission([
+    "read_courses",
+    "create_courses",
+    "update_courses",
+  ])
 
   const { data, isLoading, error } = useFreeCourses({
     page,
     limit: 10,
     search,
-    isActive: isActiveFilter === 'all' ? undefined : isActiveFilter === 'active',
+    isActive:
+      isActiveFilter === "all" ? undefined : isActiveFilter === "active",
   })
 
   const deleteMutation = useDeleteFreeCourse()
@@ -70,19 +75,21 @@ export default function FreeCoursesPage() {
       setDeleteDialogOpen(false)
       setSelectedCourse(null)
     } catch (error) {
-      console.error('Failed to delete free course:', error)
+      console.error("Failed to delete free course:", error)
     }
   }
 
   const getDisplayName = (value: any) => {
-    if (typeof value === 'string') return value
-    return value?.en || value?.name?.en || 'N/A'
+    if (typeof value === "string") return value
+    return value?.en || value?.name?.en || "N/A"
   }
 
   if (!canView) {
     return (
       <div className="flex items-center justify-center h-96">
-        <p className="text-muted-foreground">You don't have permission to view free courses.</p>
+        <p className="text-muted-foreground">
+          You don't have permission to view free courses.
+        </p>
       </div>
     )
   }
@@ -167,20 +174,22 @@ export default function FreeCoursesPage() {
                         {getDisplayName(course.name)}
                       </TableCell>
                       <TableCell>
-                        {getDisplayName((course.universityId as University))}
+                        {getDisplayName(course.universityId as University)}
                       </TableCell>
                       <TableCell>
-                        {getDisplayName((course.facultyId as Faculty))}
+                        {getDisplayName(course.facultyId as Faculty)}
                       </TableCell>
                       <TableCell>
-                        {typeof course.instructorId === 'object'
+                        {typeof course.instructorId === "object"
                           ? (course.instructorId as Admin).userName
-                          : 'N/A'}
+                          : "N/A"}
                       </TableCell>
                       <TableCell>{course.sections?.length || 0}</TableCell>
                       <TableCell>
-                        <Badge variant={course.isActive ? 'default' : 'secondary'}>
-                          {course.isActive ? 'Active' : 'Inactive'}
+                        <Badge
+                          variant={course.isActive ? "default" : "secondary"}
+                        >
+                          {course.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -198,7 +207,9 @@ export default function FreeCoursesPage() {
                               </DropdownMenuItem>
                             </Link>
                             {canUpdate && (
-                              <Link to={`/dashboard/free-courses/${course._id}/edit`}>
+                              <Link
+                                to={`/dashboard/free-courses/${course._id}/edit`}
+                              >
                                 <DropdownMenuItem>
                                   <Pencil className="mr-2 h-4 w-4" />
                                   Edit
@@ -228,8 +239,8 @@ export default function FreeCoursesPage() {
               {data.data.pagination && (
                 <div className="flex items-center justify-between px-6 py-4 border-t">
                   <p className="text-sm text-muted-foreground">
-                    Showing {((page - 1) * 10) + 1} to{' '}
-                    {Math.min(page * 10, data.data.pagination.totalItems)} of{' '}
+                    Showing {(page - 1) * 10 + 1} to{" "}
+                    {Math.min(page * 10, data.data.pagination.totalItems)} of{" "}
                     {data.data.pagination.totalItems} courses
                   </p>
                   <div className="flex gap-2">
@@ -262,14 +273,18 @@ export default function FreeCoursesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will deactivate the free course "{selectedCourse && getDisplayName(selectedCourse.name)}".
-              This action can be reversed by reactivating the course.
+              This will deactivate the free course "
+              {selectedCourse && getDisplayName(selectedCourse.name)}". This
+              action can be reversed by reactivating the course.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleteMutation.isPending}>
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
