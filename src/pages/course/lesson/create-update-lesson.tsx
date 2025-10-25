@@ -342,7 +342,7 @@ export function CreateUpdateLesson() {
         toast.success("Lesson created successfully!");
       }
 
-      navigate(`/dashboard/courses/topics/${topicId}/lessons`);
+      navigate(`/dashboard/courses/${courseId}/topics/${topicId}/lessons`);
     } catch (error) {
       console.error("Error saving lesson:", error);
       toast.error(

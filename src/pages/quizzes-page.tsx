@@ -47,7 +47,8 @@ export function QuizzesPage() {
     page,
     limit: 10,
     search: search || undefined,
-    quizType: quizTypeFilter !== "all" ? (quizTypeFilter as QuizType) : undefined,
+    quizType:
+      quizTypeFilter !== "all" ? (quizTypeFilter as QuizType) : undefined,
     isActive: statusFilter !== "all" ? statusFilter === "active" : undefined,
   });
 
@@ -77,8 +78,8 @@ export function QuizzesPage() {
   };
 
   const getTitle = (quiz: Quiz): string => {
-    if (typeof quiz.title === 'string') return quiz.title;
-    return quiz.title.en || quiz.title.ar || quiz.title.he || 'Untitled Quiz';
+    if (typeof quiz.title === "string") return quiz.title;
+    return quiz.title.en || quiz.title.ar || quiz.title.he || "Untitled Quiz";
   };
 
   if (isLoading) {
@@ -183,14 +184,19 @@ export function QuizzesPage() {
           <TableBody>
             {quizzes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-8 text-gray-500"
+                >
                   No quizzes found
                 </TableCell>
               </TableRow>
             ) : (
               quizzes.map((quiz: Quiz) => (
                 <TableRow key={quiz._id}>
-                  <TableCell className="font-medium">{getTitle(quiz)}</TableCell>
+                  <TableCell className="font-medium">
+                    {getTitle(quiz)}
+                  </TableCell>
                   <TableCell>
                     <Badge className={getQuizTypeBadge(quiz.quizType)}>
                       {quiz.quizType}
@@ -209,14 +215,9 @@ export function QuizzesPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(`/dashboard/quizzes/${quiz._id}/view`)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/dashboard/quizzes/${quiz._id}/edit`)}
+                        onClick={() =>
+                          navigate(`/dashboard/quizzes/${quiz._id}/edit`)
+                        }
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -239,9 +240,13 @@ export function QuizzesPage() {
         {pagination && pagination.totalPages > 1 && (
           <div className="flex items-center justify-between border-t p-4">
             <div className="text-sm text-gray-500">
-              Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{" "}
-              {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{" "}
-              {pagination.totalItems} quizzes
+              Showing{" "}
+              {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} to{" "}
+              {Math.min(
+                pagination.currentPage * pagination.itemsPerPage,
+                pagination.totalItems
+              )}{" "}
+              of {pagination.totalItems} quizzes
             </div>
             <div className="flex gap-2">
               <Button
@@ -266,13 +271,16 @@ export function QuizzesPage() {
       </Card>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteQuizId} onOpenChange={() => setDeleteQuizId(null)}>
+      <AlertDialog
+        open={!!deleteQuizId}
+        onOpenChange={() => setDeleteQuizId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Quiz</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this quiz? This action cannot be undone.
-              All progress and statistics will be lost.
+              Are you sure you want to delete this quiz? This action cannot be
+              undone. All progress and statistics will be lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
