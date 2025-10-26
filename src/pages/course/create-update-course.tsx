@@ -1,18 +1,19 @@
-import { useRef, useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useNavigate, useParams } from "react-router-dom";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useRef, useState, useEffect } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { useNavigate, useParams } from "react-router-dom"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import {
   Form,
   FormControl,
@@ -20,16 +21,16 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "@/components/ui/form"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { MultipleSelector } from "@/components/ui/multiple-selector";
-import type { Option } from "@/components/ui/multiple-selector";
+} from "@/components/ui/select"
+import { MultipleSelector } from "@/components/ui/multiple-selector"
+import type { Option } from "@/components/ui/multiple-selector"
 import {
   ArrowLeft,
   Save,
@@ -40,22 +41,22 @@ import {
   Users,
   Video,
   GraduationCap,
-} from "lucide-react";
-import { toast } from "sonner";
+} from "lucide-react"
+import { toast } from "sonner"
 
 import {
   useCourse,
   useCreateCourse,
   useUpdateCourse,
   useFacultiesGroupedByUniversity,
-} from "@/hooks/use-courses";
-import { useAdminsByRoleName } from "@/hooks/use-admins";
-import { useVideosForSelect } from "@/hooks/use-videos-library";
-import { UploadService, type UploadProgress } from "@/services/upload-service";
-import { UploadProgressCard } from "@/components/ui/upload-progress";
+} from "@/hooks/use-courses"
+import { useAdminsByRoleName } from "@/hooks/use-admins"
+import { useVideosForSelect } from "@/hooks/use-videos-library"
+import { UploadService, type UploadProgress } from "@/services/upload-service"
+import { UploadProgressCard } from "@/components/ui/upload-progress"
 import RichTextEditor, {
   type RichTextEditorRef,
-} from "@/components/ui/RichTextEditor";
+} from "@/components/ui/RichTextEditor"
 
 // Form schemas
 const courseSchema = z.object({
@@ -140,34 +141,34 @@ const courseSchema = z.object({
   imageUrl: z.string().optional(),
   introductoryVideoId: z.string().optional(),
   isActive: z.boolean(),
-});
+})
 
-type CourseFormData = z.infer<typeof courseSchema>;
+type CourseFormData = z.infer<typeof courseSchema>
 
 export function CreateCourse() {
-  const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false)
 
   // File upload state
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imageUploadProgress, setImageUploadProgress] =
-    useState<UploadProgress | null>(null);
+    useState<UploadProgress | null>(null)
   const [imageUploadStatus, setImageUploadStatus] = useState<
     "idle" | "uploading" | "completed" | "error"
-  >("idle");
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const editorRef = useRef<RichTextEditorRef>(null);
+  >("idle")
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const editorRef = useRef<RichTextEditorRef>(null)
 
   // Queries
-  const { data: courseData, isLoading: isLoadingCourse } = useCourse(id || "");
-  const { data: facultiesData } = useFacultiesGroupedByUniversity();
-  const { data: adminsData } = useAdminsByRoleName("Instructor");
-  const { data: videosData } = useVideosForSelect("course");
+  const { data: courseData, isLoading: isLoadingCourse } = useCourse(id || "")
+  const { data: facultiesData } = useFacultiesGroupedByUniversity()
+  const { data: adminsData } = useAdminsByRoleName("Instructor")
+  const { data: videosData } = useVideosForSelect("course")
   // Mutations
-  const createCourseMutation = useCreateCourse();
-  const updateCourseMutation = useUpdateCourse();
+  const createCourseMutation = useCreateCourse()
+  const updateCourseMutation = useUpdateCourse()
 
   // Form
   const form = useForm<CourseFormData>({
@@ -186,32 +187,32 @@ export function CreateCourse() {
       introductoryVideoId: "",
       isActive: true,
     },
-  });
-  console.log(form.formState.errors);
+  })
+  console.log(form.formState.errors)
   // Load course data when editing
   useEffect(() => {
     if (id && courseData?.data) {
-      const course = courseData.data;
+      const course = courseData.data
       const courseName =
         typeof course.name === "string"
           ? { en: course.name, ar: "", he: "" }
-          : course.name;
+          : course.name
 
       const courseAbout =
         typeof course.aboutCourse === "string"
           ? { en: course.aboutCourse, ar: "", he: "" }
-          : course.aboutCourse;
+          : course.aboutCourse
 
       const facultyIds = Array.isArray(course.facultyIds)
         ? course.facultyIds.map((faculty) =>
             typeof faculty === "string" ? faculty : faculty._id
           )
-        : [];
+        : []
 
       const instructorId =
         typeof course.instructorId === "string"
           ? course.instructorId
-          : course.instructorId._id;
+          : course.instructorId._id
 
       form.reset({
         name: {
@@ -238,10 +239,10 @@ export function CreateCourse() {
         imageUrl: course.imageUrl || "",
         introductoryVideoId: "", // Will be set after videos are loaded
         isActive: course.isActive,
-      });
-      setIsEditing(true);
+      })
+      setIsEditing(true)
     }
-  }, [id, courseData, form]);
+  }, [id, courseData, form])
 
   // Set video ID when videos are loaded and we have an existing video URL
   useEffect(() => {
@@ -253,48 +254,48 @@ export function CreateCourse() {
       // Find the video that matches the current video URL
       const matchingVideo = videosData.data.find(
         (video) => video.videoUrl === courseData?.data?.introductoryVideoUrl
-      );
+      )
       if (matchingVideo) {
-        form.setValue("introductoryVideoId", matchingVideo.id);
+        form.setValue("introductoryVideoId", matchingVideo.id)
       }
     }
-  }, [isEditing, courseData, videosData, form]);
+  }, [isEditing, courseData, videosData, form])
 
   // Handlers
   const handleSubmit = async (data: CourseFormData) => {
     try {
       // Upload image if selected
-      let imageUrl = data.imageUrl || "";
+      let imageUrl = data.imageUrl || ""
       if (selectedImage) {
         try {
-          setImageUploadStatus("uploading");
+          setImageUploadStatus("uploading")
           const imageResult = await UploadService.uploadFileWithProgress(
             selectedImage,
             "image",
             "courses",
             (progress) => setImageUploadProgress(progress)
-          );
-          imageUrl = imageResult.downloadUrl;
-          setImageUploadStatus("completed");
+          )
+          imageUrl = imageResult.downloadUrl
+          setImageUploadStatus("completed")
         } catch (error) {
-          setImageUploadStatus("error");
+          setImageUploadStatus("error")
           setUploadError(
             error instanceof Error ? error.message : "Image upload failed"
-          );
-          throw error;
+          )
+          throw error
         }
       } else if (!isEditing && !data.imageUrl) {
-        throw new Error("Course image is required");
+        throw new Error("Course image is required")
       }
 
       // Get video URL from selected video ID
-      let introductoryVideoUrl = "";
+      let introductoryVideoUrl = ""
       if (data.introductoryVideoId) {
         const selectedVideo = videosData?.data?.find(
           (video) => video.id === data.introductoryVideoId
-        );
+        )
         if (selectedVideo) {
-          introductoryVideoUrl = selectedVideo.videoUrl;
+          introductoryVideoUrl = selectedVideo.videoUrl
         }
       }
 
@@ -326,56 +327,56 @@ export function CreateCourse() {
         imageUrl,
         introductoryVideoUrl,
         isActive: data.isActive,
-      };
+      }
 
       if (isEditing && id) {
-        await updateCourseMutation.mutateAsync({ id, data: processedData });
-        toast.success("Course updated successfully!");
+        await updateCourseMutation.mutateAsync({ id, data: processedData })
+        toast.success("Course updated successfully!")
       } else {
-        await createCourseMutation.mutateAsync(processedData);
-        toast.success("Course created successfully!");
+        await createCourseMutation.mutateAsync(processedData)
+        toast.success("Course created successfully!")
       }
-      navigate("/dashboard/courses");
+      navigate("/dashboard/courses")
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to save course"
-      );
+      )
     }
-  };
+  }
 
   const handleAddLearningOutcome = () => {
-    const currentOutcomes = form.getValues("whatWillYouLearn");
+    const currentOutcomes = form.getValues("whatWillYouLearn")
     form.setValue("whatWillYouLearn", [
       ...currentOutcomes,
       { en: "", ar: "", he: "" },
-    ]);
-  };
+    ])
+  }
 
   const handleRemoveLearningOutcome = (index: number) => {
-    const currentOutcomes = form.getValues("whatWillYouLearn");
+    const currentOutcomes = form.getValues("whatWillYouLearn")
     if (currentOutcomes.length > 1) {
       form.setValue(
         "whatWillYouLearn",
         currentOutcomes.filter((_, i) => i !== index)
-      );
+      )
     }
-  };
+  }
 
   // File upload handlers
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files?.[0]
     if (file) {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        toast.error("Please select a valid image file");
-        return;
+        toast.error("Please select a valid image file")
+        return
       }
-      setSelectedImage(file);
-      setImageUploadStatus("idle");
-      setImageUploadProgress(null);
-      setUploadError(null);
+      setSelectedImage(file)
+      setImageUploadStatus("idle")
+      setImageUploadProgress(null)
+      setUploadError(null)
     }
-  };
+  }
 
   if (isLoadingCourse) {
     return (
@@ -384,7 +385,7 @@ export function CreateCourse() {
           <p className="text-gray-500">Loading course...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (id && !courseData?.data) {
@@ -394,7 +395,7 @@ export function CreateCourse() {
           <p className="text-gray-500">Course not found.</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -796,7 +797,7 @@ export function CreateCourse() {
                 name="facultyIds"
                 render={({ field }) => {
                   // Transform grouped data to flat options with group information
-                  const options: Option[] = [];
+                  const options: Option[] = []
                   facultiesData?.data?.map((group) => {
                     group.faculties.map((faculty) => {
                       options.push({
@@ -807,9 +808,9 @@ export function CreateCourse() {
                         } (${group.universityName.en})`,
                         value: faculty._id,
                         group: group.universityName.en,
-                      });
-                    });
-                  });
+                      })
+                    })
+                  })
                   return (
                     <FormItem>
                       <FormLabel>Faculties *</FormLabel>
@@ -819,13 +820,13 @@ export function CreateCourse() {
                           value={field.value?.map((value) => {
                             const option = options.find(
                               (opt) => opt.value === value
-                            );
-                            return option || { label: value, value };
+                            )
+                            return option || { label: value, value }
                           })}
                           onChange={(selectedOptions) => {
                             field.onChange(
                               selectedOptions.map((opt) => opt.value)
-                            );
+                            )
                           }}
                           placeholder="Select faculties..."
                           maxSelected={5}
@@ -839,7 +840,7 @@ export function CreateCourse() {
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  );
+                  )
                 }}
               />
             </CardContent>
@@ -1050,5 +1051,5 @@ export function CreateCourse() {
         </form>
       </Form>
     </div>
-  );
+  )
 }

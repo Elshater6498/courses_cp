@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState } from "react"
+import { useParams } from "react-router-dom"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,16 +10,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -26,13 +27,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 import {
   Upload,
   Plus,
@@ -46,82 +47,83 @@ import {
   File,
   Calendar,
   User,
-} from "lucide-react";
-import { useCourse } from "@/hooks/use-courses";
+} from "lucide-react"
+import { useCourse } from "@/hooks/use-courses"
 import {
   useAttachedFiles,
   useDeleteAttachedFile,
   usePresignedDownloadUrl,
-} from "@/hooks/use-attached-files";
-import { type AttachedFile } from "@/services/attached-files-service";
-import { UploadFileDialog } from "./upload-file-dialog";
-import { UploadService } from "@/services/upload-service";
+} from "@/hooks/use-attached-files"
+import { type AttachedFile } from "@/services/attached-files-service"
+import { UploadFileDialog } from "./upload-file-dialog"
+import { UploadService } from "@/services/upload-service"
 
 export function CourseFilesPage() {
-  const { courseId } = useParams<{ courseId: string }>();
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [deleteFileId, setDeleteFileId] = useState<string>("");
-  const [deleteFileName, setDeleteFileName] = useState<string>("");
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { courseId } = useParams<{ courseId: string }>()
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
+  const [deleteFileId, setDeleteFileId] = useState<string>("")
+  const [deleteFileName, setDeleteFileName] = useState<string>("")
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   // Queries
-  const { data: courseData } = useCourse(courseId!);
+  const { data: courseData } = useCourse(courseId!)
   const { data: attachedFilesData, isLoading: isLoadingFiles } =
-    useAttachedFiles("course", courseId!);
+    useAttachedFiles("course", courseId!)
 
   // Mutations
-  const deleteFileMutation = useDeleteAttachedFile();
-  const downloadUrlMutation = usePresignedDownloadUrl();
+  const deleteFileMutation = useDeleteAttachedFile()
+  const downloadUrlMutation = usePresignedDownloadUrl()
 
   // Handlers
   const handleFileUploaded = () => {
     // The hook will automatically invalidate queries
-  };
+  }
 
   const handleDeleteFile = (fileId: string, fileName: string) => {
-    setDeleteFileId(fileId);
-    setDeleteFileName(fileName);
-    setIsDeleteDialogOpen(true);
-  };
+    setDeleteFileId(fileId)
+    setDeleteFileName(fileName)
+    setIsDeleteDialogOpen(true)
+  }
 
   const confirmDeleteFile = () => {
-    deleteFileMutation.mutate(deleteFileId);
-    setIsDeleteDialogOpen(false);
-    setDeleteFileId("");
-    setDeleteFileName("");
-  };
+    deleteFileMutation.mutate(deleteFileId)
+    setIsDeleteDialogOpen(false)
+    setDeleteFileId("")
+    setDeleteFileName("")
+  }
 
   const handleDownloadFile = async (file: AttachedFile) => {
     try {
       const response = await downloadUrlMutation.mutateAsync({
         fileId: file._id,
-      });
+      })
       if (response.data?.downloadUrl) {
         // Create a temporary link to download the file
-        const link = document.createElement("a");
-        link.href = response.data.downloadUrl;
-        link.download = file.name.en || "download";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const link = document.createElement("a")
+        link.href = response.data.downloadUrl
+        link.download = file.name.en || "download"
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
       }
     } catch (error) {
       // Error is already handled by the hook
+      console.error(error)
     }
-  };
+  }
 
   // Get file type icon
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith("image/")) {
-      return <Image className="h-4 w-4 text-blue-500" />;
+      return <Image className="h-4 w-4 text-blue-500" />
     } else if (fileType.startsWith("video/")) {
-      return <Video className="h-4 w-4 text-red-500" />;
+      return <Video className="h-4 w-4 text-red-500" />
     } else if (fileType.startsWith("audio/")) {
-      return <Music className="h-4 w-4 text-green-500" />;
+      return <Music className="h-4 w-4 text-green-500" />
     } else {
-      return <File className="h-4 w-4 text-gray-500" />;
+      return <File className="h-4 w-4 text-gray-500" />
     }
-  };
+  }
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -131,10 +133,10 @@ export function CourseFilesPage() {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    });
-  };
+    })
+  }
 
-  const attachedFiles = attachedFilesData?.data || [];
+  const attachedFiles = attachedFilesData?.data || []
 
   return (
     <div className="space-y-6">
@@ -316,5 +318,5 @@ export function CourseFilesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }

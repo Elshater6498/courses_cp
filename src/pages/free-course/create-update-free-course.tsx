@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import { useForm } from "react-hook-form"
@@ -256,9 +257,11 @@ export default function CreateUpdateFreeCourse() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>
-                        Select a university first
-                      </FormDescription>
+                      {!selectedUniversity && (
+                        <FormDescription>
+                          Select a university first
+                        </FormDescription>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}

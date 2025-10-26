@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -241,7 +242,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                     </div>
 
                     <div className="grid gap-4">
-                      <div>
+                      <div className="flex flex-col gap-2">
                         <Label>Title (English) *</Label>
                         <Input
                           value={section.title.en}
@@ -256,7 +257,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                         />
                       </div>
 
-                      <div>
+                      <div className="flex flex-col gap-2">
                         <Label>Title (Arabic)</Label>
                         <Input
                           value={section.title.ar || ""}
@@ -271,7 +272,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                         />
                       </div>
 
-                      <div>
+                      <div className="flex flex-col gap-2">
                         <Label>Title (Hebrew)</Label>
                         <Input
                           value={section.title.he || ""}
@@ -286,7 +287,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                         />
                       </div>
 
-                      <div>
+                      <div className="flex flex-col gap-2">
                         <Label>Description (English)</Label>
                         <Textarea
                           value={section.description?.en || ""}
@@ -302,7 +303,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                         />
                       </div>
 
-                      <div>
+                      <div className="flex flex-col gap-2">
                         <Label>Description (Arabic)</Label>
                         <Textarea
                           value={section.description?.ar || ""}
@@ -318,7 +319,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                         />
                       </div>
 
-                      <div>
+                      <div className="flex flex-col gap-2">
                         <Label>Description (Hebrew)</Label>
                         <Textarea
                           value={section.description?.he || ""}
@@ -382,7 +383,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                   </div>
 
                                   <div className="grid gap-3">
-                                    <div>
+                                    <div className="flex flex-col gap-2">
                                       <Label>Content Type *</Label>
                                       <Select
                                         value={item.type}
@@ -412,7 +413,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                       </Select>
                                     </div>
 
-                                    <div>
+                                    <div className="flex flex-col gap-2">
                                       <Label>Title (English) *</Label>
                                       <Input
                                         value={item.title.en}
@@ -428,7 +429,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                       />
                                     </div>
 
-                                    <div>
+                                    <div className="flex flex-col gap-2">
                                       <Label>Title (Arabic)</Label>
                                       <Input
                                         value={item.title.ar || ""}
@@ -444,7 +445,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                       />
                                     </div>
 
-                                    <div>
+                                    <div className="flex flex-col gap-2">
                                       <Label>Title (Hebrew)</Label>
                                       <Input
                                         value={item.title.he || ""}
@@ -461,7 +462,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                     </div>
 
                                     {item.type === "video" && (
-                                      <div>
+                                      <div className="flex flex-col gap-2">
                                         <Label>Video URL</Label>
                                         <Input
                                           value={item.url || ""}
@@ -478,7 +479,7 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                       </div>
                                     )}
 
-                                    <div>
+                                    <div className="flex flex-col gap-2">
                                       <Label>Resource ID (optional)</Label>
                                       <Input
                                         value={item.resourceId || ""}
