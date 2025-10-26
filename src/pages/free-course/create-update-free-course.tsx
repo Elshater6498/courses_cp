@@ -33,8 +33,11 @@ import {
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SectionBuilder } from "@/components/free-course/section-builder"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2, X } from "lucide-react"
 import type { Section } from "@/types/api"
+import { UploadService, type UploadProgress } from "@/services/upload-service"
+import { UploadProgressCard } from "@/components/ui/upload-progress"
+import { toast } from "sonner"
 
 const freeCourseSchema = z.object({
   name: z.object({
@@ -56,10 +59,7 @@ const freeCourseSchema = z.object({
   universityId: z.string().min(1, "University is required"),
   facultyId: z.string().min(1, "Faculty is required"),
   instructorId: z.string().min(1, "Instructor is required"),
-  imageUrl: z
-    .string()
-    .url("Must be a valid URL")
-    .min(1, "Image URL is required"),
+  imageUrl: z.string().optional(),
   sections: z.array(z.any()).optional(),
 })
 
@@ -72,6 +72,15 @@ export default function CreateUpdateFreeCourse() {
 
   const [sections, setSections] = useState<Section[]>([])
   const [selectedUniversity, setSelectedUniversity] = useState<string>("")
+
+  // Image upload state
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imageUploadProgress, setImageUploadProgress] =
+    useState<UploadProgress | null>(null)
+  const [imageUploadStatus, setImageUploadStatus] = useState<
+    "idle" | "uploading" | "completed" | "error"
+  >("idle")
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const { data: freeCourseData, isLoading: isLoadingFreeCourse } =
     useFreeCourse(id || "")
@@ -138,20 +147,67 @@ export default function CreateUpdateFreeCourse() {
 
   const onSubmit = async (data: FreeCourseFormValues) => {
     try {
+      // Upload image if selected
+      let imageUrl = data.imageUrl || ""
+      if (selectedImage) {
+        try {
+          setImageUploadStatus("uploading")
+          const imageResult = await UploadService.uploadFileWithProgress(
+            selectedImage,
+            "image",
+            "free-courses",
+            (progress) => setImageUploadProgress(progress)
+          )
+          imageUrl = imageResult.downloadUrl
+          setImageUploadStatus("completed")
+        } catch (error) {
+          setImageUploadStatus("error")
+          setUploadError(
+            error instanceof Error ? error.message : "Image upload failed"
+          )
+          toast.error("Failed to upload image")
+          return
+        }
+      } else if (!isEditMode && !data.imageUrl) {
+        toast.error("Course image is required")
+        return
+      }
+
       const payload = {
         ...data,
+        imageUrl,
         sections,
       }
 
       if (isEditMode && id) {
         await updateMutation.mutateAsync({ id, data: payload })
+        toast.success("Free course updated successfully!")
       } else {
         await createMutation.mutateAsync(payload)
+        toast.success("Free course created successfully!")
       }
 
       navigate("/dashboard/free-courses")
     } catch (error) {
       console.error("Failed to save free course:", error)
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save free course"
+      )
+    }
+  }
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file")
+        return
+      }
+      setSelectedImage(file)
+      setImageUploadStatus("idle")
+      setImageUploadProgress(null)
+      setUploadError(null)
     }
   }
 
@@ -295,22 +351,96 @@ export default function CreateUpdateFreeCourse() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="imageUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Image URL *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://example.com/image.jpg"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="md:col-span-2">
+                  <FormLabel>Course Image *</FormLabel>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Upload a high-quality image for your course (JPG, PNG, GIF,
+                    WebP, SVG)
+                  </p>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="flex-1"
+                      />
+                      {selectedImage && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedImage(null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+
+                    {selectedImage && (
+                      <div className="text-sm text-gray-600">
+                        Selected: {selectedImage.name} (
+                        {UploadService.formatBytes(selectedImage.size)})
+                      </div>
+                    )}
+
+                    {imageUploadStatus === "uploading" && imageUploadProgress && (
+                      <UploadProgressCard
+                        progress={imageUploadProgress}
+                        fileName={selectedImage?.name || ""}
+                        status="uploading"
+                      />
+                    )}
+
+                    {imageUploadStatus === "completed" && (
+                      <UploadProgressCard
+                        progress={imageUploadProgress!}
+                        fileName={selectedImage?.name || ""}
+                        status="completed"
+                      />
+                    )}
+
+                    {imageUploadStatus === "error" && (
+                      <UploadProgressCard
+                        progress={imageUploadProgress!}
+                        fileName={selectedImage?.name || ""}
+                        status="error"
+                        error={uploadError}
+                      />
+                    )}
+
+                    {/* Show existing image when editing */}
+                    {isEditMode &&
+                      freeCourseData?.data?.imageUrl &&
+                      !selectedImage && (
+                        <div className="mt-3 p-3 border rounded-lg bg-gray-50">
+                          <p className="text-sm text-gray-600 mb-2">
+                            Current image:
+                          </p>
+                          <img
+                            src={freeCourseData.data.imageUrl}
+                            alt="Current course image"
+                            className="max-w-xs h-auto rounded border"
+                          />
+                        </div>
+                      )}
+                  </div>
+
+                  {/* Hidden form field for validation */}
+                  <FormField
+                    control={form.control}
+                    name="imageUrl"
+                    render={({ field }) => (
+                      <FormItem className="hidden">
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -442,12 +572,21 @@ export default function CreateUpdateFreeCourse() {
             </Button>
             <Button
               type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending}
+              disabled={
+                createMutation.isPending ||
+                updateMutation.isPending ||
+                imageUploadStatus === "uploading"
+              }
             >
               {createMutation.isPending || updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {isEditMode ? "Updating..." : "Creating..."}
+                </>
+              ) : imageUploadStatus === "uploading" ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading image...
                 </>
               ) : isEditMode ? (
                 "Update Free Course"

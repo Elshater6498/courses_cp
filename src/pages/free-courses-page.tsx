@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react"
 import { Link } from "react-router"
 import { useFreeCourses, useDeleteFreeCourse } from "@/hooks/use-free-courses"
@@ -64,6 +65,8 @@ export default function FreeCoursesPage() {
     isActive:
       isActiveFilter === "all" ? undefined : isActiveFilter === "active",
   })
+
+  console.log("data", data)
 
   const deleteMutation = useDeleteFreeCourse()
 

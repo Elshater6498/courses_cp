@@ -27,8 +27,13 @@ import {
   FileText,
   Video,
   ClipboardList,
+  X,
 } from "lucide-react"
 import type { Section, ContentItem, ContentItemType } from "@/types/api"
+import { useVideosForSelect } from "@/hooks/use-videos-library"
+import { UploadService, type UploadProgress } from "@/services/upload-service"
+import { UploadProgressCard } from "@/components/ui/upload-progress"
+import { toast } from "sonner"
 
 interface SectionBuilderProps {
   sections: Section[]
@@ -37,6 +42,22 @@ interface SectionBuilderProps {
 
 export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
   const [expandedSections, setExpandedSections] = useState<string[]>([])
+
+  // Video library query
+  const { data: videosData } = useVideosForSelect("lesson")
+
+  // File upload state tracking per content item
+  const [uploadingFiles, setUploadingFiles] = useState<
+    Record<
+      string,
+      {
+        file: File
+        progress: UploadProgress | null
+        status: "idle" | "uploading" | "completed" | "error"
+        error: string | null
+      }
+    >
+  >({})
 
   const addSection = () => {
     const newSection: Section = {
@@ -141,6 +162,15 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
 
   const deleteContentItem = (sectionIndex: number, contentIndex: number) => {
     const updated = [...sections]
+    const itemId = updated[sectionIndex].contentItems[contentIndex]._id
+
+    // Clean up upload state if exists
+    if (uploadingFiles[itemId]) {
+      const newUploadingFiles = { ...uploadingFiles }
+      delete newUploadingFiles[itemId]
+      setUploadingFiles(newUploadingFiles)
+    }
+
     updated[sectionIndex].contentItems = updated[
       sectionIndex
     ].contentItems.filter((_, i) => i !== contentIndex)
@@ -149,6 +179,93 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
       item.order = i + 1
     })
     onChange(updated)
+  }
+
+  const handleFileSelect = async (
+    sectionIndex: number,
+    contentIndex: number,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const itemId = sections[sectionIndex].contentItems[contentIndex]._id
+
+    // Initialize upload state
+    setUploadingFiles((prev) => ({
+      ...prev,
+      [itemId]: {
+        file,
+        progress: null,
+        status: "idle",
+        error: null,
+      },
+    }))
+
+    try {
+      // Update status to uploading
+      setUploadingFiles((prev) => ({
+        ...prev,
+        [itemId]: { ...prev[itemId], status: "uploading" },
+      }))
+
+      // Upload file
+      const uploadType = UploadService.getUploadType(file.type)
+      const result = await UploadService.uploadFileWithProgress(
+        file,
+        uploadType,
+        "free-courses-content",
+        (progress) => {
+          setUploadingFiles((prev) => ({
+            ...prev,
+            [itemId]: { ...prev[itemId], progress },
+          }))
+        }
+      )
+
+      // Update content item with uploaded file URL
+      updateContentItem(sectionIndex, contentIndex, "resourceId", result.key)
+
+      // Update status to completed
+      setUploadingFiles((prev) => ({
+        ...prev,
+        [itemId]: { ...prev[itemId], status: "completed" },
+      }))
+
+      toast.success("File uploaded successfully")
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "File upload failed"
+      setUploadingFiles((prev) => ({
+        ...prev,
+        [itemId]: {
+          ...prev[itemId],
+          status: "error",
+          error: errorMessage,
+        },
+      }))
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleVideoSelect = (
+    sectionIndex: number,
+    contentIndex: number,
+    videoId: string
+  ) => {
+    const selectedVideo = videosData?.data?.find(
+      (video) => video.id === videoId
+    )
+    if (selectedVideo) {
+      // Update both url and resourceId
+      updateContentItem(
+        sectionIndex,
+        contentIndex,
+        "url",
+        selectedVideo.videoUrl
+      )
+      updateContentItem(sectionIndex, contentIndex, "resourceId", videoId)
+    }
   }
 
   const getContentIcon = (type: ContentItemType) => {
@@ -463,41 +580,159 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
 
                                     {item.type === "video" && (
                                       <div className="flex flex-col gap-2">
-                                        <Label>Video URL</Label>
-                                        <Input
-                                          value={item.url || ""}
-                                          onChange={(e) =>
-                                            updateContentItem(
+                                        <Label>
+                                          Select Video from Library *
+                                        </Label>
+                                        <Select
+                                          value={item.resourceId || ""}
+                                          onValueChange={(value) =>
+                                            handleVideoSelect(
                                               sectionIndex,
                                               contentIndex,
-                                              "url",
-                                              e.target.value
+                                              value
                                             )
                                           }
-                                          placeholder="Enter video URL or leave empty to select from library"
-                                        />
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select a video from library" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {videosData?.data?.map((video) => (
+                                              <SelectItem
+                                                key={video.id}
+                                                value={video.id}
+                                              >
+                                                {video.name}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        {item.resourceId && (
+                                          <p className="text-xs text-muted-foreground">
+                                            Selected:{" "}
+                                            {
+                                              videosData?.data?.find(
+                                                (v) => v.id === item.resourceId
+                                              )?.name
+                                            }
+                                          </p>
+                                        )}
                                       </div>
                                     )}
 
-                                    <div className="flex flex-col gap-2">
-                                      <Label>Resource ID (optional)</Label>
-                                      <Input
-                                        value={item.resourceId || ""}
-                                        onChange={(e) =>
-                                          updateContentItem(
-                                            sectionIndex,
-                                            contentIndex,
-                                            "resourceId",
-                                            e.target.value
-                                          )
-                                        }
-                                        placeholder="Enter resource ID (file/video/quiz)"
-                                      />
-                                      <p className="text-xs text-muted-foreground mt-1">
-                                        ID of the file, video from library, or
-                                        quiz
-                                      </p>
-                                    </div>
+                                    {item.type === "file" && (
+                                      <div className="flex flex-col gap-2">
+                                        <Label>Upload File *</Label>
+                                        <div className="space-y-3">
+                                          <div className="flex items-center gap-3">
+                                            <Input
+                                              type="file"
+                                              accept="*/*"
+                                              onChange={(e) =>
+                                                handleFileSelect(
+                                                  sectionIndex,
+                                                  contentIndex,
+                                                  e
+                                                )
+                                              }
+                                              className="flex-1"
+                                            />
+                                            {uploadingFiles[item._id]?.file && (
+                                              <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                  const newUploadingFiles = {
+                                                    ...uploadingFiles,
+                                                  }
+                                                  delete newUploadingFiles[
+                                                    item._id
+                                                  ]
+                                                  setUploadingFiles(
+                                                    newUploadingFiles
+                                                  )
+                                                }}
+                                              >
+                                                <X className="h-4 w-4" />
+                                              </Button>
+                                            )}
+                                          </div>
+
+                                          {uploadingFiles[item._id]?.file && (
+                                            <div className="text-sm text-gray-600">
+                                              Selected:{" "}
+                                              {
+                                                uploadingFiles[item._id].file
+                                                  .name
+                                              }{" "}
+                                              (
+                                              {UploadService.formatBytes(
+                                                uploadingFiles[item._id].file
+                                                  .size
+                                              )}
+                                              )
+                                            </div>
+                                          )}
+
+                                          {uploadingFiles[item._id]?.status ===
+                                            "uploading" &&
+                                            uploadingFiles[item._id]
+                                              .progress && (
+                                              <UploadProgressCard
+                                                progress={
+                                                  uploadingFiles[item._id]
+                                                    .progress!
+                                                }
+                                                fileName={
+                                                  uploadingFiles[item._id].file
+                                                    .name
+                                                }
+                                                status="uploading"
+                                              />
+                                            )}
+
+                                          {uploadingFiles[item._id]?.status ===
+                                            "completed" && (
+                                            <UploadProgressCard
+                                              progress={
+                                                uploadingFiles[item._id]
+                                                  .progress!
+                                              }
+                                              fileName={
+                                                uploadingFiles[item._id].file
+                                                  .name
+                                              }
+                                              status="completed"
+                                            />
+                                          )}
+
+                                          {uploadingFiles[item._id]?.status ===
+                                            "error" && (
+                                            <UploadProgressCard
+                                              progress={
+                                                uploadingFiles[item._id]
+                                                  .progress!
+                                              }
+                                              fileName={
+                                                uploadingFiles[item._id].file
+                                                  .name
+                                              }
+                                              status="error"
+                                              error={
+                                                uploadingFiles[item._id].error
+                                              }
+                                            />
+                                          )}
+
+                                          {item.resourceId && (
+                                            <p className="text-xs text-green-600">
+                                              ✓ File uploaded successfully
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </CardContent>
