@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, Eye, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useQuizzes, useDeleteQuiz } from "@/hooks/use-quizzes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

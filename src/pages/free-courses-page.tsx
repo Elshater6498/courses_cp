@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MoreHorizontal, Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { MoreHorizontal, Plus, Pencil, Trash2 } from "lucide-react";
 import type { FreeCourse, University, Faculty, Admin } from "@/types/api";
 
 export default function FreeCoursesPage() {
