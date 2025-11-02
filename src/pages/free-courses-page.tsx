@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react"
-import { Link } from "react-router"
-import { useFreeCourses, useDeleteFreeCourse } from "@/hooks/use-free-courses"
-import { useAuthStore } from "@/stores/auth-store"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Link } from "react-router";
+import { useFreeCourses, useDeleteFreeCourse } from "@/hooks/use-free-courses";
+import { useAuthStore } from "@/stores/auth-store";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,13 +11,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,36 +27,36 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/alert-dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { MoreHorizontal, Plus, Pencil, Trash2, Eye } from "lucide-react"
-import type { FreeCourse, University, Faculty, Admin } from "@/types/api"
+} from "@/components/ui/select";
+import { MoreHorizontal, Plus, Pencil, Trash2, Eye } from "lucide-react";
+import type { FreeCourse, University, Faculty, Admin } from "@/types/api";
 
 export default function FreeCoursesPage() {
-  const { hasPermission, hasAnyPermission } = useAuthStore()
-  const [page, setPage] = useState(1)
-  const [search, setSearch] = useState("")
-  const [isActiveFilter, setIsActiveFilter] = useState<string>("all")
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [selectedCourse, setSelectedCourse] = useState<FreeCourse | null>(null)
+  const { hasPermission, hasAnyPermission } = useAuthStore();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<FreeCourse | null>(null);
 
-  const canCreate = hasPermission("create_courses")
-  const canUpdate = hasPermission("update_courses")
-  const canDelete = hasPermission("delete_courses")
+  const canCreate = hasPermission("create_courses");
+  const canUpdate = hasPermission("update_courses");
+  const canDelete = hasPermission("delete_courses");
   const canView = hasAnyPermission([
     "read_courses",
     "create_courses",
     "update_courses",
-  ])
+  ]);
 
   const { data, isLoading, error } = useFreeCourses({
     page,
@@ -64,28 +64,28 @@ export default function FreeCoursesPage() {
     search,
     isActive:
       isActiveFilter === "all" ? undefined : isActiveFilter === "active",
-  })
+  });
 
-  console.log("data", data)
+  console.log("data", data);
 
-  const deleteMutation = useDeleteFreeCourse()
+  const deleteMutation = useDeleteFreeCourse();
 
   const handleDelete = async () => {
-    if (!selectedCourse) return
+    if (!selectedCourse) return;
 
     try {
-      await deleteMutation.mutateAsync(selectedCourse._id)
-      setDeleteDialogOpen(false)
-      setSelectedCourse(null)
+      await deleteMutation.mutateAsync(selectedCourse._id);
+      setDeleteDialogOpen(false);
+      setSelectedCourse(null);
     } catch (error) {
-      console.error("Failed to delete free course:", error)
+      console.error("Failed to delete free course:", error);
     }
-  }
+  };
 
   const getDisplayName = (value: any) => {
-    if (typeof value === "string") return value
-    return value?.en || value?.name?.en || "N/A"
-  }
+    if (typeof value === "string") return value;
+    return value?.en || value?.name?.en || "N/A";
+  };
 
   if (!canView) {
     return (
@@ -94,7 +94,7 @@ export default function FreeCoursesPage() {
           You don't have permission to view free courses.
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -198,17 +198,13 @@ export default function FreeCoursesPage() {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            <div>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <Link to={`/dashboard/free-courses/${course._id}`}>
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                View Details
-                              </DropdownMenuItem>
-                            </Link>
                             {canUpdate && (
                               <Link
                                 to={`/dashboard/free-courses/${course._id}/edit`}
@@ -223,8 +219,8 @@ export default function FreeCoursesPage() {
                               <DropdownMenuItem
                                 className="text-destructive"
                                 onClick={() => {
-                                  setSelectedCourse(course)
-                                  setDeleteDialogOpen(true)
+                                  setSelectedCourse(course);
+                                  setDeleteDialogOpen(true);
                                 }}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
@@ -293,5 +289,5 @@ export default function FreeCoursesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

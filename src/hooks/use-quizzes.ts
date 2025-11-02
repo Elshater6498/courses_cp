@@ -108,3 +108,16 @@ export const useDeleteQuiz = () => {
     },
   });
 };
+
+// Get quizzes for select input (for free course sections)
+export const useQuizzesForSelect = () => {
+  return useQuery({
+    queryKey: [...quizKeys.all, "select", "section"],
+    queryFn: () => quizService.getQuizzes({ isActive: true, quizType: "section" }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    select: (data) => {
+      // Transform the paginated response into a simple array for select options
+      return data.data?.items || [];
+    },
+  });
+};

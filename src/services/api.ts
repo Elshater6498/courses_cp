@@ -119,18 +119,40 @@ export const apiGetPaginated = async <T>(
     ...config,
     params,
   })
-  
-  // Handle nested response structure from backend
+
   const responseData = response.data
+
+  // Transform mongoose-paginate response to our PaginatedResponse format
+  if (responseData.data && responseData.data.docs) {
+    return {
+      success: responseData.success,
+      message: responseData.message || 'Success',
+      data: {
+        items: responseData.data.docs,
+        pagination: {
+          currentPage: responseData.data.page,
+          totalPages: responseData.data.totalPages,
+          totalItems: responseData.data.totalDocs,
+          itemsPerPage: responseData.data.limit,
+          hasNext: responseData.data.hasNextPage,
+          hasPrev: responseData.data.hasPrevPage,
+          nextPage: responseData.data.nextPage,
+          prevPage: responseData.data.prevPage,
+        },
+        meta: responseData.data.meta
+      }
+    }
+  }
+
+  // Handle already transformed response or nested data structure
   if (responseData.data && responseData.data.data) {
-    // If the response has nested data structure, flatten it
     return {
       success: responseData.success,
       message: responseData.message,
       data: responseData.data.data
     }
   }
-  
+
   return responseData
 }
 

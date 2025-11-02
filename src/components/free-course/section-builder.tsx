@@ -31,6 +31,7 @@ import {
 } from "lucide-react"
 import type { Section, ContentItem, ContentItemType } from "@/types/api"
 import { useVideosForSelect } from "@/hooks/use-videos-library"
+import { useQuizzesForSelect } from "@/hooks/use-quizzes"
 import { UploadService, type UploadProgress } from "@/services/upload-service"
 import { UploadProgressCard } from "@/components/ui/upload-progress"
 import { toast } from "sonner"
@@ -45,6 +46,9 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
 
   // Video library query
   const { data: videosData } = useVideosForSelect("lesson")
+
+  // Quiz library query
+  const { data: quizzesData } = useQuizzesForSelect()
 
   // File upload state tracking per content item
   const [uploadingFiles, setUploadingFiles] = useState<
@@ -266,6 +270,23 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
       )
       updateContentItem(sectionIndex, contentIndex, "resourceId", videoId)
     }
+  }
+
+  const handleQuizSelect = (
+    sectionIndex: number,
+    contentIndex: number,
+    quizId: string
+  ) => {
+    const selectedQuiz = quizzesData?.find((quiz) => quiz._id === quizId)
+    if (selectedQuiz) {
+      // Update resourceId for quiz
+      updateContentItem(sectionIndex, contentIndex, "resourceId", quizId)
+    }
+  }
+
+  const getQuizTitle = (quiz: any): string => {
+    if (typeof quiz.title === "string") return quiz.title
+    return quiz.title?.en || quiz.title?.ar || quiz.title?.he || "Untitled Quiz"
   }
 
   const getContentIcon = (type: ContentItemType) => {
@@ -614,6 +635,54 @@ export function SectionBuilder({ sections, onChange }: SectionBuilderProps) {
                                               videosData?.data?.find(
                                                 (v) => v.id === item.resourceId
                                               )?.name
+                                            }
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {item.type === "quiz" && (
+                                      <div className="flex flex-col gap-2">
+                                        <Label>
+                                          Select Quiz from Library *
+                                        </Label>
+                                        <Select
+                                          value={item.resourceId || ""}
+                                          onValueChange={(value) =>
+                                            handleQuizSelect(
+                                              sectionIndex,
+                                              contentIndex,
+                                              value
+                                            )
+                                          }
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select a quiz from library" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {quizzesData?.map((quiz) => (
+                                              <SelectItem
+                                                key={quiz._id}
+                                                value={quiz._id}
+                                              >
+                                                {getQuizTitle(quiz)}
+                                              </SelectItem>
+                                            ))}
+                                          </SelectContent>
+                                        </Select>
+                                        {item.resourceId && (
+                                          <p className="text-xs text-muted-foreground">
+                                            Selected:{" "}
+                                            {
+                                              quizzesData?.find(
+                                                (q) => q._id === item.resourceId
+                                              )?.title &&
+                                              getQuizTitle(
+                                                quizzesData.find(
+                                                  (q) =>
+                                                    q._id === item.resourceId
+                                                )!
+                                              )
                                             }
                                           </p>
                                         )}
