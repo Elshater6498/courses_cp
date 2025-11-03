@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { MoreVertical, Edit, Trash2 } from "lucide-react";
+import { MoreVertical, Eye, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +18,7 @@ import {
 } from "../ui/alert-dialog";
 import { Button } from "../ui/button";
 import { useDeleteContentItem } from "../../hooks/use-content-items";
+import { ViewContentItemDialog } from "./view-content-item-dialog";
 
 interface ContentItemActionsDropdownProps {
   freeCourseId: string;
@@ -34,6 +34,7 @@ export function ContentItemActionsDropdown({
   contentTitle,
 }: ContentItemActionsDropdownProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
   const deleteContentItem = useDeleteContentItem(freeCourseId, sectionId);
 
   const handleDelete = async () => {
@@ -52,14 +53,9 @@ export function ContentItemActionsDropdown({
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
-            <Link
-              to={`/dashboard/free-courses/${freeCourseId}/sections/${sectionId}/content/${contentId}/edit`}
-              className="flex items-center"
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
+          <DropdownMenuItem onClick={() => setShowViewDialog(true)}>
+            <Eye className="mr-2 h-4 w-4" />
+            View
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setShowDeleteDialog(true)}
@@ -70,6 +66,14 @@ export function ContentItemActionsDropdown({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <ViewContentItemDialog
+        freeCourseId={freeCourseId}
+        sectionId={sectionId}
+        contentId={contentId}
+        open={showViewDialog}
+        onOpenChange={setShowViewDialog}
+      />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

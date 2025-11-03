@@ -106,7 +106,6 @@ export default function SectionsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order</TableHead>
                   <TableHead>Title</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Content Items</TableHead>
@@ -116,12 +115,9 @@ export default function SectionsPage() {
               </TableHeader>
               <TableBody>
                 {sections
-                  .sort((a, b) => a.order - b.order)
+                  
                   .map((section) => (
                     <TableRow key={section._id}>
-                      <TableCell className="font-medium">
-                        {section.order}
-                      </TableCell>
                       <TableCell className="font-medium">
                         {getDisplayName(section.title)}
                       </TableCell>

@@ -1,16 +1,16 @@
-import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   useSection,
   useCreateSection,
   useUpdateSection,
   useSections,
-} from '@/hooks/use-sections';
-import { useFreeCourse } from '@/hooks/use-free-courses';
-import { Button } from '@/components/ui/button';
+} from "@/hooks/use-sections";
+import { useFreeCourse } from "@/hooks/use-free-courses";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -19,30 +19,31 @@ import {
   FormLabel,
   FormMessage,
   FormDescription,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BreadcrumbNavigation } from '@/components/shared/breadcrumb-navigation';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BreadcrumbNavigation } from "@/components/shared/breadcrumb-navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 const sectionSchema = z.object({
   title: z.object({
     en: z
       .string()
-      .min(2, 'English title must be at least 2 characters')
+      .min(2, "English title must be at least 2 characters")
       .max(200),
     ar: z.string().max(200).optional(),
     he: z.string().max(200).optional(),
   }),
-  description: z.object({
-    en: z.string().max(1000),
-    ar: z.string().max(1000).optional(),
-    he: z.string().max(1000).optional(),
-  }).optional(),
+  description: z
+    .object({
+      en: z.string().max(1000),
+      ar: z.string().max(1000).optional(),
+      he: z.string().max(1000).optional(),
+    })
+    .optional(),
   isVisible: z.boolean(),
-  order: z.number().min(1).optional(),
 });
 
 type SectionFormValues = z.infer<typeof sectionSchema>;
@@ -55,23 +56,22 @@ export default function CreateUpdateSection() {
   const navigate = useNavigate();
   const isEditMode = !!sectionId;
 
-  const { data: freeCourse } = useFreeCourse(freeCourseId || '');
+  const { data: freeCourse } = useFreeCourse(freeCourseId || "");
   const { data: section, isLoading: isLoadingSection } = useSection(
-    freeCourseId || '',
-    sectionId || '',
+    freeCourseId || "",
+    sectionId || ""
   );
-  const { data: sections } = useSections(freeCourseId || '');
+  const { data: sections } = useSections(freeCourseId || "");
 
-  const createMutation = useCreateSection(freeCourseId || '');
-  const updateMutation = useUpdateSection(freeCourseId || '', sectionId || '');
+  const createMutation = useCreateSection(freeCourseId || "");
+  const updateMutation = useUpdateSection(freeCourseId || "", sectionId || "");
 
   const form = useForm<SectionFormValues>({
     resolver: zodResolver(sectionSchema),
     defaultValues: {
-      title: { en: '', ar: '', he: '' },
-      description: { en: '', ar: '', he: '' },
+      title: { en: "", ar: "", he: "" },
+      description: { en: "", ar: "", he: "" },
       isVisible: true,
-      order: undefined,
     },
   });
 
@@ -80,17 +80,9 @@ export default function CreateUpdateSection() {
     if (isEditMode && section) {
       form.reset({
         title: section.title,
-        description: section.description || { en: '', ar: '', he: '' },
+        description: section.description || { en: "", ar: "", he: "" },
         isVisible: section.isVisible,
-        order: section.order,
       });
-    } else if (!isEditMode && sections) {
-      // Auto-calculate order for new section
-      const maxOrder = sections.reduce(
-        (max, s) => Math.max(max, s.order || 0),
-        0
-      );
-      form.setValue('order', maxOrder + 1);
     }
   }, [section, sections, isEditMode, form]);
 
@@ -103,13 +95,13 @@ export default function CreateUpdateSection() {
       }
       navigate(`/dashboard/free-courses/${freeCourseId}/sections`);
     } catch (error) {
-      console.error('Failed to save section:', error);
+      console.error("Failed to save section:", error);
     }
   };
 
   const getDisplayName = (value: any) => {
-    if (typeof value === 'string') return value;
-    return value?.en || value?.name?.en || 'N/A';
+    if (typeof value === "string") return value;
+    return value?.en || value?.name?.en || "N/A";
   };
 
   if (isEditMode && isLoadingSection) {
@@ -124,13 +116,16 @@ export default function CreateUpdateSection() {
     <div className="space-y-6">
       <BreadcrumbNavigation
         items={[
-          { label: 'Free Courses', path: '/dashboard/free-courses' },
+          { label: "Free Courses", path: "/dashboard/free-courses" },
           {
             label: getDisplayName(freeCourse?.data?.name),
             path: `/dashboard/free-courses/${freeCourseId}/sections`,
           },
-          { label: 'Sections', path: `/dashboard/free-courses/${freeCourseId}/sections` },
-          { label: isEditMode ? 'Edit Section' : 'Create Section' },
+          {
+            label: "Sections",
+            path: `/dashboard/free-courses/${freeCourseId}/sections`,
+          },
+          { label: isEditMode ? "Edit Section" : "Create Section" },
         ]}
       />
 
@@ -146,12 +141,12 @@ export default function CreateUpdateSection() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {isEditMode ? 'Edit Section' : 'Create Section'}
+            {isEditMode ? "Edit Section" : "Create Section"}
           </h1>
           <p className="text-muted-foreground">
             {isEditMode
-              ? 'Update section details'
-              : 'Create a new section for this free course'}
+              ? "Update section details"
+              : "Create a new section for this free course"}
           </p>
         </div>
       </div>
@@ -272,29 +267,7 @@ export default function CreateUpdateSection() {
                 />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="order"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Order *</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={1}
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Position of this section in the course
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+              <div>
                 <FormField
                   control={form.control}
                   name="isVisible"
@@ -336,12 +309,12 @@ export default function CreateUpdateSection() {
               {createMutation.isPending || updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isEditMode ? 'Updating...' : 'Creating...'}
+                  {isEditMode ? "Updating..." : "Creating..."}
                 </>
               ) : isEditMode ? (
-                'Update Section'
+                "Update Section"
               ) : (
-                'Create Section'
+                "Create Section"
               )}
             </Button>
           </div>

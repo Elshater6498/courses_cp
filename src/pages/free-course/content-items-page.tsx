@@ -149,7 +149,6 @@ export default function ContentItemsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order</TableHead>
                   <TableHead>Title</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -157,12 +156,9 @@ export default function ContentItemsPage() {
               </TableHeader>
               <TableBody>
                 {contentItems
-                  .sort((a, b) => a.order - b.order)
+                  
                   .map((item) => (
                     <TableRow key={item._id}>
-                      <TableCell className="font-medium">
-                        {item.order}
-                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getContentTypeIcon(item.type)}

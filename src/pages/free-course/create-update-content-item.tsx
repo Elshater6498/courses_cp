@@ -49,7 +49,6 @@ const contentItemSchema = z.object({
     he: z.string().max(200).optional(),
   }),
   type: z.enum(["file", "video", "quiz"]),
-  order: z.number().min(1).optional(),
   resourceId: z.string().optional(),
   url: z.string().url().optional().or(z.literal("")),
 });
@@ -111,7 +110,6 @@ export default function CreateUpdateContentItem() {
     defaultValues: {
       title: { en: "", ar: "", he: "" },
       type: "file",
-      order: undefined,
       resourceId: "",
       url: "",
     },
@@ -123,18 +121,10 @@ export default function CreateUpdateContentItem() {
       form.reset({
         title: contentItem.title,
         type: contentItem.type,
-        order: contentItem.order,
         resourceId: contentItem.resourceId || "",
         url: contentItem.url || "",
       });
       setSelectedContentType(contentItem.type);
-    } else if (!isEditMode && contentItems) {
-      // Auto-calculate order for new content item
-      const maxOrder = contentItems.reduce(
-        (max, c) => Math.max(max, c.order || 0),
-        0
-      );
-      form.setValue("order", maxOrder + 1);
     }
   }, [contentItem, contentItems, isEditMode, form]);
 
@@ -183,7 +173,6 @@ export default function CreateUpdateContentItem() {
       const payload: any = {
         title: data.title,
         type: data.type,
-        order: data.order,
       };
 
       // Add resourceId or url based on type
@@ -349,7 +338,7 @@ export default function CreateUpdateContentItem() {
                 />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-4">
                 <FormField
                   control={form.control}
                   name="type"
@@ -380,30 +369,6 @@ export default function CreateUpdateContentItem() {
                           Content type cannot be changed after creation
                         </FormDescription>
                       )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="order"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Order *</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={1}
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Position of this content in the section
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

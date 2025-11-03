@@ -719,7 +719,6 @@ export interface MCQOption {
     he?: string;
   };
   isCorrect: boolean;
-  order: number;
 }
 
 export interface Question {
@@ -736,7 +735,6 @@ export interface Question {
     he?: string;
   };
   points: number;
-  order: number;
 }
 
 export interface Quiz {
@@ -918,7 +916,6 @@ export interface ContentItem {
     ar?: string;
     he?: string;
   };
-  order: number;
   resourceId?: string; // AttachedFile, VideoLibrary, or Quiz ID
   url?: string; // For external videos
 }
@@ -935,7 +932,6 @@ export interface Section {
     ar?: string;
     he?: string;
   };
-  order: number;
   isVisible: boolean;
   contentItems: ContentItem[];
 }
@@ -1011,7 +1007,6 @@ export interface CreateSectionInput {
     ar?: string;
     he?: string;
   };
-  order?: number;
   isVisible?: boolean;
   contentItems?: ContentItem[];
 }
@@ -1027,7 +1022,6 @@ export interface UpdateSectionInput {
     ar?: string;
     he?: string;
   };
-  order?: number;
   isVisible?: boolean;
 }
 
@@ -1038,7 +1032,6 @@ export interface CreateContentItemInput {
     ar?: string;
     he?: string;
   };
-  order?: number;
   resourceId?: string;
   url?: string;
 }
@@ -1162,7 +1155,6 @@ export interface TopicProgressDetail {
       ar?: string;
       he?: string;
     };
-    order: number;
     topicsPrice: number;
     discount: number;
   };
@@ -1181,7 +1173,6 @@ export interface TopicProgressDetail {
         ar?: string;
         he?: string;
       };
-      order: number;
       description: {
         en: string;
         ar?: string;
