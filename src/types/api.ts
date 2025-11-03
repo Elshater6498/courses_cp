@@ -1054,3 +1054,236 @@ export interface FreeCourseEnrollment extends Enrollment {
   freeCourseId: FreeCourse;
   enrollmentType: 'free_course';
 }
+
+// Progress Tracking Types
+export type VideoType = "main" | "gvo" | "vvt";
+
+export interface VideoProgress {
+  lessonId: string;
+  videoType: VideoType;
+  watchedDuration: number;
+  totalDuration: number;
+  lastWatchedPosition: number;
+  completionPercentage: number;
+  isCompleted: boolean;
+  watchCount: number;
+  firstWatchedAt: string;
+  lastWatchedAt: string;
+}
+
+export interface LessonProgress {
+  lessonId: string;
+  isCompleted: boolean;
+  completedAt?: string;
+  timeSpent: number;
+  videosProgress: VideoProgress[];
+  firstAccessedAt: string;
+  lastAccessedAt: string;
+}
+
+export interface TopicProgress {
+  topicId: string;
+  isCompleted: boolean;
+  completedAt?: string;
+  lessonsProgress: LessonProgress[];
+  completedLessons: number;
+  totalLessons: number;
+  completionPercentage: number;
+  timeSpent: number;
+  firstAccessedAt: string;
+  lastAccessedAt: string;
+}
+
+export interface Progress {
+  _id: string;
+  userId: string;
+  courseId: string;
+  enrollmentId: string;
+  topicsProgress: TopicProgress[];
+  completedTopics: number;
+  totalTopics: number;
+  completedLessons: number;
+  totalLessons: number;
+  courseCompletionPercentage: number;
+  totalTimeSpent: number;
+  isCourseCompleted: boolean;
+  startedAt: string;
+  completedAt?: string;
+  lastAccessedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProgressSummary {
+  userId: string;
+  courseId: string;
+  enrollmentId: string;
+  completedTopics: number;
+  totalTopics: number;
+  completedLessons: number;
+  totalLessons: number;
+  courseCompletionPercentage: number;
+  totalTimeSpent: number;
+  totalTimeSpentFormatted: string;
+  isCourseCompleted: boolean;
+  startedAt: string;
+  completedAt?: string;
+  lastAccessedAt: string;
+  topicsProgress: Array<{
+    topicId: string;
+    isCompleted: boolean;
+    completedAt?: string;
+    completedLessons: number;
+    totalLessons: number;
+    completionPercentage: number;
+    timeSpent: number;
+    timeSpentFormatted: string;
+  }>;
+}
+
+export interface ProgressWithCourse {
+  course: Course;
+  enrollment: Enrollment;
+  progress: Progress;
+    instructorPercentage: number;
+    imageUrl: string;
+    introductoryVideoUrl: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+
+
+export interface TopicProgressDetail {
+  topicId: {
+    _id: string;
+    name: {
+      en: string;
+      ar?: string;
+      he?: string;
+    };
+    order: number;
+    topicsPrice: number;
+    discount: number;
+  };
+  isCompleted: boolean;
+  completedAt?: string;
+  completedLessons: number;
+  totalLessons: number;
+  completionPercentage: number;
+  timeSpent: number;
+  timeSpentFormatted: string;
+  lessonsProgress: Array<{
+    lesson: {
+      _id: string;
+      name: {
+        en: string;
+        ar?: string;
+        he?: string;
+      };
+      order: number;
+      description: {
+        en: string;
+        ar?: string;
+        he?: string;
+      };
+      main_recording_url: string;
+      recording_gvo_url: string;
+      recording_vvt_url: string;
+    };
+    isCompleted: boolean;
+    completedAt?: string;
+    timeSpent: number;
+    timeSpentFormatted: string;
+    videosProgress: VideoProgress[];
+    lastAccessedAt: string;
+  }>;
+}
+
+export interface LessonProgressDetail {
+  lessonId: string;
+  topicId: string;
+  isCompleted: boolean;
+  completedAt?: string;
+  timeSpent: number;
+  timeSpentFormatted: string;
+  videosProgress: VideoProgress[];
+  firstAccessedAt: string;
+  lastAccessedAt: string;
+}
+
+export interface CourseStatistics {
+  totalUsers: number;
+  completedUsers: number;
+  inProgressUsers: number;
+  completionRate: number;
+  averageCompletion: number;
+  averageTimeSpent: number;
+  totalTimeSpent: number;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  user: {
+    _id: string;
+    fullName: string;
+    email: string;
+  };
+  completionPercentage: number;
+  completedLessons: number;
+  totalLessons: number;
+  totalTimeSpent: number;
+  totalTimeSpentFormatted: string;
+  isCourseCompleted: boolean;
+  completedAt?: string;
+}
+
+// Progress Request Types
+export interface InitializeProgressRequest {
+  enrollmentId: string;
+  courseId: string;
+}
+
+export interface MarkLessonViewedRequest {
+  enrollmentId: string;
+  lessonId: string;
+  topicId: string;
+}
+
+export interface MarkLessonCompletedRequest {
+  enrollmentId: string;
+  lessonId: string;
+  topicId: string;
+}
+
+export interface UpdateVideoProgressRequest {
+  enrollmentId: string;
+  lessonId: string;
+  topicId: string;
+  videoType: VideoType;
+  watchedDuration: number;
+  totalDuration: number;
+  currentPosition: number;
+}
+
+export interface AddTimeSpentRequest {
+  enrollmentId: string;
+  lessonId: string;
+  topicId: string;
+  seconds: number;
+}
+
+export interface ResetProgressRequest {
+  userId: string;
+}
+
+export interface DeleteProgressRequest {
+  userId: string;
+}
+
+// Progress Query Parameters
+export interface ProgressQueryParams extends PaginationParams {
+  courseId?: string;
+  userId?: string;
+  isCompleted?: boolean;
+}

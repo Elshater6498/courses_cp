@@ -33,7 +33,7 @@ import { useCourses } from "@/hooks/use-courses";
 import { useTopics } from "@/hooks/use-topics";
 import { useLessons } from "@/hooks/use-lessons";
 import { useFreeCourses } from "@/hooks/use-free-courses";
-import type { Quiz, QuizType } from "@/types/api";
+import type { Quiz } from "@/types/api";
 
 // Form schema
 const duplicateQuizSchema = z.object({
@@ -63,7 +63,6 @@ export function DuplicateQuizDialog({
   onClose,
   quiz,
 }: DuplicateQuizDialogProps) {
-  const [selectedQuizType, setSelectedQuizType] = useState<QuizType | "">("");
   const [selectedCourse, setSelectedCourse] = useState<string>("");
   const [selectedTopic, setSelectedTopic] = useState<string>("");
 
@@ -96,7 +95,6 @@ export function DuplicateQuizDialog({
   useEffect(() => {
     if (!isOpen) {
       form.reset();
-      setSelectedQuizType("");
       setSelectedCourse("");
       setSelectedTopic("");
     }
@@ -193,7 +191,6 @@ export function DuplicateQuizDialog({
                     value={field.value}
                     onValueChange={(value) => {
                       field.onChange(value);
-                      setSelectedQuizType(value as QuizType);
                       form.setValue("entityId", "");
                       setSelectedCourse("");
                       setSelectedTopic("");

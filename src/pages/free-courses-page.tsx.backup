@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MoreHorizontal, Plus, Pencil, Trash2, FolderOpen } from "lucide-react";
+import { MoreHorizontal, Plus, Pencil, Trash2 } from "lucide-react";
 import type { FreeCourse, University, Faculty, Admin } from "@/types/api";
 
 export default function FreeCoursesPage() {
@@ -187,16 +187,7 @@ export default function FreeCoursesPage() {
                           ? (course.instructorId as Admin).userName
                           : "N/A"}
                       </TableCell>
-                      <TableCell>
-                        <Link
-                          to={`/dashboard/free-courses/${course._id}/sections`}
-                        >
-                          <Button variant="ghost" size="sm">
-                            <FolderOpen className="mr-2 h-4 w-4" />
-                            Sections ({course.sections?.length || 0})
-                          </Button>
-                        </Link>
-                      </TableCell>
+                      <TableCell>{course.sections?.length || 0}</TableCell>
                       <TableCell>
                         <Badge
                           variant={course.isActive ? "default" : "secondary"}

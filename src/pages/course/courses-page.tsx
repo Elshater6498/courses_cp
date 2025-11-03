@@ -41,6 +41,7 @@ import {
   GraduationCap,
   RefreshCw,
   File,
+  TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
@@ -447,6 +448,19 @@ export function CoursesPage() {
                         >
                           <File className="h-4 w-4 mr-1" />
                           Files
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 w-full">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 w-full"
+                          onClick={() =>
+                            navigate(`/dashboard/courses/${course._id}/progress`)
+                          }
+                        >
+                          <TrendingUp className="h-4 w-4 mr-1" />
+                          Progress
                         </Button>
                       </div>
                       <div className="flex items-center gap-2 w-full">

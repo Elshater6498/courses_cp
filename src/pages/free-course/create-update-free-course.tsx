@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   useFreeCourse,
   useCreateFreeCourse,
   useUpdateFreeCourse,
-} from "@/hooks/use-free-courses"
-import { useUniversities } from "@/hooks/use-universities"
-import { useFaculties } from "@/hooks/use-faculties"
-import { useAdmins } from "@/hooks/use-admins"
-import { Button } from "@/components/ui/button"
+} from "@/hooks/use-free-courses";
+import { useUniversities } from "@/hooks/use-universities";
+import { useFaculties } from "@/hooks/use-faculties";
+import { useAdmins } from "@/hooks/use-admins";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -21,23 +21,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SectionBuilder } from "@/components/free-course/section-builder"
-import { ArrowLeft, Loader2, X } from "lucide-react"
-import type { Section } from "@/types/api"
-import { UploadService, type UploadProgress } from "@/services/upload-service"
-import { UploadProgressCard } from "@/components/ui/upload-progress"
-import { toast } from "sonner"
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Section builder removed - sections now managed on separate page
+import { ArrowLeft, Loader2, X } from "lucide-react";
+// Section type import removed - no longer needed
+import { UploadService, type UploadProgress } from "@/services/upload-service";
+import { UploadProgressCard } from "@/components/ui/upload-progress";
+import { toast } from "sonner";
 
 const freeCourseSchema = z.object({
   name: z.object({
@@ -60,39 +60,38 @@ const freeCourseSchema = z.object({
   facultyId: z.string().min(1, "Faculty is required"),
   instructorId: z.string().min(1, "Instructor is required"),
   imageUrl: z.string().optional(),
-  sections: z.array(z.any()).optional(),
-})
+});
 
-type FreeCourseFormValues = z.infer<typeof freeCourseSchema>
+type FreeCourseFormValues = z.infer<typeof freeCourseSchema>;
 
 export default function CreateUpdateFreeCourse() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const isEditMode = !!id
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditMode = !!id;
 
-  const [sections, setSections] = useState<Section[]>([])
-  const [selectedUniversity, setSelectedUniversity] = useState<string>("")
+  // Sections state removed - managed on separate page
+  const [selectedUniversity, setSelectedUniversity] = useState<string>("");
 
   // Image upload state
-  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imageUploadProgress, setImageUploadProgress] =
-    useState<UploadProgress | null>(null)
+    useState<UploadProgress | null>(null);
   const [imageUploadStatus, setImageUploadStatus] = useState<
     "idle" | "uploading" | "completed" | "error"
-  >("idle")
-  const [uploadError, setUploadError] = useState<string | null>(null)
+  >("idle");
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const { data: freeCourseData, isLoading: isLoadingFreeCourse } =
-    useFreeCourse(id || "")
-  const { data: universitiesData } = useUniversities({ isActive: true })
+    useFreeCourse(id || "");
+  const { data: universitiesData } = useUniversities({ isActive: true });
   const { data: facultiesData } = useFaculties({
     universityId: selectedUniversity,
     isActive: true,
-  })
-  const { data: adminsData } = useAdmins({ isActive: true })
+  });
+  const { data: adminsData } = useAdmins({ isActive: true });
 
-  const createMutation = useCreateFreeCourse()
-  const updateMutation = useUpdateFreeCourse()
+  const createMutation = useCreateFreeCourse();
+  const updateMutation = useUpdateFreeCourse();
 
   const form = useForm<FreeCourseFormValues>({
     resolver: zodResolver(freeCourseSchema),
@@ -103,20 +102,19 @@ export default function CreateUpdateFreeCourse() {
       facultyId: "",
       instructorId: "",
       imageUrl: "",
-      sections: [],
     },
-  })
+  });
 
   // Load existing free course data in edit mode
   useEffect(() => {
     if (isEditMode && freeCourseData?.data) {
-      const course = freeCourseData.data
+      const course = freeCourseData.data;
       const nameObj =
-        typeof course.name === "string" ? { en: course.name } : course.name
+        typeof course.name === "string" ? { en: course.name } : course.name;
       const overviewObj =
         typeof course.overview === "string"
           ? { en: course.overview }
-          : course.overview
+          : course.overview;
 
       form.reset({
         name: nameObj,
@@ -134,94 +132,92 @@ export default function CreateUpdateFreeCourse() {
             ? course.instructorId
             : course.instructorId._id,
         imageUrl: course.imageUrl,
-      })
+      });
 
       setSelectedUniversity(
         typeof course.universityId === "string"
           ? course.universityId
           : course.universityId._id
-      )
-      setSections(course.sections || [])
+      ); // Sections loaded separately on sections page
     }
-  }, [freeCourseData, isEditMode, form])
+  }, [freeCourseData, isEditMode, form]);
 
   const onSubmit = async (data: FreeCourseFormValues) => {
     try {
       // Upload image if selected
-      let imageUrl = data.imageUrl || ""
+      let imageUrl = data.imageUrl || "";
       if (selectedImage) {
         try {
-          setImageUploadStatus("uploading")
+          setImageUploadStatus("uploading");
           const imageResult = await UploadService.uploadFileWithProgress(
             selectedImage,
             "image",
             "free-courses",
             (progress) => setImageUploadProgress(progress)
-          )
-          imageUrl = imageResult.downloadUrl
-          setImageUploadStatus("completed")
+          );
+          imageUrl = imageResult.downloadUrl;
+          setImageUploadStatus("completed");
         } catch (error) {
-          setImageUploadStatus("error")
+          setImageUploadStatus("error");
           setUploadError(
             error instanceof Error ? error.message : "Image upload failed"
-          )
-          toast.error("Failed to upload image")
-          return
+          );
+          toast.error("Failed to upload image");
+          return;
         }
       } else if (!isEditMode && !data.imageUrl) {
-        toast.error("Course image is required")
-        return
+        toast.error("Course image is required");
+        return;
       }
 
       const payload = {
         ...data,
         imageUrl,
-        sections,
-      }
+      };
 
       if (isEditMode && id) {
-        await updateMutation.mutateAsync({ id, data: payload })
-        toast.success("Free course updated successfully!")
+        await updateMutation.mutateAsync({ id, data: payload });
+        toast.success("Free course updated successfully!");
       } else {
-        await createMutation.mutateAsync(payload)
-        toast.success("Free course created successfully!")
+        await createMutation.mutateAsync(payload);
+        toast.success("Free course created successfully!");
       }
 
-      navigate("/dashboard/free-courses")
+      navigate("/dashboard/free-courses");
     } catch (error) {
-      console.error("Failed to save free course:", error)
+      console.error("Failed to save free course:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to save free course"
-      )
+      );
     }
-  }
+  };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        toast.error("Please select a valid image file")
-        return
+        toast.error("Please select a valid image file");
+        return;
       }
-      setSelectedImage(file)
-      setImageUploadStatus("idle")
-      setImageUploadProgress(null)
-      setUploadError(null)
+      setSelectedImage(file);
+      setImageUploadStatus("idle");
+      setImageUploadProgress(null);
+      setUploadError(null);
     }
-  }
+  };
 
   const getDisplayName = (value: any) => {
-    if (typeof value === "string") return value
-    return value?.en || value?.name?.en || "N/A"
-  }
+    if (typeof value === "string") return value;
+    return value?.en || value?.name?.en || "N/A";
+  };
 
   if (isEditMode && isLoadingFreeCourse) {
     return (
       <div className="flex items-center justify-center h-96">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
@@ -262,9 +258,9 @@ export default function CreateUpdateFreeCourse() {
                       <FormLabel>University *</FormLabel>
                       <Select
                         onValueChange={(value) => {
-                          field.onChange(value)
-                          setSelectedUniversity(value)
-                          form.setValue("facultyId", "") // Reset faculty when university changes
+                          field.onChange(value);
+                          setSelectedUniversity(value);
+                          form.setValue("facultyId", ""); // Reset faculty when university changes
                         }}
                         value={field.value}
                       >
@@ -385,13 +381,14 @@ export default function CreateUpdateFreeCourse() {
                       </div>
                     )}
 
-                    {imageUploadStatus === "uploading" && imageUploadProgress && (
-                      <UploadProgressCard
-                        progress={imageUploadProgress}
-                        fileName={selectedImage?.name || ""}
-                        status="uploading"
-                      />
-                    )}
+                    {imageUploadStatus === "uploading" &&
+                      imageUploadProgress && (
+                        <UploadProgressCard
+                          progress={imageUploadProgress}
+                          fileName={selectedImage?.name || ""}
+                          status="uploading"
+                        />
+                      )}
 
                     {imageUploadStatus === "completed" && (
                       <UploadProgressCard
@@ -556,11 +553,21 @@ export default function CreateUpdateFreeCourse() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <SectionBuilder sections={sections} onChange={setSections} />
-            </CardContent>
-          </Card>
+          {/* Section builder removed - manage sections on the sections page */}
+          {isEditMode && id && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
+                  <p className="text-muted-foreground">
+                    Sections are now managed separately for better organization.
+                  </p>
+                  <Link to={`/dashboard/free-courses/${id}/sections`}>
+                    <Button variant="outline">Manage Sections</Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="flex justify-end gap-4">
             <Button
@@ -598,5 +605,5 @@ export default function CreateUpdateFreeCourse() {
         </form>
       </Form>
     </div>
-  )
+  );
 }

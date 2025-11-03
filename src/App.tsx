@@ -32,6 +32,12 @@ import { QuizzesPage } from "./pages/quizzes-page";
 import { CreateUpdateQuiz } from "./pages/quiz/create-update-quiz";
 import FreeCoursesPage from "./pages/free-courses-page";
 import CreateUpdateFreeCourse from "./pages/free-course/create-update-free-course";
+import SectionsPage from "./pages/free-course/sections-page";
+import CreateUpdateSection from "./pages/free-course/create-update-section";
+import ContentItemsPage from "./pages/free-course/content-items-page";
+import CreateUpdateContentItem from "./pages/free-course/create-update-content-item";
+import { CourseProgressPage } from "./pages/progress/course-progress-page";
+import { CourseLeaderboardPage } from "./pages/progress/course-leaderboard-page";
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -102,6 +108,12 @@ function App() {
             <Route path="free-courses" element={<FreeCoursesPage />} />
             <Route path="free-courses/create" element={<CreateUpdateFreeCourse />} />
             <Route path="free-courses/:id/edit" element={<CreateUpdateFreeCourse />} />
+            <Route path="free-courses/:freeCourseId/sections" element={<SectionsPage />} />
+            <Route path="free-courses/:freeCourseId/sections/create" element={<CreateUpdateSection />} />
+            <Route path="free-courses/:freeCourseId/sections/:sectionId/edit" element={<CreateUpdateSection />} />
+            <Route path="free-courses/:freeCourseId/sections/:sectionId/content" element={<ContentItemsPage />} />
+            <Route path="free-courses/:freeCourseId/sections/:sectionId/content/create" element={<CreateUpdateContentItem />} />
+            <Route path="free-courses/:freeCourseId/sections/:sectionId/content/:contentId/edit" element={<CreateUpdateContentItem />} />
             <Route path="courses/new" element={<CreateCourse />} />
             <Route path="courses/:id/edit" element={<CreateCourse />} />
             <Route path="courses/:courseId/topics" element={<TopicsPage />} />
@@ -128,6 +140,14 @@ function App() {
             <Route
               path="courses/:courseId/topics/:topicId/lessons/:lessonId/files"
               element={<LessonFilesPage />}
+            />
+            <Route
+              path="courses/:courseId/progress"
+              element={<CourseProgressPage />}
+            />
+            <Route
+              path="courses/:courseId/leaderboard"
+              element={<CourseLeaderboardPage />}
             />
           </Route>
 

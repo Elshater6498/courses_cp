@@ -393,6 +393,85 @@ FreeCourse
 - `update_free_courses` - Edit existing free courses
 - `delete_free_courses` - Delete free courses
 
+## Progress Tracking System
+
+The application includes a comprehensive progress tracking system for monitoring student learning progress across courses, topics, and lessons.
+
+### Progress Architecture
+
+**Core Concepts**:
+
+- Progress is tied to enrollments (one progress record per enrollment)
+- Tracks lesson completion, video progress, time spent, and quiz attempts
+- Provides real-time statistics and leaderboards for courses
+- Supports both admin monitoring and user self-tracking
+
+**Key Features**:
+
+- **Lesson Tracking**: Mark lessons as viewed/completed, track video playback progress
+- **Time Tracking**: Record time spent on each lesson and course
+- **Statistics**: Course-level statistics including completion rates and average scores
+- **Leaderboards**: Rank students by completion percentage and total score
+- **Admin Controls**: Reset or delete progress for specific enrollments
+
+**Progress Endpoints**:
+
+**User Endpoints**:
+- `POST /progress/initialize` - Initialize progress for new enrollment
+- `POST /progress/lesson/viewed` - Mark lesson as viewed (first access)
+- `POST /progress/lesson/completed` - Mark lesson as completed
+- `POST /progress/video` - Update video playback progress
+- `POST /progress/time` - Add time spent on lesson
+- `GET /progress` - Get all user's course progress
+- `GET /progress/:enrollmentId` - Get detailed progress for enrollment
+- `GET /progress/:enrollmentId/summary` - Get lightweight progress summary
+- `GET /progress/:enrollmentId/topic/:topicId` - Get topic-level progress
+- `GET /progress/:enrollmentId/lesson/:lessonId` - Get lesson-level progress
+
+**Admin Endpoints**:
+- `GET /dashboard/progress/stats/course/:courseId` - Course statistics
+- `GET /dashboard/progress/leaderboard/course/:courseId` - Course leaderboard
+- `POST /dashboard/progress/:enrollmentId/reset` - Reset progress (admin)
+- `DELETE /dashboard/progress/:enrollmentId` - Delete progress (admin)
+- `GET /dashboard/progress` - Get paginated list of all progress records
+
+**Components**:
+
+- `CourseProgressPage` (`src/pages/progress/course-progress-page.tsx`) - View course progress details
+- `CourseLeaderboardPage` (`src/pages/progress/course-leaderboard-page.tsx`) - View course leaderboards
+- Service: `src/services/progress-service.ts`
+- Hooks: `src/hooks/use-progress.ts`
+
+**Progress Data Structure**:
+
+```typescript
+Progress
+  ├── enrollmentId (reference)
+  ├── courseId (reference)
+  ├── userId (reference)
+  ├── courseCompletionPercentage (0-100)
+  ├── totalTimeSpent (seconds)
+  ├── completedLessons (count)
+  ├── totalLessons (count)
+  ├── topicProgress[]
+  │    ├── topicId
+  │    ├── completionPercentage
+  │    ├── completedLessons
+  │    └── totalLessons
+  └── lessonProgress[]
+       ├── lessonId
+       ├── status (not_started|in_progress|completed)
+       ├── videoProgress (percentage)
+       ├── timeSpent (seconds)
+       ├── lastAccessedAt
+       └── completedAt
+```
+
+**Permissions Required**:
+
+- `read_progress` - View progress data
+- `manage_progress` - Reset/delete progress (admin only)
+
 ## Payment & Enrollment System
 
 Enrollments support Stripe payment integration with comprehensive tracking:
