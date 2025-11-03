@@ -891,6 +891,16 @@ export interface QuizQueryParams extends PaginationParams {
   isActive?: boolean;
 }
 
+export interface DuplicateQuizInput {
+  entityId: string;
+  quizType?: QuizType;
+  newTitle?: {
+    en: string;
+    ar?: string;
+    he?: string;
+  };
+}
+
 // Free Course Types
 export const ContentItemType = {
   FILE: 'file',

@@ -3,7 +3,11 @@
     "allow": [
       "Read(//d/Ctrl-Z/courses/courses_backend_api/**)",
       "Bash(npm run dev)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix TypeScript build errors: Remove unused Eye import from free-courses-page and quizzes-page\n\n- Remove unused ''Eye'' icon import from lucide-react in free-courses-page.tsx\n- Remove unused ''Eye'' icon import from lucide-react in quizzes-page.tsx\n- Resolves TS6133 errors about unused declarations\n- Build now completes successfully without errors\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

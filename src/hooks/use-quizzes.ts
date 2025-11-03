@@ -121,3 +121,17 @@ export const useQuizzesForSelect = () => {
     },
   });
 };
+
+// Duplicate quiz mutation
+export const useDuplicateQuiz = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: import("@/types/api").DuplicateQuizInput }) =>
+      quizService.duplicateQuiz(id, data),
+    onSuccess: () => {
+      // Invalidate and refetch quizzes list
+      queryClient.invalidateQueries({ queryKey: quizKeys.lists() });
+    },
+  });
+};

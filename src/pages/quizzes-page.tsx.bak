@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, Search, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useQuizzes, useDeleteQuiz } from "@/hooks/use-quizzes";
-import { DuplicateQuizDialog } from "@/components/quiz/duplicate-quiz-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -43,7 +42,6 @@ export function QuizzesPage() {
   const [quizTypeFilter, setQuizTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [deleteQuizId, setDeleteQuizId] = useState<string | null>(null);
-  const [duplicateQuiz, setDuplicateQuiz] = useState<Quiz | null>(null);
 
   const { data, isLoading } = useQuizzes({
     page,
@@ -220,23 +218,13 @@ export function QuizzesPage() {
                         onClick={() =>
                           navigate(`/dashboard/quizzes/${quiz._id}/edit`)
                         }
-                        title="Edit Quiz"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setDuplicateQuiz(quiz)}
-                        title="Duplicate Quiz"
-                      >
-                        <Copy className="h-4 w-4 text-blue-500" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
                         onClick={() => setDeleteQuizId(quiz._id)}
-                        title="Delete Quiz"
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
@@ -281,13 +269,6 @@ export function QuizzesPage() {
           </div>
         )}
       </Card>
-
-      {/* Duplicate Quiz Dialog */}
-      <DuplicateQuizDialog
-        isOpen={!!duplicateQuiz}
-        onClose={() => setDuplicateQuiz(null)}
-        quiz={duplicateQuiz}
-      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog

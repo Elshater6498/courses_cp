@@ -204,6 +204,7 @@ All UI components are in `src/components/ui/` and built with Radix UI primitives
 - Custom input, button, dialog, dropdown, and table components
 
 Component configuration is in `components.json` with:
+
 - Style: "new-york"
 - Path alias `@` pointing to `src/`
 - TypeScript enabled
@@ -340,10 +341,12 @@ The application supports free courses in addition to paid courses. Free courses 
 **Key Components**:
 
 1. **FreeCoursesPage** (`src/pages/free-courses-page.tsx`):
+
    - Lists all free courses with filtering and search
    - CRUD operations with permission-based access
 
 2. **CreateUpdateFreeCourse** (`src/pages/free-course/create-update-free-course.tsx`):
+
    - Form for creating/editing free courses
    - Multilingual support for name and overview
    - University/faculty assignment
@@ -424,28 +427,28 @@ React Query mutations follow a consistent cache invalidation pattern:
 
 ```typescript
 onSuccess: () => {
-  queryClient.invalidateQueries({ queryKey: entityKeys.detail(id) })
-  queryClient.invalidateQueries({ queryKey: entityKeys.lists() })
-}
+  queryClient.invalidateQueries({ queryKey: entityKeys.detail(id) });
+  queryClient.invalidateQueries({ queryKey: entityKeys.lists() });
+};
 ```
 
 **Create/Delete Operations**:
 
 ```typescript
 onSuccess: () => {
-  queryClient.invalidateQueries({ queryKey: entityKeys.lists() })
-  queryClient.invalidateQueries({ queryKey: entityKeys.stats() })
-}
+  queryClient.invalidateQueries({ queryKey: entityKeys.lists() });
+  queryClient.invalidateQueries({ queryKey: entityKeys.stats() });
+};
 ```
 
 **Status Toggles**:
 
 ```typescript
 onSuccess: () => {
-  queryClient.invalidateQueries({ queryKey: entityKeys.detail(id) })
-  queryClient.invalidateQueries({ queryKey: entityKeys.lists() })
-  queryClient.invalidateQueries({ queryKey: entityKeys.stats() })
-}
+  queryClient.invalidateQueries({ queryKey: entityKeys.detail(id) });
+  queryClient.invalidateQueries({ queryKey: entityKeys.lists() });
+  queryClient.invalidateQueries({ queryKey: entityKeys.stats() });
+};
 ```
 
 This ensures UI consistency across list views, detail views, and statistics.
@@ -455,18 +458,21 @@ This ensures UI consistency across list views, detail views, and statistics.
 The application uses **Sonner** for toast notifications with a consistent error handling pattern:
 
 **Success Messages**:
+
 ```typescript
-toast.success('Course created successfully')
+toast.success("Course created successfully");
 ```
 
 **Error Messages**:
+
 ```typescript
-toast.error(error.response?.data?.message || 'Failed to create course')
+toast.error(error.response?.data?.message || "Failed to create course");
 ```
 
 **Toast Provider**: Configured in `src/main.tsx` with the `<Toaster />` component.
 
 **API Error Format**: The backend returns errors in the format:
+
 ```typescript
 {
   success: false,
@@ -480,6 +486,7 @@ Mutation hooks automatically extract and display these error messages.
 ## Debugging Tips
 
 **React Query DevTools**: Not currently installed, but can be added for debugging cache and queries:
+
 ```bash
 npm install @tanstack/react-query-devtools
 ```
@@ -493,16 +500,17 @@ npm install @tanstack/react-query-devtools
 5. **Multilingual Fields**: Some endpoints return strings, others return objects - type system accommodates both
 
 **Useful Browser Console Commands**:
+
 ```javascript
 // Check auth state
-JSON.parse(localStorage.getItem('auth-store'))
+JSON.parse(localStorage.getItem("auth-store"));
 
 // Check token
-localStorage.getItem('admin_token')
+localStorage.getItem("admin_token");
 
 // Clear auth (logout)
-localStorage.removeItem('admin_token')
-localStorage.removeItem('auth-store')
+localStorage.removeItem("admin_token");
+localStorage.removeItem("auth-store");
 ```
 
 ## Important Notes

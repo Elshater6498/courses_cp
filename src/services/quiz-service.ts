@@ -8,6 +8,7 @@ import type {
   QuizQueryParams,
   PaginatedResponse,
   ApiResponse,
+  DuplicateQuizInput,
 } from '@/types/api';
 
 export const quizService = {
@@ -52,5 +53,10 @@ export const quizService = {
       quizType: entityType,
       entityId: entityId,
     });
+  },
+
+  // Duplicate quiz
+  async duplicateQuiz(id: string, data: DuplicateQuizInput): Promise<ApiResponse<Quiz>> {
+    return await apiPost<Quiz>(`/dashboard/quizzes/${id}/duplicate`, data);
   },
 };
