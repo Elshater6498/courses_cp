@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
+import { useState } from 'react';
 import { useSections } from '@/hooks/use-sections';
 import { useFreeCourse } from '@/hooks/use-free-courses';
 import { useAuthStore } from '@/stores/auth-store';
@@ -13,16 +14,29 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Eye } from 'lucide-react';
+import { Plus, Eye, Pencil, Trash2 } from 'lucide-react';
 import { BreadcrumbNavigation } from '@/components/shared/breadcrumb-navigation';
-import { SectionActionsDropdown } from '@/components/free-course/section-actions-dropdown';
+import { useDeleteSection } from '@/hooks/use-sections';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function SectionsPage() {
   const { freeCourseId } = useParams<{ freeCourseId: string }>();
   const { hasPermission, hasAnyPermission } = useAuthStore();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedSection, setSelectedSection] = useState<{ id: string; name: string } | null>(null);
 
   const canCreate = hasPermission('create_courses');
   const canUpdate = hasPermission('update_courses');
+  const canDelete = hasPermission('delete_courses');
   const canView = hasAnyPermission([
     'read_courses',
     'create_courses',
@@ -35,6 +49,14 @@ export default function SectionsPage() {
   const { data: sections, isLoading: isSectionsLoading } = useSections(
     freeCourseId || ''
   );
+  const deleteSection = useDeleteSection(freeCourseId || '');
+
+  const handleDelete = async () => {
+    if (!selectedSection) return;
+    await deleteSection.mutateAsync(selectedSection.id);
+    setShowDeleteDialog(false);
+    setSelectedSection(null);
+  };
 
   const getDisplayName = (value: any) => {
     if (typeof value === 'string') return value;
@@ -142,13 +164,42 @@ export default function SectionsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        {(canUpdate || hasPermission('delete_courses')) && (
-                          <SectionActionsDropdown
-                            freeCourseId={freeCourseId || ''}
-                            sectionId={section._id}
-                            sectionName={getDisplayName(section.title)}
-                          />
-                        )}
+                        <div className="flex items-center justify-end gap-2">
+                          {canUpdate && (
+                            <>
+                              <Link
+                                to={`/dashboard/free-courses/${freeCourseId}/sections/${section._id}/content`}
+                              >
+                                <Button variant="ghost" size="sm">
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View Content
+                                </Button>
+                              </Link>
+                              <Link
+                                to={`/dashboard/free-courses/${freeCourseId}/sections/${section._id}/edit`}
+                              >
+                                <Button variant="ghost" size="sm">
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </Button>
+                              </Link>
+                            </>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => {
+                                setSelectedSection({ id: section._id, name: getDisplayName(section.title) });
+                                setShowDeleteDialog(true);
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -157,6 +208,28 @@ export default function SectionsPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the section "{selectedSection?.name}" and all
+              its content items. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteSection.isPending}
+            >
+              {deleteSection.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

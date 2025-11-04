@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
 import { useContentItems } from "@/hooks/use-content-items";
 import { useSection } from "@/hooks/use-sections";
 import { useFreeCourse } from "@/hooks/use-free-courses";
@@ -14,9 +15,20 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText, Video, ClipboardList } from "lucide-react";
+import { Plus, FileText, Video, ClipboardList, Eye, Trash2 } from "lucide-react";
 import { BreadcrumbNavigation } from "@/components/shared/breadcrumb-navigation";
-import { ContentItemActionsDropdown } from "@/components/free-course/content-item-actions-dropdown";
+import { useDeleteContentItem } from "@/hooks/use-content-items";
+import { ViewContentItemDialog } from "@/components/free-course/view-content-item-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ContentItemsPage() {
   const { freeCourseId, sectionId } = useParams<{
@@ -24,9 +36,13 @@ export default function ContentItemsPage() {
     sectionId: string;
   }>();
   const { hasPermission, hasAnyPermission } = useAuthStore();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [selectedContent, setSelectedContent] = useState<{ id: string; title: string } | null>(null);
 
   const canCreate = hasPermission("create_courses");
   const canUpdate = hasPermission("update_courses");
+  const canDelete = hasPermission("delete_courses");
   const canView = hasAnyPermission([
     "read_courses",
     "create_courses",
@@ -44,6 +60,14 @@ export default function ContentItemsPage() {
     freeCourseId || "",
     sectionId || ""
   );
+  const deleteContentItem = useDeleteContentItem(freeCourseId || "", sectionId || "");
+
+  const handleDelete = async () => {
+    if (!selectedContent) return;
+    await deleteContentItem.mutateAsync(selectedContent.id);
+    setShowDeleteDialog(false);
+    setSelectedContent(null);
+  };
 
   const getDisplayName = (value: any) => {
     if (typeof value === "string") return value;
@@ -169,14 +193,35 @@ export default function ContentItemsPage() {
                       </TableCell>
                       <TableCell>{getContentTypeBadge(item.type)}</TableCell>
                       <TableCell className="text-right">
-                        {(canUpdate || hasPermission("delete_courses")) && (
-                          <ContentItemActionsDropdown
-                            freeCourseId={freeCourseId || ""}
-                            sectionId={sectionId || ""}
-                            contentId={item._id}
-                            contentTitle={getDisplayName(item.title)}
-                          />
-                        )}
+                        <div className="flex items-center justify-end gap-2">
+                          {canUpdate && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedContent({ id: item._id, title: getDisplayName(item.title) });
+                                setShowViewDialog(true);
+                              }}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => {
+                                setSelectedContent({ id: item._id, title: getDisplayName(item.title) });
+                                setShowDeleteDialog(true);
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -185,6 +230,38 @@ export default function ContentItemsPage() {
           )}
         </CardContent>
       </Card>
+
+      {selectedContent && (
+        <ViewContentItemDialog
+          freeCourseId={freeCourseId || ""}
+          sectionId={sectionId || ""}
+          contentId={selectedContent.id}
+          open={showViewDialog}
+          onOpenChange={setShowViewDialog}
+        />
+      )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the content item "{selectedContent?.title}".
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteContentItem.isPending}
+            >
+              {deleteContentItem.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

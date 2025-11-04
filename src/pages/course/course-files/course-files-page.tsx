@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, Link } from "react-router-dom"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,15 +29,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
   Upload,
   Plus,
-  MoreHorizontal,
   Download,
   Trash2,
   FileText,
@@ -47,6 +40,7 @@ import {
   File,
   Calendar,
   User,
+  ArrowLeft,
 } from "lucide-react"
 import { useCourse } from "@/hooks/use-courses"
 import {
@@ -141,21 +135,29 @@ export function CourseFilesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Course Files</h1>
-          <p className="text-gray-600">
-            Manage files attached to "
-            {typeof courseData?.data?.name === "string"
-              ? courseData.data.name
-              : courseData?.data?.name?.en || "this course"}
-            "
-          </p>
+      <div className="flex flex-col gap-4">
+        <Link to="/dashboard/courses">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Courses
+          </Button>
+        </Link>
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Course Files</h1>
+            <p className="text-gray-600">
+              Manage files attached to "
+              {typeof courseData?.data?.name === "string"
+                ? courseData.data.name
+                : courseData?.data?.name?.en || "this course"}
+              "
+            </p>
+          </div>
+          <Button onClick={() => setIsUploadDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Upload File
+          </Button>
         </div>
-        <Button onClick={() => setIsUploadDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Upload File
-        </Button>
       </div>
 
       {/* Files List */}
@@ -247,32 +249,27 @@ export function CourseFilesPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <div className="h-8 w-8 p-0">
-                                <Button variant="ghost" size="sm">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => handleDownloadFile(file)}
-                              >
-                                <Download className="h-4 w-4 mr-2" />
-                                Download
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleDeleteFile(file._id, file.name as any)
-                                }
-                                className="text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownloadFile(file)}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-600"
+                              onClick={() =>
+                                handleDeleteFile(file._id, file.name as any)
+                              }
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
