@@ -160,31 +160,47 @@ export function CreateUpdateLesson() {
     if (isEditing && lessonData?.data && videosData?.data) {
       const lesson = lessonData.data;
 
-      // Find matching videos for each recording type
+      // Handle main_recording_url - can be string or object
       if (lesson.main_recording_url) {
-        const mainVideo = videosData.data.find(
-          (video) => video.videoUrl === lesson.main_recording_url
-        );
-        if (mainVideo) {
-          form.setValue("main_recording_id", mainVideo.id);
+        if (typeof lesson.main_recording_url === "object" && lesson.main_recording_url.id) {
+          // Backend returned video object with id, name, videoUrl
+          form.setValue("main_recording_id", lesson.main_recording_url.id);
+        } else if (typeof lesson.main_recording_url === "string") {
+          // Backend returned string URL - find matching video
+          const mainVideo = videosData.data.find(
+            (video) => video.videoUrl === lesson.main_recording_url
+          );
+          if (mainVideo) {
+            form.setValue("main_recording_id", mainVideo.id);
+          }
         }
       }
 
+      // Handle recording_gvo_url - can be string or object
       if (lesson.recording_gvo_url) {
-        const gvoVideo = videosData.data.find(
-          (video) => video.videoUrl === lesson.recording_gvo_url
-        );
-        if (gvoVideo) {
-          form.setValue("recording_gvo_id", gvoVideo.id);
+        if (typeof lesson.recording_gvo_url === "object" && lesson.recording_gvo_url.id) {
+          form.setValue("recording_gvo_id", lesson.recording_gvo_url.id);
+        } else if (typeof lesson.recording_gvo_url === "string") {
+          const gvoVideo = videosData.data.find(
+            (video) => video.videoUrl === lesson.recording_gvo_url
+          );
+          if (gvoVideo) {
+            form.setValue("recording_gvo_id", gvoVideo.id);
+          }
         }
       }
 
+      // Handle recording_vvt_url - can be string or object
       if (lesson.recording_vvt_url) {
-        const vvtVideo = videosData.data.find(
-          (video) => video.videoUrl === lesson.recording_vvt_url
-        );
-        if (vvtVideo) {
-          form.setValue("recording_vvt_id", vvtVideo.id);
+        if (typeof lesson.recording_vvt_url === "object" && lesson.recording_vvt_url.id) {
+          form.setValue("recording_vvt_id", lesson.recording_vvt_url.id);
+        } else if (typeof lesson.recording_vvt_url === "string") {
+          const vvtVideo = videosData.data.find(
+            (video) => video.videoUrl === lesson.recording_vvt_url
+          );
+          if (vvtVideo) {
+            form.setValue("recording_vvt_id", vvtVideo.id);
+          }
         }
       }
     }
@@ -353,6 +369,37 @@ export function CreateUpdateLesson() {
     }
   };
   console.log(form.formState.errors);
+
+  // Helper function to get video URL for preview
+  const getVideoPreviewUrl = (videoId: string | undefined) => {
+    if (!videoId) return null;
+
+    // Check if the lesson data has video objects with presigned URLs
+    if (isEditing && lessonData?.data) {
+      const lesson = lessonData.data;
+
+      // Check main_recording_url
+      if (typeof lesson.main_recording_url === "object" &&
+          lesson.main_recording_url.id === videoId) {
+        return lesson.main_recording_url.videoUrl;
+      }
+
+      // Check recording_gvo_url
+      if (typeof lesson.recording_gvo_url === "object" &&
+          lesson.recording_gvo_url.id === videoId) {
+        return lesson.recording_gvo_url.videoUrl;
+      }
+
+      // Check recording_vvt_url
+      if (typeof lesson.recording_vvt_url === "object" &&
+          lesson.recording_vvt_url.id === videoId) {
+        return lesson.recording_vvt_url.videoUrl;
+      }
+    }
+
+    return null;
+  };
+
   // Helper function to get topic name
   const getTopicName = () => {
     if (!topicData?.data) return "Loading...";
@@ -579,11 +626,11 @@ export function CreateUpdateLesson() {
 
                 {/* Show selected main recording */}
                 {form.watch("main_recording_id") && (
-                  <div className="mt-3 p-3 border rounded-lg bg-gray-50">
-                    <p className="text-sm text-gray-600 mb-2">
+                  <div className="mt-3 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                       Selected main recording:
                     </p>
-                    <div className="text-sm font-medium">
+                    <div className="text-sm font-medium mb-3">
                       {
                         videosData?.data?.find(
                           (video) =>
@@ -591,6 +638,17 @@ export function CreateUpdateLesson() {
                         )?.name
                       }
                     </div>
+                    {/* Video Preview */}
+                    {getVideoPreviewUrl(form.watch("main_recording_id")) && (
+                      <div className="mt-3">
+                        <video
+                          src={getVideoPreviewUrl(form.watch("main_recording_id"))!}
+                          controls
+                          className="w-full rounded-lg"
+                          style={{ maxHeight: "400px" }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -630,17 +688,28 @@ export function CreateUpdateLesson() {
 
                 {/* Show selected GVO recording */}
                 {form.watch("recording_gvo_id") && (
-                  <div className="mt-3 p-3 border rounded-lg bg-gray-50">
-                    <p className="text-sm text-gray-600 mb-2">
+                  <div className="mt-3 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                       Selected GVO recording:
                     </p>
-                    <div className="text-sm font-medium">
+                    <div className="text-sm font-medium mb-3">
                       {
                         videosData?.data?.find(
                           (video) => video.id === form.watch("recording_gvo_id")
                         )?.name
                       }
                     </div>
+                    {/* Video Preview */}
+                    {getVideoPreviewUrl(form.watch("recording_gvo_id")) && (
+                      <div className="mt-3">
+                        <video
+                          src={getVideoPreviewUrl(form.watch("recording_gvo_id"))!}
+                          controls
+                          className="w-full rounded-lg"
+                          style={{ maxHeight: "400px" }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -680,17 +749,28 @@ export function CreateUpdateLesson() {
 
                 {/* Show selected VVT recording */}
                 {form.watch("recording_vvt_id") && (
-                  <div className="mt-3 p-3 border rounded-lg bg-gray-50">
-                    <p className="text-sm text-gray-600 mb-2">
+                  <div className="mt-3 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                       Selected VVT recording:
                     </p>
-                    <div className="text-sm font-medium">
+                    <div className="text-sm font-medium mb-3">
                       {
                         videosData?.data?.find(
                           (video) => video.id === form.watch("recording_vvt_id")
                         )?.name
                       }
                     </div>
+                    {/* Video Preview */}
+                    {getVideoPreviewUrl(form.watch("recording_vvt_id")) && (
+                      <div className="mt-3">
+                        <video
+                          src={getVideoPreviewUrl(form.watch("recording_vvt_id"))!}
+                          controls
+                          className="w-full rounded-lg"
+                          style={{ maxHeight: "400px" }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

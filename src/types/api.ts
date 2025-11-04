@@ -457,9 +457,9 @@ export interface Lesson {
   }
   | string
   topicId: Topic | string
-  main_recording_url: string
-  recording_gvo_url?: string
-  recording_vvt_url?: string
+  main_recording_url: string | { id: string; name: string; videoUrl: string }
+  recording_gvo_url?: string | { id: string; name: string; videoUrl: string }
+  recording_vvt_url?: string | { id: string; name: string; videoUrl: string }
   isActive: boolean
   createdAt: Date
   updatedAt: Date
