@@ -84,6 +84,7 @@ import {
 } from "@/hooks/use-admins";
 import type { Admin } from "@/types/api";
 import { PasswordInput } from "@/components/ui/password-input";
+import { getErrorMessage } from "@/utils/error-utils";
 
 // Form schemas
 const createAdminSchema = z.object({
@@ -210,9 +211,7 @@ export function AdminsPage() {
       setIsCreateDialogOpen(false);
       createForm.reset();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create admin"
-      );
+      toast.error(getErrorMessage(error, "Failed to create admin"));
     }
   };
 
@@ -226,9 +225,7 @@ export function AdminsPage() {
       setEditingAdmin(null);
       updateForm.reset();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update admin"
-      );
+      toast.error(getErrorMessage(error, "Failed to update admin"));
     }
   };
 
@@ -244,9 +241,7 @@ export function AdminsPage() {
       setIsDeleteDialogOpen(false);
       setDeleteAdminId("");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete admin"
-      );
+      toast.error(getErrorMessage(error, "Failed to delete admin"));
     }
   };
 
@@ -291,9 +286,7 @@ export function AdminsPage() {
       setPasswordAdminId("");
       passwordForm.reset();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update password"
-      );
+      toast.error(getErrorMessage(error, "Failed to update password"));
     }
   };
 

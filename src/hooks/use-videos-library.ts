@@ -94,10 +94,9 @@ export function useCreateVideoLibrary() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateVideoLibraryInput) => 
+    mutationFn: (data: CreateVideoLibraryInput) =>
       videoLibraryService.createVideoLibrary(data),
     onSuccess: () => {
-      toast.success('Video library created successfully!');
       // Invalidate and refetch video library queries
       queryClient.invalidateQueries({ queryKey: videoLibraryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: videoLibraryKeys.all });
@@ -199,7 +198,6 @@ export function useUploadVideo() {
       onProgress?: (progress: { loaded: number; total: number; percentage: number }) => void;
     }) => videoLibraryService.uploadVideoWithProgress(file, entityType, entityId, onProgress),
     onSuccess: () => {
-      toast.success('Video uploaded successfully!');
       // Invalidate and refetch video library queries
       queryClient.invalidateQueries({ queryKey: videoLibraryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: videoLibraryKeys.all });
