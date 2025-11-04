@@ -719,6 +719,7 @@ export interface MCQOption {
     he?: string;
   };
   isCorrect: boolean;
+  order?: number;
 }
 
 export interface Question {
@@ -735,6 +736,7 @@ export interface Question {
     he?: string;
   };
   points: number;
+  order?: number;
 }
 
 export interface Quiz {
@@ -821,6 +823,7 @@ export interface QuestionResult {
   selectedOptions: number[];
   correctOptions: number[];
   isCorrect: boolean;
+  order?: number;
   pointsEarned: number;
   maxPoints: number;
   timeSpent?: number;
@@ -918,6 +921,7 @@ export interface ContentItem {
   };
   resourceId?: string; // AttachedFile, VideoLibrary, or Quiz ID
   url?: string; // For external videos
+  order?: number;
 }
 
 export interface Section {
@@ -934,6 +938,7 @@ export interface Section {
   };
   isVisible: boolean;
   contentItems: ContentItem[];
+  order?: number;
 }
 
 export interface FreeCourse {
@@ -1023,6 +1028,7 @@ export interface UpdateSectionInput {
     he?: string;
   };
   isVisible?: boolean;
+  order?: number;
 }
 
 export interface CreateContentItemInput {

@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useContentItem } from '@/hooks/use-content-items';
 import { useVideoLibrary } from '@/hooks/use-videos-library';
 import { useQuiz } from '@/hooks/use-quizzes';
