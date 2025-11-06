@@ -1,19 +1,20 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import {
   useContentItem,
   useContentItems,
   useCreateContentItem,
   useUpdateContentItem,
-} from "@/hooks/use-content-items";
-import { useSection } from "@/hooks/use-sections";
-import { useFreeCourse } from "@/hooks/use-free-courses";
-import { useVideoLibraries } from "@/hooks/use-videos-library";
-import { useQuizzes } from "@/hooks/use-quizzes";
-import { Button } from "@/components/ui/button";
+} from "@/hooks/use-content-items"
+import { useSection } from "@/hooks/use-sections"
+import { useFreeCourse } from "@/hooks/use-free-courses"
+import { useVideoLibraries } from "@/hooks/use-videos-library"
+import { useQuizzes } from "@/hooks/use-quizzes"
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -22,22 +23,22 @@ import {
   FormLabel,
   FormMessage,
   FormDescription,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BreadcrumbNavigation } from "@/components/shared/breadcrumb-navigation";
-import { ArrowLeft, Loader2, X } from "lucide-react";
-import { UploadService, type UploadProgress } from "@/services/upload-service";
-import { UploadProgressCard } from "@/components/ui/upload-progress";
-import { toast } from "sonner";
-import type { ContentItemType } from "@/types/api";
+} from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { BreadcrumbNavigation } from "@/components/shared/breadcrumb-navigation"
+import { ArrowLeft, Loader2, X } from "lucide-react"
+import { UploadService, type UploadProgress } from "@/services/upload-service"
+import { UploadProgressCard } from "@/components/ui/upload-progress"
+import { toast } from "sonner"
+import type { ContentItemType } from "@/types/api"
 
 const contentItemSchema = z.object({
   title: z.object({
@@ -51,59 +52,59 @@ const contentItemSchema = z.object({
   type: z.enum(["file", "video", "quiz"]),
   resourceId: z.string().optional(),
   url: z.string().url().optional().or(z.literal("")),
-});
+})
 
-type ContentItemFormValues = z.infer<typeof contentItemSchema>;
+type ContentItemFormValues = z.infer<typeof contentItemSchema>
 
 export default function CreateUpdateContentItem() {
   const { freeCourseId, sectionId, contentId } = useParams<{
-    freeCourseId: string;
-    sectionId: string;
-    contentId?: string;
-  }>();
-  const navigate = useNavigate();
-  const isEditMode = !!contentId;
+    freeCourseId: string
+    sectionId: string
+    contentId?: string
+  }>()
+  const navigate = useNavigate()
+  const isEditMode = !!contentId
 
   const [selectedContentType, setSelectedContentType] =
-    useState<ContentItemType>("file");
+    useState<ContentItemType>("file")
 
   // File upload state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileUploadProgress, setFileUploadProgress] =
-    useState<UploadProgress | null>(null);
+    useState<UploadProgress | null>(null)
   const [fileUploadStatus, setFileUploadStatus] = useState<
     "idle" | "uploading" | "completed" | "error"
-  >("idle");
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  >("idle")
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
-  const { data: freeCourse } = useFreeCourse(freeCourseId || "");
-  const { data: section } = useSection(freeCourseId || "", sectionId || "");
+  const { data: freeCourse } = useFreeCourse(freeCourseId || "")
+  const { data: section } = useSection(freeCourseId || "", sectionId || "")
   const { data: contentItem, isLoading: isLoadingContent } = useContentItem(
     freeCourseId || "",
     sectionId || "",
     contentId || ""
-  );
+  )
   const { data: contentItems } = useContentItems(
     freeCourseId || "",
     sectionId || ""
-  );
+  )
 
   // Load video library and quizzes for selection
-  const { data: videoLibraries } = useVideoLibraries({});
+  const { data: videoLibraries } = useVideoLibraries({})
   const { data: quizzes } = useQuizzes({
     type: "course",
     isActive: true,
-  });
+  })
 
   const createMutation = useCreateContentItem(
     freeCourseId || "",
     sectionId || ""
-  );
+  )
   const updateMutation = useUpdateContentItem(
     freeCourseId || "",
     sectionId || "",
     contentId || ""
-  );
+  )
 
   const form = useForm<ContentItemFormValues>({
     resolver: zodResolver(contentItemSchema),
@@ -113,7 +114,7 @@ export default function CreateUpdateContentItem() {
       resourceId: "",
       url: "",
     },
-  });
+  })
 
   // Load existing content item data in edit mode
   useEffect(() => {
@@ -123,110 +124,110 @@ export default function CreateUpdateContentItem() {
         type: contentItem.type,
         resourceId: contentItem.resourceId || "",
         url: contentItem.url || "",
-      });
-      setSelectedContentType(contentItem.type);
+      })
+      setSelectedContentType(contentItem.type)
     }
-  }, [contentItem, contentItems, isEditMode, form]);
+  }, [contentItem, contentItems, isEditMode, form])
 
   const onSubmit = async (data: ContentItemFormValues) => {
     try {
-      let resourceId = data.resourceId;
-      let fileUrl = "";
+      const resourceId = data.resourceId
+      let fileUrl = ""
 
       // Handle file upload for file type
       if (data.type === "file" && selectedFile) {
         try {
-          setFileUploadStatus("uploading");
+          setFileUploadStatus("uploading")
           const fileResult = await UploadService.uploadFileWithProgress(
             selectedFile,
             "general",
-            "free-courses/content",
+            "free-courses-content",
             (progress) => setFileUploadProgress(progress)
-          );
-          fileUrl = fileResult.downloadUrl;
-          setFileUploadStatus("completed");
+          )
+          fileUrl = fileResult.downloadUrl
+          setFileUploadStatus("completed")
         } catch (error) {
-          setFileUploadStatus("error");
+          setFileUploadStatus("error")
           setUploadError(
             error instanceof Error ? error.message : "File upload failed"
-          );
-          toast.error("Failed to upload file");
-          return;
+          )
+          toast.error("Failed to upload file")
+          return
         }
       } else if (data.type === "file" && !isEditMode && !resourceId) {
-        toast.error("Please select a file to upload");
-        return;
+        toast.error("Please select a file to upload")
+        return
       }
 
       // Validate video has either resourceId or url
       if (data.type === "video" && !resourceId && !data.url) {
-        toast.error("Please select a video from library or enter a video URL");
-        return;
+        toast.error("Please select a video from library or enter a video URL")
+        return
       }
 
       // Validate quiz has resourceId
       if (data.type === "quiz" && !resourceId) {
-        toast.error("Please select a quiz");
-        return;
+        toast.error("Please select a quiz")
+        return
       }
 
       const payload: any = {
         title: data.title,
         type: data.type,
-      };
+      }
 
       // Add resourceId or url based on type
       if (data.type === "file") {
         if (fileUrl) {
-          payload.fileUrl = fileUrl;
+          payload.fileUrl = fileUrl
         } else if (resourceId) {
-          payload.resourceId = resourceId;
+          payload.resourceId = resourceId
         }
       } else if (data.type === "video") {
         if (resourceId) {
-          payload.resourceId = resourceId;
+          payload.resourceId = resourceId
         } else if (data.url) {
-          payload.url = data.url;
+          payload.url = data.url
         }
       } else if (data.type === "quiz") {
-        payload.resourceId = resourceId;
+        payload.resourceId = resourceId
       }
 
       if (isEditMode && contentId) {
-        await updateMutation.mutateAsync(payload);
+        await updateMutation.mutateAsync(payload)
       } else {
-        await createMutation.mutateAsync(payload);
+        await createMutation.mutateAsync(payload)
       }
 
       navigate(
         `/dashboard/free-courses/${freeCourseId}/sections/${sectionId}/content`
-      );
+      )
     } catch (error) {
-      console.error("Failed to save content item:", error);
+      console.error("Failed to save content item:", error)
     }
-  };
+  }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files?.[0]
     if (file) {
-      setSelectedFile(file);
-      setFileUploadStatus("idle");
-      setFileUploadProgress(null);
-      setUploadError(null);
+      setSelectedFile(file)
+      setFileUploadStatus("idle")
+      setFileUploadProgress(null)
+      setUploadError(null)
     }
-  };
+  }
 
   const getDisplayName = (value: any) => {
-    if (typeof value === "string") return value;
-    return value?.en || value?.name?.en || "N/A";
-  };
+    if (typeof value === "string") return value
+    return value?.en || value?.name?.en || "N/A"
+  }
 
   if (isEditMode && isLoadingContent) {
     return (
       <div className="flex items-center justify-center h-96">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    );
+    )
   }
 
   return (
@@ -347,8 +348,8 @@ export default function CreateUpdateContentItem() {
                       <FormLabel>Content Type *</FormLabel>
                       <Select
                         onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedContentType(value as ContentItemType);
+                          field.onChange(value)
+                          setSelectedContentType(value as ContentItemType)
                         }}
                         value={field.value}
                         disabled={isEditMode}
@@ -561,5 +562,5 @@ export default function CreateUpdateContentItem() {
         </form>
       </Form>
     </div>
-  );
+  )
 }

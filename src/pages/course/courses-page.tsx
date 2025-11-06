@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,25 +9,25 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import {
   Plus,
   Search,
@@ -42,26 +42,25 @@ import {
   RefreshCw,
   File,
   TrendingUp,
-} from "lucide-react";
-import { toast } from "sonner";
-import { useAuthStore } from "@/stores/auth-store";
+} from "lucide-react"
+import { toast } from "sonner"
+import { useAuthStore } from "@/stores/auth-store"
 import {
   useCourses,
   useDeleteCourse,
   useToggleCourseStatus,
   useCourseStats,
-} from "@/hooks/use-courses";
-import type { Course } from "@/types/api";
+} from "@/hooks/use-courses"
+import type { Course } from "@/types/api"
 
 export function CoursesPage() {
-  const navigate = useNavigate();
-  const { hasPermission } = useAuthStore();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isActiveFilter, setIsActiveFilter] = useState<string>("all");
-  const [priceFilter, setPriceFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [deleteCourseId, setDeleteCourseId] = useState<string>("");
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const navigate = useNavigate()
+  const { hasPermission } = useAuthStore()
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isActiveFilter, setIsActiveFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [deleteCourseId, setDeleteCourseId] = useState<string>("")
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   // Queries
   const {
@@ -73,32 +72,32 @@ export function CoursesPage() {
     limit: 12, // Show more items per page for card layout
     search: searchTerm || undefined,
     isActive: isActiveFilter === "all" ? undefined : isActiveFilter === "true",
-  });
+  })
 
-  const { data: statsData } = useCourseStats();
+  const { data: statsData } = useCourseStats()
 
   // Mutations
-  const deleteCourseMutation = useDeleteCourse();
-  const toggleCourseStatusMutation = useToggleCourseStatus();
+  const deleteCourseMutation = useDeleteCourse()
+  const toggleCourseStatusMutation = useToggleCourseStatus()
 
   // Handlers
   const handleDeleteCourse = async (courseId: string) => {
-    setDeleteCourseId(courseId);
-    setIsDeleteDialogOpen(true);
-  };
+    setDeleteCourseId(courseId)
+    setIsDeleteDialogOpen(true)
+  }
 
   const confirmDeleteCourse = async () => {
     try {
-      await deleteCourseMutation.mutateAsync(deleteCourseId);
-      toast.success("Course deleted successfully!");
-      setIsDeleteDialogOpen(false);
-      setDeleteCourseId("");
+      await deleteCourseMutation.mutateAsync(deleteCourseId)
+      toast.success("Course deleted successfully!")
+      setIsDeleteDialogOpen(false)
+      setDeleteCourseId("")
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete course"
-      );
+      )
     }
-  };
+  }
 
   const handleToggleCourseStatus = async (
     courseId: string,
@@ -108,75 +107,70 @@ export function CoursesPage() {
       await toggleCourseStatusMutation.mutateAsync({
         id: courseId,
         isActive: !currentStatus,
-      });
+      })
       toast.success(
         `Course ${!currentStatus ? "activated" : "deactivated"} successfully!`
-      );
+      )
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
           : "Failed to update course status"
-      );
+      )
     }
-  };
+  }
 
   const handleSearch = () => {
-    setCurrentPage(1);
-    refetch();
-  };
+    setCurrentPage(1)
+    refetch()
+  }
 
   const handleFilterChange = (value: string) => {
-    setIsActiveFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handlePriceFilterChange = (value: string) => {
-    setPriceFilter(value);
-    setCurrentPage(1);
-  };
+    setIsActiveFilter(value)
+    setCurrentPage(1)
+  }
 
   // Helper function to get course name
   const getCourseName = (course: Course): string => {
     if (typeof course.name === "string") {
-      return course.name;
+      return course.name
     }
-    return course.name.en || "Unknown Course";
-  };
+    return course.name.en || "Unknown Course"
+  }
 
   // Helper function to get course description
   const getCourseDescription = (course: Course): string => {
     if (typeof course.aboutCourse === "string") {
-      return course.aboutCourse;
+      return course.aboutCourse
     }
-    return course.aboutCourse.en || "No description available";
-  };
+    return course.aboutCourse.en || "No description available"
+  }
 
   // Helper function to get faculty names
   const getFacultyNames = (course: Course): string[] => {
-    if (!Array.isArray(course.facultyIds)) return [];
+    if (!Array.isArray(course.facultyIds)) return []
 
     return course.facultyIds.map((faculty) => {
-      if (typeof faculty === "string") return "Unknown Faculty";
-      if (typeof faculty.name === "string") return faculty.name;
-      return faculty.name.en || "Unknown Faculty";
-    });
-  };
+      if (typeof faculty === "string") return "Unknown Faculty"
+      if (typeof faculty.name === "string") return faculty.name
+      return faculty.name.en || "Unknown Faculty"
+    })
+  }
 
   // Helper function to get instructor name
   const getInstructorName = (course: Course): string => {
-    if (typeof course.instructorId === "string") return "Unknown Instructor";
-    return course.instructorId?.userName || "Unknown Instructor";
-  };
+    if (typeof course.instructorId === "string") return "Unknown Instructor"
+    return course.instructorId?.userName || "Unknown Instructor"
+  }
 
   // Helper function to calculate discounted price
   const getDiscountedPrice = (course: Course): number => {
-    return course.coursePrice - (course.coursePrice * course.discount) / 100;
-  };
+    return course.coursePrice - (course.coursePrice * course.discount) / 100
+  }
 
-  const canCreate = hasPermission("create_courses");
-  const canUpdate = hasPermission("update_courses");
-  const canDelete = hasPermission("delete_courses");
+  const canCreate = hasPermission("create_courses")
+  const canUpdate = hasPermission("update_courses")
+  const canDelete = hasPermission("delete_courses")
 
   return (
     <div className="space-y-6">
@@ -281,17 +275,6 @@ export function CoursesPage() {
                 <SelectItem value="false">Inactive</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={priceFilter} onValueChange={handlePriceFilterChange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by price" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Prices</SelectItem>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="discounted">Discounted</SelectItem>
-              </SelectContent>
-            </Select>
             <Button variant="outline" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -310,7 +293,7 @@ export function CoursesPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {coursesData?.data?.items?.map((course) => (
-                <Card key={course._id} className="overflow-hidden">
+                <Card key={course._id} className="overflow-hidden pt-0">
                   {/* Course Image */}
                   <div className="relative h-48 bg-gray-100">
                     {course.imageUrl ? (
@@ -456,7 +439,9 @@ export function CoursesPage() {
                           size="sm"
                           className="flex-1 w-full"
                           onClick={() =>
-                            navigate(`/dashboard/courses/${course._id}/progress`)
+                            navigate(
+                              `/dashboard/courses/${course._id}/progress`
+                            )
                           }
                         >
                           <TrendingUp className="h-4 w-4 mr-1" />
@@ -573,5 +558,5 @@ export function CoursesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }
