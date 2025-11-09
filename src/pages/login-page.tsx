@@ -1,16 +1,16 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -18,42 +18,44 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { useAuthStore } from "@/stores/auth-store";
-import { toast } from "sonner";
+} from "@/components/ui/form"
+import { useAuthStore } from "@/stores/auth-store"
+import { toast } from "sonner"
 
 const loginSchema = z.object({
   login: z.string().min(1, "Username or email is required"),
   password: z.string().min(1, "Password is required"),
-});
+})
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginPage() {
-  const { login, isLoading } = useAuthStore();
+  const { login, isLoading } = useAuthStore()
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      login: "superadmin@email.com",
-      password: "SuperAdmin123!",
+      // login: "superadmin@email.com",
+      // password: "SuperAdmin123!",
+      login: "",
+      password: "",
     },
-  });
+  })
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       // Determine if login is email or username
-      const isEmail = data.login.includes("@");
+      const isEmail = data.login.includes("@")
       const credentials = isEmail
         ? { email: data.login, password: data.password }
-        : { userName: data.login, password: data.password };
+        : { userName: data.login, password: data.password }
 
-      await login(credentials);
-      toast.success("Login successful!");
+      await login(credentials)
+      toast.success("Login successful!")
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Login failed");
+      toast.error(error instanceof Error ? error.message : "Login failed")
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -109,5 +111,5 @@ export function LoginPage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
