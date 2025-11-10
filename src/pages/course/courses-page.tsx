@@ -330,6 +330,7 @@ export function CoursesPage() {
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
                       <div
+                        className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed [&_span]:!bg-background [&_span]:!text-muted-foreground"
                         dangerouslySetInnerHTML={{
                           __html: getCourseDescription(course),
                         }}
